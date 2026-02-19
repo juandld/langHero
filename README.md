@@ -232,6 +232,10 @@ On startup, any legacy `.txt`/`.title` are consolidated into JSON. Missing metad
 - `frontend/src/lib/config.ts` hosts `BACKEND_URL` (default `http://localhost:8000`).
 - You can set per‑scenario language by adding `language` to each scenario; the frontend passes it to the backend for better transcription.
 
+## Rules for AI Assistants
+
+- **Never commit or push** — the human handles all git operations (commit, push, rebase, etc.). Do not run `git commit`, `git push`, or any other git write commands.
+
 ## Development Playbook
 
 - High-level product direction lives in `ROADMAP.md`.

@@ -1,14 +1,15 @@
 """
-SHOGUN STORY - Japan 1600, Sengoku Period
+Story Manifest System - Tracks characters, locations, and their appearances.
 
-The player is a foreigner washed ashore, learning Japanese to survive.
-Bimbo (AI companion) can freeze time to teach vocabulary.
+Ensures character consistency by:
+1. Defining all characters (named + recurring unnamed) with references
+2. Tracking which characters appear in each panel
+3. Always including relevant references during generation
 """
 
 import os
-import asyncio
-from story_manifest import Character, Location, PanelSpec, get_panel_references
-from image_gen_google import generate_character_ref, generate_location_ref
+from dataclasses import dataclass, field
+from typing import Optional
 
 # Paths
 IMAGE_CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "image_cache")
@@ -16,20 +17,60 @@ CHARACTER_REF_DIR = os.path.join(IMAGE_CACHE_DIR, "characters")
 LOCATION_REF_DIR = os.path.join(IMAGE_CACHE_DIR, "locations")
 
 
+@dataclass
+class Character:
+    """Character definition with visual consistency info."""
+    id: str
+    name: str
+    description: str  # Detailed visual description for prompts
+    reference_path: Optional[str] = None
+    variants: dict = field(default_factory=dict)
+
+    def get_ref_path(self, variant: str = None) -> Optional[str]:
+        if variant and variant in self.variants:
+            path = self.variants[variant]
+        else:
+            path = self.reference_path
+        return path if path and os.path.exists(path) else None
+
+    def prompt_description(self) -> str:
+        """Get description formatted for prompts."""
+        return f"{self.name}: {self.description}"
+
+
+@dataclass
+class Location:
+    """Location definition."""
+    id: str
+    name: str
+    description: str
+    reference_path: Optional[str] = None
+
+    def get_ref_path(self) -> Optional[str]:
+        return self.reference_path if self.reference_path and os.path.exists(self.reference_path) else None
+
+
+@dataclass
+class PanelSpec:
+    """Panel specification with character/location tracking."""
+    id: str
+    chapter: str
+    panel_type: str  # establishing, dialogue, action, time_freeze, emotional, pov
+    description: str  # Scene description
+    characters: list[str] = field(default_factory=list)  # Character IDs in this panel
+    location: str = None
+    speaker: str = None  # Who is speaking (for dialogue panels)
+    mood: str = None
+    is_time_freeze: bool = False
+    is_holographic: bool = False
+    additional_notes: str = None  # Extra prompt instructions
+
+
 # ============================================================
-# STORY METADATA
+# SHOGUN STORY MANIFEST
 # ============================================================
 
-STORY_ID = "shogun_test"
-STORY_TITLE = "The Weight of Words"
-STORY_SUBTITLE = "Shogun Era, Japan 1600"
-
-
-# ============================================================
-# CHARACTERS
-# ============================================================
-
-CHARACTERS = {
+SHOGUN_CHARACTERS = {
     # === MAIN CHARACTERS ===
     "bimbo": Character(
         id="bimbo",
@@ -71,50 +112,9 @@ CHARACTERS = {
         description="Older Japanese farmer, 50s. Weathered but not as harsh as Hana. Cautious expression. Carries a wooden staff. Gray-streaked hair. Worn clothes patched many times. Hangs back from confrontation.",
         reference_path=os.path.join(CHARACTER_REF_DIR, "farmer_old.png"),
     ),
-
-    # === CHARACTERS FOR LATER CHAPTERS ===
-    "mariko": Character(
-        id="mariko",
-        name="Mariko",
-        description="Elegant Japanese noblewoman. Refined features, composed expression. Elaborate kimono with subtle patterns. Hair pinned with ornaments. Graceful bearing. She speaks softly but commands attention. Sengoku period nobility.",
-        reference_path=os.path.join(CHARACTER_REF_DIR, "mariko.png"),
-    ),
-
-    "samurai": Character(
-        id="samurai",
-        name="Samurai (Hostile)",
-        description="Japanese samurai warrior. Stern threatening expression. Traditional armor or formal samurai attire. Hand near sword. Authority and danger. Sengoku period.",
-        reference_path=os.path.join(CHARACTER_REF_DIR, "samurai_hostile.png"),
-    ),
-
-    "eikou": Character(
-        id="eikou",
-        name="Eikou",
-        description="Buddhist monk. Shaved head, calm wise expression. Simple monk robes. Weathered but peaceful face. Sengoku period.",
-        reference_path=os.path.join(CHARACTER_REF_DIR, "eikou.png"),
-    ),
-
-    "takeshi": Character(
-        id="takeshi",
-        name="Takeshi",
-        description="Young samurai, more refined than hostile samurai. Intelligent eyes, measured expression. Formal attire. Sengoku period.",
-        reference_path=os.path.join(CHARACTER_REF_DIR, "takeshi.png"),
-    ),
-
-    "kenji": Character(
-        id="kenji",
-        name="Kenji",
-        description="Young Japanese farmer. Wary but curious expression. Simple work clothes. Muscular from farm labor. Sengoku period.",
-        reference_path=os.path.join(CHARACTER_REF_DIR, "kenji.png"),
-    ),
 }
 
-
-# ============================================================
-# LOCATIONS
-# ============================================================
-
-LOCATIONS = {
+SHOGUN_LOCATIONS = {
     "ship_observation": Location(
         id="ship_observation",
         name="Spaceship Observation Deck",
@@ -129,76 +129,23 @@ LOCATIONS = {
         reference_path=os.path.join(LOCATION_REF_DIR, "beach_dawn.png"),
     ),
 
-    "village_day": Location(
-        id="village_day",
-        name="Japanese Village",
-        description="Small Japanese village, Sengoku period. Cluster of wooden buildings around muddy central path. Smoke from cook fires. Farmers at work.",
-        reference_path=os.path.join(LOCATION_REF_DIR, "village_day.png"),
-    ),
-
-    "village_samurai": Location(
-        id="village_samurai",
-        name="Village with Samurai",
-        description="Japanese village with tension. Samurai have arrived. Villagers clearing path, fearful. Atmosphere of danger and oppression.",
-        reference_path=os.path.join(LOCATION_REF_DIR, "village_samurai.png"),
-    ),
-
-    "forest_road": Location(
-        id="forest_road",
-        name="Forest Road",
-        description="Forest road in feudal Japan. Cedar trees thick on both sides. Mountain path with switchbacks. Rain and mist.",
-        reference_path=os.path.join(LOCATION_REF_DIR, "forest_road.png"),
-    ),
-
-    "castle_exterior": Location(
-        id="castle_exterior",
-        name="Castle Exterior",
-        description="Japanese castle on a hill above a river. Gray stone walls rising from mist. Solid and permanent. Statement of power.",
-        reference_path=os.path.join(LOCATION_REF_DIR, "castle_exterior.png"),
-    ),
-
-    "castle_interior": Location(
-        id="castle_interior",
-        name="Castle Interior",
-        description="Interior of Japanese castle, tatami room. Sliding paper screens (shoji). Minimal furnishing. Window overlooking valley.",
-        reference_path=os.path.join(LOCATION_REF_DIR, "castle_interior.png"),
-    ),
-
-    "garden_koi": Location(
-        id="garden_koi",
-        name="Koi Garden",
-        description="Small Japanese garden within castle grounds. Koi pond with gold and white fish. Arranged rocks, bent pine tree. Autumn colors.",
-        reference_path=os.path.join(LOCATION_REF_DIR, "garden_koi.png"),
-    ),
-
-    "temple_exterior": Location(
-        id="temple_exterior",
-        name="Mountain Temple",
-        description="Small Buddhist temple in the mountains. Weathered wooden building with mossy roof. Bell in wooden frame. Surrounded by forest and mist.",
-        reference_path=os.path.join(LOCATION_REF_DIR, "temple_exterior.png"),
-    ),
-
-    "sekigahara_sunset": Location(
-        id="sekigahara_sunset",
-        name="Sekigahara Battlefield",
-        description="Sekigahara battlefield, months after the battle. Wide valley between mountains. Trampled grass recovering. Remnants of war. Sunset light.",
-        reference_path=os.path.join(LOCATION_REF_DIR, "sekigahara_sunset.png"),
+    "village_path": Location(
+        id="village_path",
+        name="Path to Village",
+        description="Sandy path leading from beach toward small Japanese fishing village. Thatched roof buildings visible in distance. Dawn light. Mountains behind village.",
+        reference_path=os.path.join(LOCATION_REF_DIR, "beach_dawn.png"),  # Reuse beach for now
     ),
 }
 
-
-# ============================================================
-# PANELS - PROLOGUE + CHAPTER 1
-# ============================================================
-
-PANELS = [
+# Panel specifications with character tracking
+SHOGUN_PANELS = [
     # === PROLOGUE ===
     PanelSpec(
         id="pro_01_stars",
         chapter="prologue",
         panel_type="establishing",
         description="POV looking out through the curved observation window. The infinite void of space stretches before you. Stars drift like ash. You are alone with your thoughts.",
-        characters=[],
+        characters=[],  # No characters - just environment
         location="ship_observation",
         mood="contemplative",
         is_holographic=True,
@@ -234,7 +181,7 @@ PANELS = [
         chapter="ch01",
         panel_type="pov",
         description="POV waking up on Japanese beach. Blurred edges suggesting disorientation. Your legs visible in foreground, waves washing over them. Bruised purple-amber sky, sun clearing mountains. Sand and shipwreck debris around you.",
-        characters=[],
+        characters=[],  # No characters yet
         location="beach_dawn",
         mood="disoriented",
     ),
@@ -337,7 +284,7 @@ PANELS = [
         panel_type="establishing",
         description="POV following Hana. She walks ahead up the sandy path toward the village, glancing back and gesturing for you to follow. Village visible in distance. Dawn light warming the scene.",
         characters=["hana"],
-        location="beach_dawn",
+        location="village_path",
         speaker="hana",
         mood="cautious_hope",
         additional_notes="Hana ahead on path, looking back at us. We are following her into the unknown.",
@@ -345,129 +292,118 @@ PANELS = [
 ]
 
 
-# ============================================================
-# UTILITY FUNCTIONS
-# ============================================================
+def get_panel_references(panel: PanelSpec, characters: dict, locations: dict) -> list[str]:
+    """Get all reference image paths for a panel."""
+    refs = []
 
-def check_missing():
-    """Check which references need to be generated."""
+    # Add character references
+    for char_id in panel.characters:
+        char = characters.get(char_id)
+        if char:
+            # Choose variant based on context
+            variant = None
+            if char_id == "bimbo":
+                if panel.is_time_freeze:
+                    variant = "teaching"
+                elif panel.is_holographic:
+                    variant = "casual"
+
+            ref_path = char.get_ref_path(variant)
+            if ref_path:
+                refs.append(ref_path)
+
+    # Add location reference
+    if panel.location:
+        loc = locations.get(panel.location)
+        if loc:
+            ref_path = loc.get_ref_path()
+            if ref_path:
+                refs.append(ref_path)
+
+    return refs
+
+
+def get_panel_character_descriptions(panel: PanelSpec, characters: dict) -> str:
+    """Get formatted character descriptions for a panel's prompt."""
+    descriptions = []
+    for char_id in panel.characters:
+        char = characters.get(char_id)
+        if char:
+            descriptions.append(f"• {char.prompt_description()}")
+    return "\n".join(descriptions)
+
+
+def check_missing_references(characters: dict, locations: dict) -> dict:
+    """Check which references are missing and need to be generated."""
     missing = {"characters": [], "locations": []}
 
-    for char_id, char in CHARACTERS.items():
-        if not char.reference_path or not os.path.exists(char.reference_path):
+    for char_id, char in characters.items():
+        if not char.get_ref_path():
             missing["characters"].append(char_id)
 
-    for loc_id, loc in LOCATIONS.items():
-        if not loc.reference_path or not os.path.exists(loc.reference_path):
+    for loc_id, loc in locations.items():
+        if not loc.get_ref_path():
             missing["locations"].append(loc_id)
 
     return missing
 
 
-def print_summary():
-    """Print story summary."""
-    print(f"\n{'='*50}")
-    print(f"STORY: {STORY_TITLE}")
-    print(f"ID: {STORY_ID}")
-    print(f"{'='*50}")
-    print(f"\nCharacters: {len(CHARACTERS)}")
-    for cid, char in CHARACTERS.items():
-        has_ref = "✓" if char.reference_path and os.path.exists(char.reference_path) else "✗"
-        print(f"  [{has_ref}] {cid}: {char.name}")
+# ============================================================
+# GENERATION HELPERS
+# ============================================================
 
-    print(f"\nLocations: {len(LOCATIONS)}")
-    for lid, loc in LOCATIONS.items():
-        has_ref = "✓" if loc.reference_path and os.path.exists(loc.reference_path) else "✗"
-        print(f"  [{has_ref}] {lid}: {loc.name}")
+def generate_missing_character_refs():
+    """Generate prompts for missing character references."""
+    from image.google import generate_character_ref
+    import asyncio
 
-    print(f"\nPanels: {len(PANELS)}")
-    chapters = {}
-    for p in PANELS:
-        chapters[p.chapter] = chapters.get(p.chapter, 0) + 1
-    for ch, count in chapters.items():
-        print(f"  {ch}: {count} panels")
+    missing = check_missing_references(SHOGUN_CHARACTERS, SHOGUN_LOCATIONS)
 
+    if not missing["characters"]:
+        print("All character references exist!")
+        return
 
-async def generate_references(force=False):
-    """Generate missing character and location references."""
-    missing = check_missing()
+    print(f"Missing character references: {missing['characters']}")
 
     for char_id in missing["characters"]:
-        char = CHARACTERS[char_id]
+        char = SHOGUN_CHARACTERS[char_id]
         prompt = f"""Manhwa/Korean webtoon style character portrait.
 
 {char.description}
 
-Portrait shot, shoulders up, facing camera.
+Portrait shot, shoulders up, facing slightly toward camera.
 Clean background. Professional character design reference quality.
-Expressive manhwa style, clean linework, soft cel-shading.
+Expressive manhwa eyes, clean linework, soft cel-shading.
 
 NO TEXT IN IMAGE."""
 
-        print(f"Generating character: {char_id}...")
-        result = await generate_character_ref(char_id, prompt, force=force)
+        print(f"\nGenerating {char_id}...")
+        print(f"Prompt: {prompt[:200]}...")
+
+        result = asyncio.run(generate_character_ref(char_id, prompt, force=True))
         print(f"  -> {result['path']}")
 
-    for loc_id in missing["locations"]:
-        loc = LOCATIONS[loc_id]
-        prompt = f"""Manhwa/Korean webtoon style environment.
-
-{loc.description}
-
-Wide establishing shot. Rich detail.
-Clean manhwa aesthetic, soft lighting.
-
-NO TEXT IN IMAGE."""
-
-        print(f"Generating location: {loc_id}...")
-        result = await generate_location_ref(loc_id, prompt, force=force)
-        print(f"  -> {result['path']}")
-
-
-# ============================================================
-# CLI
-# ============================================================
 
 if __name__ == "__main__":
     import sys
-    from story_panels_test import generate_all_panels
 
-    if len(sys.argv) < 2:
-        print_summary()
-        print("\nUsage:")
-        print("  python story_shogun.py check    - Check missing references")
-        print("  python story_shogun.py generate - Generate character/location refs")
-        print("  python story_shogun.py panels   - Generate all panels")
-        print("  python story_shogun.py all      - Generate everything")
-        sys.exit(0)
-
-    cmd = sys.argv[1]
-    force = "--force" in sys.argv
-
-    if cmd == "check":
-        missing = check_missing()
+    if len(sys.argv) > 1 and sys.argv[1] == "check":
+        missing = check_missing_references(SHOGUN_CHARACTERS, SHOGUN_LOCATIONS)
         print("Missing references:")
         print(f"  Characters: {missing['characters']}")
         print(f"  Locations: {missing['locations']}")
 
-    elif cmd == "generate":
-        asyncio.run(generate_references(force))
-
-    elif cmd == "panels":
-        # Update the manifest with our data
-        import story_manifest
-        story_manifest.SHOGUN_CHARACTERS = CHARACTERS
-        story_manifest.SHOGUN_LOCATIONS = LOCATIONS
-        story_manifest.SHOGUN_PANELS = PANELS
-        asyncio.run(generate_all_panels(force))
-
-    elif cmd == "all":
-        asyncio.run(generate_references(force))
-        import story_manifest
-        story_manifest.SHOGUN_CHARACTERS = CHARACTERS
-        story_manifest.SHOGUN_LOCATIONS = LOCATIONS
-        story_manifest.SHOGUN_PANELS = PANELS
-        asyncio.run(generate_all_panels(force))
+    elif len(sys.argv) > 1 and sys.argv[1] == "generate":
+        generate_missing_character_refs()
 
     else:
-        print(f"Unknown command: {cmd}")
+        print("Usage: python -m story.manifest [check|generate]")
+        print("\nShogun Story Manifest:")
+        print(f"  Characters: {len(SHOGUN_CHARACTERS)}")
+        print(f"  Locations: {len(SHOGUN_LOCATIONS)}")
+        print(f"  Panels: {len(SHOGUN_PANELS)}")
+
+        print("\nCharacters:")
+        for char_id, char in SHOGUN_CHARACTERS.items():
+            has_ref = "✓" if char.get_ref_path() else "✗"
+            print(f"  [{has_ref}] {char_id}: {char.name}")

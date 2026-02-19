@@ -6,7 +6,7 @@ import os
 import asyncio
 from fastapi import APIRouter, Request, Response, HTTPException
 import config
-import image_gen
+from image import dalle as image_gen
 import usage_log as usage
 from security import require_admin, require_auth, rate_limit, client_ip_from_headers
 from services.scenarios import (

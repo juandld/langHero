@@ -20,9 +20,9 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 # Import from the core system
-from story_manifest import Character, Location, PanelSpec, get_panel_references
-from story_panels_test import build_manifest_prompt, generate_panel_from_manifest
-from image_gen_google import generate_character_ref, generate_location_ref
+from story.manifest import Character, Location, PanelSpec, get_panel_references
+from story.panels_test import build_manifest_prompt, generate_panel_from_manifest
+from image.google import generate_character_ref, generate_location_ref
 
 # Paths
 IMAGE_CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "image_cache")
@@ -271,10 +271,10 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print_summary()
         print("\nUsage:")
-        print("  python story_template.py check    - Check missing references")
-        print("  python story_template.py generate - Generate character/location refs")
-        print("  python story_template.py panels   - Generate all panels")
-        print("  python story_template.py all      - Generate everything")
+        print("  python -m story.template check    - Check missing references")
+        print("  python -m story.template generate - Generate character/location refs")
+        print("  python -m story.template panels   - Generate all panels")
+        print("  python -m story.template all      - Generate everything")
         sys.exit(0)
 
     cmd = sys.argv[1]

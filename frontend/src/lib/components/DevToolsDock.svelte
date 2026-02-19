@@ -4,7 +4,7 @@
   import { getBackendUrl } from '$lib/config';
   import { apiFetch } from '$lib/api';
   import { runsStore } from '$lib/runStore.js';
-  import { DEVTOOLS_ENABLED } from '$lib/devtools';
+  import { DEVTOOLS_ENABLED } from '$lib/devtools/index.js';
 
   type BackendMeta = {
     demo_mode?: boolean;

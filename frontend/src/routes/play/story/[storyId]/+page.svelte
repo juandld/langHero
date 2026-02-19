@@ -8,6 +8,8 @@
   import { STORAGE_KEYS, getString, getJson, setJson } from '$lib/utils/storage';
   import { createStreamingManager } from '$lib/game/streamingManager';
   import { createRecordingSession, ensureAudioContext, playBeep, setupAudioAnalyser, disconnectAnalyser } from '$lib/game/audioUtils';
+  import { createAudioEngine } from '$lib/game/audioEngine';
+  import { RESPONSE_CATEGORIES, STYLE_TO_CATEGORY, getOptionCategory, getCategoryKey, resolveBranch, resolvePanel, findPanelLocation } from '$lib/game/branchLogic';
   import { fetchTtsUrl } from '$lib/utils/ttsCache';
 
   // Game components
@@ -16,6 +18,10 @@
   import SpeakButton from '$lib/components/game/SpeakButton.svelte';
   import VolumeControl from '$lib/components/game/VolumeControl.svelte';
   import GameMenu from '$lib/components/game/GameMenu.svelte';
+  import { DevTools } from '$lib/devtools/index.js';
+  import SpeakResultCard from '$lib/components/game/SpeakResultCard.svelte';
+  import TextBox from '$lib/components/game/TextBox.svelte';
+  import GameOverOverlay from '$lib/components/game/GameOverOverlay.svelte';
 
   const API_BASE = getApiBase();
   const AUTO_NARRATE_KEY = 'LANGHERO_AUTO_NARRATE_V1';
@@ -37,6 +43,11 @@
   let choices = {};
   let gameOver = false;
 
+  // Branching state
+  let reputation = { diplomatic: 0, pragmatic: 0, bold: 0, hostile: 0, 'history-breaking': 0 };
+  let branchHistory = [];     // [{ panelId, category, optionIndex }, ...]
+  let pendingBranch = null;   // { next_panel, life_delta, reputation_delta }
+
   // Interaction state
   let isTimeFrozen = false;
   let canAdvance = true;
@@ -53,6 +64,8 @@
   let draftText = '';
   let bimboHint = null;
   let askingBimbo = false;
+  let bimboReaction = null;        // { bimboDialogue, teachingNote }
+  let bimboReactionLoading = false;
 
   // Speech recognition state
   let isRecording = false;
@@ -66,78 +79,13 @@
   // Menu state
   let menuVisible = false;
 
-  // Dev tools
-  let devMenuOpen = false;
-  let infiniteLives = false;
+  // Dev tools ref + state
+  let devToolsRef;
   let devAudioFile = null;
-  let devInjecting = false;
+  let infiniteLives = false;
 
-  // Dev: Record Clip
-  let devIsRecordingClip = false;
-  let devClipRecorder = null;
-  let devClipStream = null;
-  let devClipChunks = [];
-  let devClipDuration = 5;
-
-  // Dev: Last Result Inspector
-  let devLastResult = null;
-  let devLastLang = '';
-
-  // Dev: Auto-Inject on Freeze
-  let devAutoInject = false;
-  let devAutoInjectDelay = 500;
-  let devAutoInjectTimeout = null;
-
-  // Dev: Match Threshold Override
-  let devMatchThreshold = 0.7;
-
-  // Response Categories
-  const RESPONSE_CATEGORIES = {
-    diplomatic:       { label: 'Diplomatic',       color: '#86efac', icon: '🕊' },
-    pragmatic:        { label: 'Pragmatic',        color: '#93c5fd', icon: '⚖' },
-    bold:             { label: 'Bold',             color: '#fdba74', icon: '⚡' },
-    hostile:          { label: 'Hostile',          color: '#fca5a5', icon: '🔥' },
-    'history-breaking': { label: 'History-Breaking', color: '#e9d5ff', icon: '✦' },
-  };
-
-  const STYLE_TO_CATEGORY = {
-    polite:      'diplomatic',
-    charming:    'diplomatic',
-    humble:      'diplomatic',
-    friendly:    'diplomatic',
-
-    cautious:    'pragmatic',
-    honest:      'pragmatic',
-    safe:        'pragmatic',
-    vague:       'pragmatic',
-    silent:      'pragmatic',
-    obedient:    'pragmatic',
-    curious:     'pragmatic',
-
-    direct:      'bold',
-    bold:        'bold',
-    desperate:   'bold',
-
-    hostile:     'hostile',
-    defiant:     'hostile',
-    threatening: 'hostile',
-
-    insightful:  'history-breaking',
-  };
-
-  function getOptionCategory(option) {
-    const style = option?.style || '';
-    const key = STYLE_TO_CATEGORY[style] || 'pragmatic';
-    return RESPONSE_CATEGORIES[key];
-  }
-
-  // Audio state
-  let currentAudio = null;
-  let audioQueue = [];
-  let isProcessingQueue = false;
-  let audioSessionId = 0;
-  let activeSubscriptions = [];
-  let audioPlayer;
+  // Audio engine
+  let audioEngine = null;
 
   function loadAutoNarrate() {
     if (!browser) return true;
@@ -151,20 +99,9 @@
   $: storyId = $page.params.storyId;
   $: currentChapter = story?.chapters?.[currentChapterIndex];
   $: rawPanel = currentChapter?.panels?.[currentPanelIndex];
-  $: currentPanel = resolvePanel(rawPanel, choices);
+  $: currentPanel = resolvePanel(rawPanel, choices, branchHistory);
   $: totalPanels = story?.chapters?.reduce((sum, ch) => sum + ch.panels.length, 0) || 0;
 
-  function resolvePanel(panel, playerChoices) {
-    if (!panel || !panel.choice_variants) return panel;
-    for (const [sourcePanelId, optionMap] of Object.entries(panel.choice_variants)) {
-      const chosenIndex = playerChoices[sourcePanelId];
-      if (chosenIndex !== undefined && optionMap[String(chosenIndex)]) {
-        const variant = optionMap[String(chosenIndex)];
-        return { ...panel, ...variant };
-      }
-    }
-    return panel;
-  }
   $: isLastPanel = currentChapterIndex === (story?.chapters?.length || 1) - 1 &&
                    currentPanelIndex === (currentChapter?.panels?.length || 1) - 1;
 
@@ -197,22 +134,23 @@
     draftText = '';
     bimboHint = null;
     askingBimbo = false;
+    bimboReaction = null;
+    bimboReactionLoading = false;
 
     // Check if we should freeze time
     if (hasTimeFreeze && !isTimeFrozen) {
       triggerTimeFreeze();
       // Dev: auto-inject audio on freeze
-      if (devAutoInject && devAudioFile) {
-        if (devAutoInjectTimeout) clearTimeout(devAutoInjectTimeout);
-        devAutoInjectTimeout = setTimeout(() => { injectAudio(); devAutoInjectTimeout = null; }, devAutoInjectDelay);
+      if (devToolsRef && devAudioFile) {
+        devToolsRef.checkAutoInject(devAudioFile);
       }
     } else if (!hasTimeFreeze && isTimeFrozen) {
       resumeTime();
     }
 
     // Auto-narrate if enabled - play on ALL panels including time freeze
-    if (autoNarrate && userHasInteracted) {
-      setTimeout(() => autoPlayPanel(), 100);
+    if (autoNarrate && userHasInteracted && audioEngine) {
+      setTimeout(() => audioEngine.autoPlayPanel(userHasInteracted), 100);
     }
   }
 
@@ -228,19 +166,26 @@
 
   $: progress = totalPanels > 0 ? (currentPanelNumber / totalPanels) * 100 : 0;
 
-  // Dev: Flat panel list for jump navigator
-  $: devPanelList = (() => {
-    if (!story?.chapters) return [];
-    const list = [];
-    story.chapters.forEach((ch, ci) => {
-      ch.panels.forEach((p, pi) => {
-        const firstOpt = p.options?.[0] || null;
-        const catColor = firstOpt ? getOptionCategory(firstOpt).color : null;
-        list.push({ chapterIdx: ci, panelIdx: pi, id: p.id, hasOptions: p.options?.length > 0, catColor });
-      });
-    });
-    return list;
-  })();
+  function jumpToPanel(panelId) {
+    const loc = findPanelLocation(story, panelId);
+    if (loc) {
+      currentChapterIndex = loc.chapterIndex;
+      currentPanelIndex = loc.panelIndex;
+    } else {
+      // Fallback: sequential advance
+      console.warn(`[Branch] Panel "${panelId}" not found, advancing sequentially`);
+      if (currentPanelIndex < currentChapter.panels.length - 1) {
+        currentPanelIndex++;
+      } else if (currentChapterIndex < story.chapters.length - 1) {
+        currentChapterIndex++;
+        currentPanelIndex = 0;
+      }
+    }
+  }
+
+  function stopAudio() {
+    if (audioEngine) audioEngine.stopAudio();
+  }
 
   function saveProgress() {
     if (!storyId) return;
@@ -252,6 +197,8 @@
       lives,
       livesTotal,
       choices,
+      reputation,
+      branchHistory,
     });
   }
 
@@ -264,6 +211,8 @@
     lives = saved.lives ?? 3;
     livesTotal = saved.livesTotal ?? 3;
     choices = saved.choices ?? {};
+    reputation = saved.reputation ?? { diplomatic: 0, pragmatic: 0, bold: 0, hostile: 0, 'history-breaking': 0 };
+    branchHistory = saved.branchHistory ?? [];
     if (lives <= 0) gameOver = true;
   }
 
@@ -274,6 +223,9 @@
     lives = 3;
     livesTotal = 3;
     choices = {};
+    reputation = { diplomatic: 0, pragmatic: 0, bold: 0, hostile: 0, 'history-breaking': 0 };
+    branchHistory = [];
+    pendingBranch = null;
     gameOver = false;
     isTimeFrozen = false;
     canAdvance = true;
@@ -285,6 +237,8 @@
     draftText = '';
     bimboHint = null;
     askingBimbo = false;
+    bimboReaction = null;
+    bimboReactionLoading = false;
     stopAudio();
     cleanupRecording();
     saveProgress();
@@ -292,6 +246,12 @@
 
   onMount(async () => {
     autoNarrate = loadAutoNarrate();
+
+    // Create audio engine
+    audioEngine = createAudioEngine({
+      getPanel: () => currentPanel,
+      onPlayingChange: (v) => { isPlaying = v; },
+    });
 
     try {
       const [storyRes, voiceRes] = await Promise.all([
@@ -316,20 +276,50 @@
   });
 
   onDestroy(() => {
-    stopAudio();
+    if (audioEngine) audioEngine.destroy();
     cleanupRecording();
     if (streamingManager) {
       streamingManager.close();
     }
-    // Dev cleanup
-    if (devClipRecorder && devClipRecorder.state !== 'inactive') {
-      try { devClipRecorder.stop(); } catch (_) {}
-    }
-    if (devClipStream) {
-      devClipStream.getTracks().forEach(t => t.stop());
-    }
-    if (devAutoInjectTimeout) clearTimeout(devAutoInjectTimeout);
+    if (devToolsRef) devToolsRef.cleanup();
   });
+
+  // Fetch dynamic Bimbo reaction after player speaks
+  async function fetchBimboReaction(result, panel, categoryKey) {
+    bimboReaction = null;
+    bimboReactionLoading = true;
+    try {
+      const matchedIdx = result.matched_index ?? -1;
+      const matchedOpt = (matchedIdx >= 0 && panel?.options) ? panel.options[matchedIdx] : null;
+      const body = {
+        heard: result.heard || '',
+        heard_translation: result.heard_translation || '',
+        tier: result.tier || 'fail',
+        match_level: result.match_level ?? 0,
+        matched_index: matchedIdx,
+        category: categoryKey || '',
+        matched_option: matchedOpt ? { text: matchedOpt.text, style: matchedOpt.style || '', target: matchedOpt.examples?.[0]?.target || '' } : null,
+        all_options: (panel?.options || []).map(o => ({ text: o.text, style: o.style || '', target: o.examples?.[0]?.target || '' })),
+        panel_dialogue: panel?.dialogue || '',
+        scene_context: panel?.narration?.slice(0, 200) || '',
+      };
+      const resp = await fetch(`${API_BASE}/narrative/generate-reaction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.bimbo_dialogue) {
+          bimboReaction = { bimboDialogue: data.bimbo_dialogue, teachingNote: data.teaching_note || '' };
+        }
+      }
+    } catch (e) {
+      console.warn('[BimboReaction] fetch failed:', e);
+    } finally {
+      bimboReactionLoading = false;
+    }
+  }
 
   // Initialize streaming manager for speech recognition
   function initStreamingManager() {
@@ -337,7 +327,6 @@
 
     streamingManager = createStreamingManager({
       getScenario: () => {
-        // Always free-speak: send all option targets for best-match
         if (currentPanel?.options?.length > 0) {
           const targets = currentPanel.options
             .map(o => o.examples?.[0]?.target)
@@ -353,17 +342,23 @@
       onStateUpdate: () => {},
       onTranscript: (text, partial) => {
         liveTranscript = text;
-        if (partial?.detected_language) devLastLang = partial.detected_language;
+        if (partial?.detected_language && devToolsRef) devToolsRef.setDevLastLang(partial.detected_language);
       },
       onResult: (result) => {
         console.log('[Speech] Result:', result);
-        devLastResult = result;
+        if (devToolsRef) devToolsRef.setDevLastResult(result);
         isRecording = false;
         evaluating = false;
         cleanupRecording();
 
         const matchLevel = result.match_level ?? 0;
         const tier = result.tier || (matchLevel >= 0.7 ? 'good' : 'fail');
+
+        // Silence — nothing was heard, just reset so they can try again
+        if (tier === 'silence') {
+          speakResult = { success: false, message: "Didn't catch anything — try again", silence: true };
+          return;
+        }
 
         // Record matched option for all non-fail tiers
         if (tier !== 'fail') {
@@ -377,12 +372,38 @@
           }
         }
 
+        // Resolve branch for any non-silence tier
+        const branchMatchedIdx = result.matched_index;
+        const branchMatchedOpt = (branchMatchedIdx >= 0 && currentPanel?.options) ? currentPanel.options[branchMatchedIdx] : null;
+        const branchCategoryKey = branchMatchedOpt ? getCategoryKey(branchMatchedOpt) : 'pragmatic';
+
+        const outcome = resolveBranch(currentPanel, branchMatchedIdx, branchCategoryKey);
+        if (outcome) {
+          if (outcome.reputation_delta) {
+            for (const [cat, delta] of Object.entries(outcome.reputation_delta)) {
+              reputation[cat] = (reputation[cat] || 0) + delta;
+            }
+            reputation = reputation; // trigger reactivity
+          }
+          if (outcome.life_delta && outcome.life_delta < 0 && !infiniteLives) {
+            lives = Math.max(0, lives + outcome.life_delta);
+            if (lives <= 0) gameOver = true;
+          }
+          branchHistory = [...branchHistory, { panelId: currentPanel.id, category: branchCategoryKey, optionIndex: branchMatchedIdx }];
+          pendingBranch = outcome;
+        }
+
+        // Fire async Bimbo reaction for panels with options
+        if (currentPanel?.options?.length > 0) {
+          fetchBimboReaction(result, currentPanel, branchCategoryKey);
+        }
+
         if (tier === 'perfect' || tier === 'good') {
           const quality = tier === 'perfect' ? 'Perfect!' : matchLevel >= 0.8 ? 'Great!' : 'Good!';
           const matchedIdx = result.matched_index;
           const matchedOpt = (matchedIdx >= 0 && currentPanel?.options) ? currentPanel.options[matchedIdx] : null;
           const category = matchedOpt ? getOptionCategory(matchedOpt) : null;
-          speakResult = { success: true, message: quality, tier, heard: result.heard || '', heardTranslation: result.heard_translation || '', category };
+          speakResult = { success: true, message: quality, tier, heard: result.heard || '', heardTranslation: result.heard_translation || '', heardPronunciation: result.heard_pronunciation || '', category };
           score += Math.round(matchLevel * 100);
           playBeep({ frequency: 880, duration: 200 });
           saveProgress();
@@ -390,13 +411,13 @@
         } else {
           const heard = result.heard || '';
           const heardTranslation = result.heard_translation || '';
+          const heardPronunciation = result.heard_pronunciation || '';
 
-          // Determine how the response landed using the category system
           const matchedIdx = result.matched_index;
           const matchedOpt = (matchedIdx >= 0 && currentPanel?.options) ? currentPanel.options[matchedIdx] : null;
           const category = matchedOpt ? getOptionCategory(matchedOpt) : null;
 
-          speakResult = { success: false, tier, heard, heardTranslation, category, canSkip: true };
+          speakResult = { success: false, tier, heard, heardTranslation, heardPronunciation, category, canSkip: true };
           requireRepeat = true;
 
           saveProgress();
@@ -447,6 +468,8 @@
       try {
         liveTranscript = '';
         speakResult = null;
+        bimboReaction = null;
+        bimboReactionLoading = false;
 
         const micId = getString(STORAGE_KEYS.MIC_DEVICE_ID, '');
         let stream;
@@ -489,74 +512,8 @@
     }
   }
 
-  async function startDevClipRecording() {
-    if (devIsRecordingClip || isRecording) return;
-    try {
-      const micId = getString(STORAGE_KEYS.MIC_DEVICE_ID, '');
-      let stream;
-      try {
-        const audioConstraints = micId ? { deviceId: { exact: micId } } : true;
-        stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
-      } catch (_) {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      }
-      devClipStream = stream;
-      devClipChunks = [];
-      const recorder = new MediaRecorder(stream);
-      devClipRecorder = recorder;
-      recorder.ondataavailable = (e) => { if (e.data) devClipChunks = [...devClipChunks, e.data]; };
-      recorder.onstop = () => {
-        const blob = new Blob(devClipChunks, { type: 'audio/webm' });
-        const optTarget = selectedOption?.example?.target || previewedOption?.example?.target || 'clip';
-        const safePanelId = (currentPanel?.id || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
-        const safeTarget = optTarget.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 30);
-        const ts = Date.now();
-        const filename = `${safePanelId}_${safeTarget}_${ts}.webm`;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = filename; a.click();
-        URL.revokeObjectURL(url);
-        devClipStream?.getTracks().forEach(t => t.stop());
-        devClipStream = null;
-        devClipRecorder = null;
-        devIsRecordingClip = false;
-      };
-      recorder.start(200);
-      devIsRecordingClip = true;
-      setTimeout(() => { if (devIsRecordingClip) stopDevClipRecording(); }, devClipDuration * 1000);
-    } catch (err) {
-      console.error('[DevClip] Mic error:', err);
-    }
-  }
-
-  function stopDevClipRecording() {
-    if (devClipRecorder && devClipRecorder.state !== 'inactive') {
-      devClipRecorder.stop();
-    }
-  }
-
-  function devJumpToPanel(entry) {
-    stopAudio();
-    cleanupRecording();
-    isTimeFrozen = false;
-    canAdvance = true;
-    previewedOption = null;
-    selectedOption = null;
-    requireRepeat = false;
-    speakResult = null;
-    liveTranscript = '';
-    currentChapterIndex = entry.chapterIdx;
-    currentPanelIndex = entry.panelIdx;
-    saveProgress();
-  }
-
-  function handleDevFileSelect(e) {
-    devAudioFile = e.target.files?.[0] || null;
-  }
-
   async function injectAudio() {
-    if (!devAudioFile || devInjecting) return;
-    devInjecting = true;
+    if (!devAudioFile) return;
 
     stopAudio();
     if (streamingManager) {
@@ -567,6 +524,8 @@
 
     liveTranscript = '';
     speakResult = null;
+    bimboReaction = null;
+    bimboReactionLoading = false;
     evaluating = true;
 
     streamingManager.setEnabled(true);
@@ -586,8 +545,6 @@
     // Brief pause then signal stop to trigger finalization
     await new Promise(r => setTimeout(r, 200));
     streamingManager.signalStop('stop');
-
-    devInjecting = false;
   }
 
   function cleanupRecording() {
@@ -605,22 +562,7 @@
     liveTranscript = '';
   }
 
-  function stopAudio() {
-    audioSessionId++;
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.src = '';
-      currentAudio = null;
-    }
-    activeSubscriptions.forEach(unsub => unsub());
-    activeSubscriptions = [];
-    audioQueue = [];
-    isProcessingQueue = false;
-    isPlaying = false;
-  }
-
   function triggerTimeFreeze() {
-    // Don't stop audio - let narration/dialogue play before showing options
     cleanupRecording();
     isTimeFrozen = true;
     canAdvance = false;
@@ -634,208 +576,11 @@
     requireRepeat = false;
   }
 
-  const TTS_PROVIDER = 'elevenlabs';
-
-  function getVoiceForSpeaker(speaker) {
-    return {
-      provider: TTS_PROVIDER,
-      character: speaker,
-      role: speaker === 'bimbo' ? 'bimbo' : 'npc',
-    };
-  }
-
-  function getNarratorVoice() {
-    return {
-      provider: TTS_PROVIDER,
-      character: 'narrator',
-      role: 'narrator',
-    };
-  }
-
-  async function playAudioWithSettings(url, sessionId) {
-    if (sessionId !== audioSessionId) return;
-
-    const audio = new Audio(url);
-    audio.volume = $masterVolume;
-    audio.playbackRate = $playbackSpeed;
-
-    const unsubVol = masterVolume.subscribe(v => audio.volume = v);
-    const unsubSpeed = playbackSpeed.subscribe(s => audio.playbackRate = s);
-    activeSubscriptions.push(unsubVol, unsubSpeed);
-
-    currentAudio = audio;
-
-    return new Promise((resolve, reject) => {
-      const cleanup = () => {
-        activeSubscriptions = activeSubscriptions.filter(s => s !== unsubVol && s !== unsubSpeed);
-        unsubVol();
-        unsubSpeed();
-        if (currentAudio === audio) currentAudio = null;
-      };
-
-      audio.onended = () => { cleanup(); resolve(undefined); };
-      audio.onerror = (e) => { cleanup(); reject(e); };
-
-      if (sessionId !== audioSessionId) {
-        cleanup();
-        resolve(undefined);
-        return;
-      }
-
-      audio.play().catch(err => { cleanup(); reject(err); });
-    });
-  }
-
-  async function processAudioQueue() {
-    if (isProcessingQueue || audioQueue.length === 0) return;
-
-    const sessionId = audioSessionId;
-    isProcessingQueue = true;
-    isPlaying = true;
-
-    console.log('[Audio] Processing queue:', audioQueue.length, 'items');
-
-    while (audioQueue.length > 0) {
-      if (sessionId !== audioSessionId) break;
-
-      const item = audioQueue.shift();
-      console.log('[Audio] Playing item:', item);
-      try {
-        const response = await getTTS(item);
-        console.log('[Audio] TTS response:', response);
-        if (sessionId !== audioSessionId) break;
-        if (response.skip) {
-          console.log('[Audio] Skipped (no voice for character)');
-          continue;
-        }
-        if (response.error) {
-          console.error('[Audio] TTS error:', response.error);
-          continue;
-        }
-        await playAudioWithSettings(response.url, sessionId);
-      } catch (e) {
-        console.error('[TTS] Error:', e);
-      }
-    }
-
-    if (sessionId === audioSessionId) {
-      isProcessingQueue = false;
-      isPlaying = false;
-    }
-  }
-
-  async function autoPlayPanel() {
-    console.log('[Audio] autoPlayPanel called', { currentPanel: currentPanel?.id, userHasInteracted });
-    if (!currentPanel || !userHasInteracted) {
-      console.log('[Audio] Skipping - no panel or no interaction yet');
-      return;
-    }
-
-    stopAudio();
-
-    // Always play narration
-    if (currentPanel.narration) {
-      console.log('[Audio] Queuing narration');
-      audioQueue.push({ text: currentPanel.narration, ...getNarratorVoice() });
-    }
-
-    // Play dialogue (skip player lines)
-    if (currentPanel.dialogue && currentPanel.speaker && currentPanel.speaker !== 'player') {
-      console.log('[Audio] Queuing dialogue for:', currentPanel.speaker);
-      audioQueue.push({ text: currentPanel.dialogue, ...getVoiceForSpeaker(currentPanel.speaker) });
-    }
-
-    if (audioQueue.length > 0) {
-      console.log('[Audio] Starting queue processing');
-      processAudioQueue();
-    } else {
-      console.log('[Audio] Nothing to play');
-    }
-  }
-
-  async function playNarration() {
-    if (!currentPanel?.narration || isPlaying) return;
-    userHasInteracted = true;
-
-    stopAudio();
-    const sessionId = audioSessionId;
-    isPlaying = true;
-
-    try {
-      const response = await getTTS({
-        text: currentPanel.narration,
-        ...getNarratorVoice(),
-      });
-
-      if (sessionId !== audioSessionId) return;
-      if (response.error) throw new Error(response.error);
-
-      await playAudioWithSettings(response.url, sessionId);
-    } catch (e) {
-      console.error('[TTS] Error:', e);
-    } finally {
-      if (sessionId === audioSessionId) isPlaying = false;
-    }
-  }
-
-  async function playDialogue() {
-    if (!currentPanel?.dialogue || !currentPanel?.speaker || isPlaying) return;
-    userHasInteracted = true;
-
-    stopAudio();
-    const sessionId = audioSessionId;
-    isPlaying = true;
-
-    try {
-      const response = await getTTS({
-        text: currentPanel.dialogue,
-        ...getVoiceForSpeaker(currentPanel.speaker),
-      });
-
-      if (sessionId !== audioSessionId) return;
-      if (response.skip) return;
-      if (response.error) throw new Error(response.error);
-
-      await playAudioWithSettings(response.url, sessionId);
-    } catch (e) {
-      console.error('[TTS] Error:', e);
-    } finally {
-      if (sessionId === audioSessionId) isPlaying = false;
-    }
-  }
-
-  async function playExample(example) {
-    if (!example?.target || isPlaying) return;
-
-    stopAudio();
-    const sessionId = audioSessionId;
-    isPlaying = true;
-
-    try {
-      // Use Bimbo's voice for teaching examples
-      const response = await getTTS({
-        text: example.target,
-        ...getVoiceForSpeaker('bimbo'),
-        language: 'ja',
-        sentiment: 'encouraging'
-      });
-
-      if (sessionId !== audioSessionId) return;
-      if (response.error) throw new Error(response.error);
-
-      await playAudioWithSettings(response.url, sessionId);
-    } catch (e) {
-      console.error('[TTS] Error:', e);
-    } finally {
-      if (sessionId === audioSessionId) isPlaying = false;
-    }
-  }
-
   function handleOptionPreview(event) {
     const detail = event?.detail || {};
     previewedOption = detail;
     speakResult = null;
-    playExample(detail.example);
+    if (audioEngine) audioEngine.playExample(detail.example);
   }
 
   async function handleAskBimbo(event) {
@@ -880,14 +625,14 @@
       // Auto-play translation audio if available
       if (data.translation) {
         console.log('[AskBimbo] Auto-playing translation:', data.translation);
-        playExample({ target: data.translation });
+        if (audioEngine) audioEngine.playExample({ target: data.translation });
       }
       // Also highlight matched option if one fits
       else if (data.matched_index >= 0 && formattedOptions[data.matched_index]) {
         const matchedOpt = formattedOptions[data.matched_index];
         console.log('[AskBimbo] Auto-previewing matched option:', data.matched_index, matchedOpt.option_text);
         if (matchedOpt.examples?.[0]) {
-          playExample(matchedOpt.examples[0]);
+          if (audioEngine) audioEngine.playExample(matchedOpt.examples[0]);
         }
       } else {
         console.log('[AskBimbo] No option to auto-preview (index:', data.matched_index, ')');
@@ -910,15 +655,24 @@
 
   function handlePlayBimboTranslation(event) {
     const detail = event?.detail;
-    if (detail?.target) {
-      playExample({ target: detail.target });
+    if (detail?.target && audioEngine) {
+      audioEngine.playExample({ target: detail.target });
     }
   }
 
   function handlePlayAudio() {
-    if (selectedOption?.example) {
-      playExample(selectedOption.example);
+    if (selectedOption?.example && audioEngine) {
+      audioEngine.playExample(selectedOption.example);
     }
+  }
+
+  function handleSpeakResultContinue() {
+    speakResult = null;
+    bimboReaction = null;
+    bimboReactionLoading = false;
+    requireRepeat = false;
+    resumeTime();
+    nextPanel();
   }
 
   function nextPanel() {
@@ -926,11 +680,20 @@
 
     stopAudio();
 
-    if (currentPanelIndex < currentChapter.panels.length - 1) {
-      currentPanelIndex++;
-    } else if (currentChapterIndex < story.chapters.length - 1) {
-      currentChapterIndex++;
-      currentPanelIndex = 0;
+    if (pendingBranch?.next_panel) {
+      const targetId = pendingBranch.next_panel;
+      pendingBranch = null;
+      jumpToPanel(targetId);
+    } else if (currentPanel?.next_panel) {
+      jumpToPanel(currentPanel.next_panel);
+    } else {
+      // Normal sequential advance
+      if (currentPanelIndex < currentChapter.panels.length - 1) {
+        currentPanelIndex++;
+      } else if (currentChapterIndex < story.chapters.length - 1) {
+        currentChapterIndex++;
+        currentPanelIndex = 0;
+      }
     }
     saveProgress();
   }
@@ -955,8 +718,8 @@
     if (browser) {
       try { localStorage.setItem(AUTO_NARRATE_KEY, String(autoNarrate)); } catch (_) {}
     }
-    if (autoNarrate && !isPlaying && !isTimeFrozen) {
-      autoPlayPanel();
+    if (autoNarrate && !isPlaying && !isTimeFrozen && audioEngine) {
+      audioEngine.autoPlayPanel(userHasInteracted);
     } else if (!autoNarrate) {
       stopAudio();
     }
@@ -967,16 +730,14 @@
   function handleMenuExit() { menuVisible = false; window.location.href = '/'; }
 
   function handleKeydown(e) {
-    // Don't capture keys when typing in an input field
     const tag = document.activeElement?.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
     const wasInteracted = userHasInteracted;
     userHasInteracted = true;
 
-    // If this is first interaction, play the current panel's audio
-    if (!wasInteracted && autoNarrate) {
-      autoPlayPanel();
+    if (!wasInteracted && autoNarrate && audioEngine) {
+      audioEngine.autoPlayPanel(userHasInteracted);
     }
 
     if (e.key === 'Escape') {
@@ -1002,9 +763,8 @@
     const wasInteracted = userHasInteracted;
     userHasInteracted = true;
 
-    // If this is first interaction, play the current panel's audio
-    if (!wasInteracted && autoNarrate) {
-      autoPlayPanel();
+    if (!wasInteracted && autoNarrate && audioEngine) {
+      audioEngine.autoPlayPanel(userHasInteracted);
     }
 
     if (isTimeFrozen) return;
@@ -1018,20 +778,107 @@
     }
   }
 
-  function getSpeakerName(speaker) {
-    const names = { bimbo: 'Bimbo', hana: 'Hana', samurai: 'Samurai', player: 'You' };
-    return names[speaker] || speaker;
+  // DevTools event handlers
+  function handleDevJumpToPanel(e) {
+    const { chapterIdx, panelIdx, clearBranch } = e.detail;
+    stopAudio();
+    cleanupRecording();
+    isTimeFrozen = false;
+    canAdvance = true;
+    previewedOption = null;
+    selectedOption = null;
+    requireRepeat = false;
+    speakResult = null;
+    bimboReaction = null;
+    bimboReactionLoading = false;
+    liveTranscript = '';
+    if (clearBranch) {
+      pendingBranch = null;
+    }
+    currentChapterIndex = chapterIdx;
+    currentPanelIndex = panelIdx;
+    saveProgress();
   }
 
-  function getSpeakerColor(speaker) {
-    const colors = { bimbo: '#a855f7', hana: '#78716c', samurai: '#dc2626', player: '#10b981' };
-    return colors[speaker] || '#fff';
+  function handleDevForceCategory(e) {
+    const categoryKey = e.detail;
+    if (!currentPanel?.category_outcomes?.[categoryKey]) return;
+    const outcome = currentPanel.category_outcomes[categoryKey];
+
+    let matchedIdx = -1;
+    if (currentPanel.options) {
+      matchedIdx = currentPanel.options.findIndex(o => getCategoryKey(o) === categoryKey);
+      if (matchedIdx < 0) matchedIdx = 0;
+    }
+    const matchedOpt = matchedIdx >= 0 ? currentPanel.options[matchedIdx] : null;
+
+    if (matchedOpt) {
+      choices = { ...choices, [currentPanel.id]: matchedIdx };
+      selectedOption = { example: matchedOpt.examples?.[0] };
+    }
+
+    if (outcome.reputation_delta) {
+      for (const [cat, delta] of Object.entries(outcome.reputation_delta)) {
+        reputation[cat] = (reputation[cat] || 0) + delta;
+      }
+      reputation = reputation;
+    }
+    if (outcome.life_delta && outcome.life_delta < 0 && !infiniteLives) {
+      lives = Math.max(0, lives + outcome.life_delta);
+      if (lives <= 0) gameOver = true;
+    }
+    branchHistory = [...branchHistory, { panelId: currentPanel.id, category: categoryKey, optionIndex: matchedIdx }];
+    pendingBranch = outcome;
+
+    const catInfo = RESPONSE_CATEGORIES[categoryKey] || null;
+    const heardText = matchedOpt?.examples?.[0]?.target || matchedOpt?.text || '';
+    speakResult = {
+      success: true,
+      message: `Forced: ${categoryKey}`,
+      tier: 'good',
+      heard: heardText,
+      heardTranslation: matchedOpt?.examples?.[0]?.reading || '',
+      heardPronunciation: '',
+      category: catInfo,
+    };
+
+    if (currentPanel.options?.length > 0) {
+      fetchBimboReaction({
+        heard: heardText,
+        heard_translation: matchedOpt?.examples?.[0]?.reading || '',
+        tier: 'good',
+        match_level: 0.95,
+        matched_index: matchedIdx,
+      }, currentPanel, categoryKey);
+    }
+
+    saveProgress();
+  }
+
+  function handleDevResetReputation() {
+    reputation = { diplomatic: 0, pragmatic: 0, bold: 0, hostile: 0, 'history-breaking': 0 };
+    saveProgress();
+  }
+
+  function handleDevClearBranchHistory() {
+    branchHistory = [];
+    saveProgress();
+  }
+
+  function handleDevClearPendingBranch() {
+    pendingBranch = null;
+  }
+
+  function handleDevAudioFileChange(e) {
+    devAudioFile = e.detail;
+  }
+
+  function handleDevInfiniteLives(e) {
+    infiniteLives = e.detail;
   }
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
-
-<audio bind:this={audioPlayer}></audio>
 
 <GameMenu
   visible={menuVisible}
@@ -1058,16 +905,7 @@
 
     <!-- Game Over Overlay -->
     {#if gameOver}
-      <div class="game-over-overlay" transition:fade={{ duration: 500 }}>
-        <div class="game-over-content" in:scale={{ duration: 400, delay: 200 }}>
-          <h1 class="game-over-title">Time Anchor Destabilized</h1>
-          <p class="game-over-subtitle">The simulation has collapsed. Your words weren't enough to hold reality together.</p>
-          <div class="game-over-score">Final Score: {score}</div>
-          <button class="game-over-btn" on:click={resetGame}>
-            Rewind to Beginning
-          </button>
-        </div>
-      </div>
+      <GameOverOverlay {score} on:restart={resetGame} />
     {/if}
 
     <!-- Audio Controls -->
@@ -1089,117 +927,30 @@
     </div>
 
     <!-- Dev Tools -->
-    <div class="dev-tools">
-      <button class="dev-btn" on:click={() => devMenuOpen = !devMenuOpen} title="Dev tools">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-        </svg>
-      </button>
-      {#if devMenuOpen}
-        <div class="dev-panel" transition:fade={{ duration: 100 }}>
-          <div class="dev-title">Dev Tools</div>
-          <label class="dev-option">
-            <input type="checkbox" bind:checked={infiniteLives} />
-            <span>Infinite lives</span>
-          </label>
-
-          <!-- Record Clip -->
-          <div class="dev-separator"></div>
-          <div class="dev-title">Record Clip</div>
-          <div class="dev-row">
-            <label class="dev-label">Duration (s)</label>
-            <input type="number" class="dev-input-sm" min="1" max="30" bind:value={devClipDuration} />
-          </div>
-          <button
-            class="dev-inject-btn"
-            class:dev-recording={devIsRecordingClip}
-            on:click={() => devIsRecordingClip ? stopDevClipRecording() : startDevClipRecording()}
-            disabled={isRecording}
-          >
-            {devIsRecordingClip ? 'Stop Recording' : 'Record'}
-          </button>
-
-          <!-- Inject Audio -->
-          <div class="dev-separator"></div>
-          <div class="dev-title">Inject Audio</div>
-          <input type="file" accept="audio/*" class="dev-file" on:change={handleDevFileSelect} />
-          {#if devAudioFile}
-            <div class="dev-file-name">{devAudioFile.name}</div>
-            <button class="dev-inject-btn" on:click={injectAudio} disabled={devInjecting || !isTimeFrozen}>
-              {devInjecting ? 'Injecting...' : 'Inject'}
-            </button>
-            <label class="dev-option" style="margin-top:4px">
-              <input type="checkbox" bind:checked={devAutoInject} />
-              <span>Auto-inject on freeze</span>
-            </label>
-            {#if devAutoInject}
-              <div class="dev-row">
-                <label class="dev-label">Delay (ms)</label>
-                <input type="number" class="dev-input-sm" min="0" max="5000" step="100" bind:value={devAutoInjectDelay} />
-              </div>
-            {/if}
-          {/if}
-
-          <!-- Match Threshold -->
-          <div class="dev-separator"></div>
-          <div class="dev-title">Match Threshold</div>
-          <div class="dev-row">
-            <input type="range" class="dev-slider" min="0" max="1" step="0.05" bind:value={devMatchThreshold} />
-            <span class="dev-value">{Math.round(devMatchThreshold * 100)}%</span>
-          </div>
-          <div class="dev-note">Frontend only. Backend uses 0.70.</div>
-
-          <!-- Last Result -->
-          <div class="dev-separator"></div>
-          <div class="dev-title">Last Result</div>
-          {#if devLastResult}
-            {@const matchedIdx = devLastResult.matched_index}
-            {@const matchedOpt = (matchedIdx !== undefined && matchedIdx >= 0 && currentPanel?.options) ? currentPanel.options[matchedIdx] : null}
-            {@const cat = getOptionCategory(matchedOpt)}
-            <div class="dev-category-badge" style="background: {cat.color}20; border-color: {cat.color}40; color: {cat.color}">
-              {cat.icon} {cat.label}
-            </div>
-            <div class="dev-result-grid">
-              <span class="dev-result-key">tier</span>
-              <span class="dev-result-val" style="color: {devLastResult.tier === 'perfect' ? '#86efac' : devLastResult.tier === 'good' ? '#86efac' : devLastResult.tier === 'passable' ? '#fbbf24' : devLastResult.tier === 'fumble' ? '#fdba74' : '#fca5a5'}">
-                {devLastResult.tier || '—'}
-              </span>
-              <span class="dev-result-key">style</span>
-              <span class="dev-result-val">{matchedOpt?.style || '—'}</span>
-              <span class="dev-result-key">match</span>
-              <span class="dev-result-val" style="color: {(devLastResult.match_level ?? 0) >= 0.9 ? '#86efac' : (devLastResult.match_level ?? 0) >= 0.7 ? '#fde047' : '#fca5a5'}">
-                {Math.round((devLastResult.match_level ?? 0) * 100)}%
-              </span>
-              <span class="dev-result-key">heard</span>
-              <span class="dev-result-val">{devLastResult.heard || '—'}</span>
-              <span class="dev-result-key">expected</span>
-              <span class="dev-result-val">{devLastResult.expected || devLastResult.expected_response || '—'}</span>
-              <span class="dev-result-key">lang</span>
-              <span class="dev-result-val">{devLastResult.detected_language || '—'}</span>
-            </div>
-          {:else}
-            <div class="dev-note">No result yet</div>
-          {/if}
-
-          <!-- Panel Jump -->
-          <div class="dev-separator"></div>
-          <div class="dev-title">Panel Jump</div>
-          <div class="dev-panel-list">
-            {#each devPanelList as entry, i}
-              <button
-                class="dev-panel-row"
-                class:dev-panel-active={entry.chapterIdx === currentChapterIndex && entry.panelIdx === currentPanelIndex}
-                on:click={() => devJumpToPanel(entry)}
-              >
-                <span class="dev-panel-idx">{i + 1}</span>
-                {#if entry.hasOptions}<span class="dev-panel-dot" style="background: {entry.catColor || '#6366f1'}"></span>{/if}
-                <span class="dev-panel-id">{entry.id}</span>
-              </button>
-            {/each}
-          </div>
-        </div>
-      {/if}
-    </div>
+    <DevTools
+      bind:this={devToolsRef}
+      {currentPanel}
+      {story}
+      {reputation}
+      {branchHistory}
+      {pendingBranch}
+      {isPlaying}
+      {speakResult}
+      {streamingManager}
+      {currentChapterIndex}
+      {currentPanelIndex}
+      {isRecording}
+      {selectedOption}
+      {previewedOption}
+      on:jumpToPanel={handleDevJumpToPanel}
+      on:forceCategory={handleDevForceCategory}
+      on:resetReputation={handleDevResetReputation}
+      on:clearBranchHistory={handleDevClearBranchHistory}
+      on:clearPendingBranch={handleDevClearPendingBranch}
+      on:injectAudio={injectAudio}
+      on:audioFileChange={handleDevAudioFileChange}
+      on:infiniteLives={handleDevInfiniteLives}
+    />
 
     <!-- Progress bar -->
     <div class="progress-bar">
@@ -1275,41 +1026,14 @@
           {/if}
 
           <!-- Result feedback -->
-          {#if speakResult}
-            <div
-              class="speak-result"
-              class:success={speakResult.success}
-              class:tier-passable={speakResult.tier === 'passable'}
-              class:tier-fumble={speakResult.tier === 'fumble'}
-              class:tier-fail={speakResult.tier === 'fail'}
-              transition:fade={{ duration: 150 }}
-            >
-              {#if speakResult.success}
-                <div class="result-success-msg">{speakResult.message}</div>
-                {#if speakResult.heard}<div class="result-heard"><span class="result-label">You said:</span> "{speakResult.heard}"{#if speakResult.heardTranslation} <span class="result-dim">— {speakResult.heardTranslation}</span>{/if}</div>{/if}
-                {#if speakResult.category}
-                  <div class="result-category" style="color: {speakResult.category.color}; border-color: {speakResult.category.color}40; background: {speakResult.category.color}15">
-                    {speakResult.category.icon} {speakResult.category.label}
-                  </div>
-                {/if}
-                <button class="continue-btn" on:click|stopPropagation={() => { speakResult = null; requireRepeat = false; resumeTime(); nextPanel(); }}>
-                  Continue →
-                </button>
-              {:else}
-                {#if speakResult.heard}<div class="result-heard"><span class="result-label">You said:</span> "{speakResult.heard}"{#if speakResult.heardTranslation} <span class="result-dim">— {speakResult.heardTranslation}</span>{/if}</div>{/if}
-                {#if speakResult.category}
-                  <div class="result-category" style="color: {speakResult.category.color}; border-color: {speakResult.category.color}40; background: {speakResult.category.color}15">
-                    {speakResult.category.icon} {speakResult.category.label}
-                  </div>
-                {/if}
-                {#if speakResult.canSkip}
-                  <button class="skip-btn" on:click|stopPropagation={() => { speakResult = null; requireRepeat = false; resumeTime(); nextPanel(); }}>
-                    Skip →
-                  </button>
-                {/if}
-              {/if}
-            </div>
-          {/if}
+          <SpeakResultCard
+            {speakResult}
+            {bimboReaction}
+            {bimboReactionLoading}
+            {isPlaying}
+            on:continue={handleSpeakResultContinue}
+            on:playBimboReaction={() => { if (audioEngine) audioEngine.playBimboReaction(bimboReaction); }}
+          />
 
           <!-- Speak button -->
           <div class="speak-section">
@@ -1326,48 +1050,14 @@
     {/if}
 
     <!-- Text box -->
-    <div class="text-box" class:minimized={isTimeFrozen && hasOptions}>
-      {#key currentPanel?.id}
-        <div class="text-content" in:fly={{ y: 20, duration: 300 }}>
-          {#if currentPanel?.narration}
-            <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-            <p class="narration clickable" on:click|stopPropagation={playNarration}>
-              {currentPanel.narration}
-              <span class="audio-hint">🔊</span>
-            </p>
-          {/if}
-          {#if currentPanel?.dialogue}
-            <p class="dialogue">
-              {#if currentPanel?.speaker}
-                {#if currentPanel.speaker === 'player'}
-                  <span class="speaker" style="color: {getSpeakerColor(currentPanel.speaker)}">
-                    {getSpeakerName(currentPanel.speaker)}:
-                  </span>
-                {:else}
-                  <button
-                    class="speaker-btn"
-                    style="color: {getSpeakerColor(currentPanel.speaker)}"
-                    on:click|stopPropagation={playDialogue}
-                  >
-                    {getSpeakerName(currentPanel.speaker)}:
-                    <span class="audio-hint">🔊</span>
-                  </button>
-                {/if}
-              {/if}
-              "{currentPanel.dialogue}"
-            </p>
-          {/if}
-        </div>
-      {/key}
-
-      {#if isPlaying}
-        <div class="playing-bar" transition:fade={{ duration: 200 }}>
-          <span class="playing-dot"></span>
-          <span>Playing...</span>
-          <button class="stop-btn" on:click|stopPropagation={stopAudio}>Stop</button>
-        </div>
-      {/if}
-    </div>
+    <TextBox
+      {currentPanel}
+      {isPlaying}
+      minimized={isTimeFrozen && hasOptions}
+      on:playNarration={() => { userHasInteracted = true; if (audioEngine) audioEngine.playNarration(); }}
+      on:playDialogue={() => { userHasInteracted = true; if (audioEngine) audioEngine.playDialogue(); }}
+      on:stopAudio={stopAudio}
+    />
 
     <!-- Navigation -->
     <div class="nav-bar">
@@ -1443,274 +1133,6 @@
     height: 100vh;
     color: #ef4444;
     font-size: 1.2rem;
-  }
-
-  .dev-tools {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    z-index: 100;
-  }
-
-  .dev-btn {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    cursor: pointer;
-    padding: 0;
-    transition: background 0.15s;
-  }
-
-  .dev-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
-  }
-
-  .dev-btn svg {
-    width: 16px;
-    height: 16px;
-    color: rgba(255, 255, 255, 0.35);
-  }
-
-  .dev-panel {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: 6px;
-    background: rgba(15, 15, 25, 0.95);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 8px 12px;
-    min-width: 280px;
-    max-height: min(70vh, 600px);
-    overflow-y: auto;
-  }
-
-  .dev-title {
-    font-size: 0.6rem;
-    color: #52525b;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 6px;
-  }
-
-  .dev-option {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.75rem;
-    color: #a1a1aa;
-    cursor: pointer;
-    padding: 3px 0;
-  }
-
-  .dev-option input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
-    accent-color: #6366f1;
-    cursor: pointer;
-  }
-
-  .dev-separator {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.08);
-    margin: 6px 0;
-  }
-
-  .dev-file {
-    font-size: 0.65rem;
-    color: #71717a;
-    width: 100%;
-    margin-top: 2px;
-  }
-
-  .dev-file::file-selector-button {
-    font-size: 0.65rem;
-    padding: 2px 6px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
-    color: #a1a1aa;
-    cursor: pointer;
-    margin-right: 4px;
-  }
-
-  .dev-file-name {
-    font-size: 0.6rem;
-    color: #52525b;
-    margin-top: 2px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .dev-inject-btn {
-    margin-top: 4px;
-    width: 100%;
-    padding: 4px 8px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    background: rgba(99, 102, 241, 0.25);
-    border: 1px solid rgba(99, 102, 241, 0.4);
-    border-radius: 5px;
-    color: #a5b4fc;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-
-  .dev-inject-btn:hover:not(:disabled) {
-    background: rgba(99, 102, 241, 0.4);
-  }
-
-  .dev-inject-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  .dev-inject-btn.dev-recording {
-    background: rgba(239, 68, 68, 0.35);
-    border-color: rgba(239, 68, 68, 0.6);
-    color: #fca5a5;
-    animation: pulse-recording 1s ease-in-out infinite;
-  }
-
-  @keyframes pulse-recording {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-    50% { box-shadow: 0 0 8px 2px rgba(239, 68, 68, 0.3); }
-  }
-
-  .dev-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 3px 0;
-  }
-
-  .dev-label {
-    font-size: 0.65rem;
-    color: #71717a;
-    white-space: nowrap;
-  }
-
-  .dev-input-sm {
-    width: 60px;
-    padding: 2px 4px;
-    font-size: 0.65rem;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 4px;
-    color: #d4d4d8;
-    text-align: center;
-  }
-
-  .dev-slider {
-    flex: 1;
-    height: 4px;
-    accent-color: #6366f1;
-    cursor: pointer;
-  }
-
-  .dev-value {
-    font-size: 0.7rem;
-    color: #a5b4fc;
-    font-weight: 600;
-    min-width: 32px;
-    text-align: right;
-  }
-
-  .dev-note {
-    font-size: 0.55rem;
-    color: #52525b;
-    font-style: italic;
-    margin-top: 2px;
-  }
-
-  .dev-category-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
-    border: 1px solid;
-    border-radius: 4px;
-    font-size: 0.65rem;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .dev-result-grid {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 2px 8px;
-    font-size: 0.65rem;
-  }
-
-  .dev-result-key {
-    color: #52525b;
-    text-align: right;
-  }
-
-  .dev-result-val {
-    color: #a1a1aa;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .dev-panel-list {
-    max-height: 160px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-
-  .dev-panel-row {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 6px;
-    background: none;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    text-align: left;
-    color: #71717a;
-    font-size: 0.6rem;
-    transition: background 0.1s;
-  }
-
-  .dev-panel-row:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: #a1a1aa;
-  }
-
-  .dev-panel-row.dev-panel-active {
-    background: rgba(99, 102, 241, 0.2);
-    color: #a5b4fc;
-  }
-
-  .dev-panel-idx {
-    min-width: 18px;
-    text-align: right;
-    color: #3f3f46;
-  }
-
-  .dev-panel-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .dev-panel-id {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .progress-bar {
@@ -1902,180 +1324,10 @@
     margin-right: auto;
   }
 
-  .speak-result {
-    margin: 0.5rem auto 0;
-    text-align: center;
-    max-width: 340px;
-  }
-
-  .speak-result.success {
-    color: #86efac;
-    font-size: 0.85rem;
-    font-weight: 600;
-  }
-
-  .result-heard {
-    font-size: 0.7rem;
-    color: #71717a;
-    margin-bottom: 0.4rem;
-  }
-
-  .result-label {
-    color: #52525b;
-  }
-
-  .result-dim {
-    color: #52525b;
-    font-style: italic;
-  }
-
-  .result-answer {
-    margin-bottom: 0.3rem;
-  }
-
-  .result-symbols {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: #f1f5f9;
-    letter-spacing: 0.05em;
-    line-height: 1.3;
-  }
-
-  .result-pron {
-    font-size: 0.75rem;
-    color: #a5b4fc;
-    margin-top: 0.15rem;
-  }
-
-  .result-meaning {
-    font-size: 0.7rem;
-    color: #94a3b8;
-    font-style: italic;
-    margin-top: 0.1rem;
-  }
-
-  .result-lives {
-    font-size: 0.65rem;
-    color: #fdba74;
-    opacity: 0.7;
-  }
-
   .speak-section {
     margin-top: 1rem;
     display: flex;
     justify-content: center;
-  }
-
-  .text-box {
-    background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.8));
-    padding: 1rem;
-    min-height: 80px;
-    transition: min-height 0.3s ease, opacity 0.3s ease;
-  }
-
-  .text-box.minimized {
-    min-height: 60px;
-    opacity: 0.7;
-  }
-
-  .text-content {
-    max-width: 700px;
-    margin: 0 auto;
-  }
-
-  .narration {
-    font-size: 0.95rem;
-    line-height: 1.6;
-    color: #d4d4d8;
-    margin: 0 0 0.5rem 0;
-    font-style: italic;
-    position: relative;
-  }
-
-  .narration.clickable {
-    cursor: pointer;
-    transition: color 0.2s;
-  }
-
-  .narration.clickable:hover {
-    color: #fff;
-  }
-
-  .audio-hint {
-    font-size: 0.75em;
-    opacity: 0.4;
-    margin-left: 0.5rem;
-    font-style: normal;
-    transition: opacity 0.2s;
-  }
-
-  .narration.clickable:hover .audio-hint,
-  .speaker-btn:hover .audio-hint {
-    opacity: 0.8;
-  }
-
-  .dialogue {
-    font-size: 1rem;
-    line-height: 1.6;
-    color: #fff;
-    margin: 0;
-  }
-
-  .speaker {
-    font-weight: 600;
-    margin-right: 0.5rem;
-  }
-
-  .speaker-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-weight: 600;
-    margin-right: 0.5rem;
-    background: none;
-    border: none;
-    padding: 0;
-    font-size: inherit;
-    font-family: inherit;
-    cursor: pointer;
-    transition: opacity 0.2s;
-  }
-
-  .speaker-btn:hover {
-    opacity: 0.8;
-  }
-
-  .playing-bar {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0;
-    font-size: 0.85rem;
-    color: #a78bfa;
-  }
-
-  .playing-dot {
-    width: 8px;
-    height: 8px;
-    background: #a78bfa;
-    border-radius: 50%;
-    animation: pulse-dot 1s ease-in-out infinite;
-  }
-
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.8); }
-  }
-
-  .stop-btn {
-    margin-left: auto;
-    padding: 0.25rem 0.75rem;
-    background: rgba(239, 68, 68, 0.2);
-    border: 1px solid rgba(239, 68, 68, 0.4);
-    border-radius: 4px;
-    color: #fca5a5;
-    font-size: 0.8rem;
-    cursor: pointer;
   }
 
   .nav-bar {
@@ -2126,178 +1378,6 @@
     font-weight: 600;
   }
 
-  .game-over-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    background: rgba(0, 0, 0, 0.92);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .game-over-content {
-    text-align: center;
-    padding: 2rem;
-    max-width: 480px;
-  }
-
-  .game-over-title {
-    font-size: 2rem;
-    font-weight: 800;
-    color: #ef4444;
-    margin: 0 0 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    text-shadow: 0 0 40px rgba(239, 68, 68, 0.5);
-  }
-
-  .game-over-subtitle {
-    font-size: 1rem;
-    color: #a1a1aa;
-    line-height: 1.6;
-    margin: 0 0 2rem;
-  }
-
-  .game-over-score {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #c4b5fd;
-    margin-bottom: 2rem;
-  }
-
-  .game-over-btn {
-    padding: 0.75rem 2rem;
-    background: #6366f1;
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .game-over-btn:hover {
-    background: #4f46e5;
-  }
-
-  .result-success-msg {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #86efac;
-    margin-bottom: 0.3rem;
-  }
-
-  .continue-btn {
-    margin-top: 0.5rem;
-    padding: 0.4rem 1.5rem;
-    background: rgba(99, 102, 241, 0.3);
-    border: 1px solid rgba(99, 102, 241, 0.5);
-    border-radius: 8px;
-    color: #c4b5fd;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-  }
-
-  .continue-btn:hover {
-    background: rgba(99, 102, 241, 0.5);
-    border-color: rgba(99, 102, 241, 0.7);
-    color: #fff;
-  }
-
-  .result-category {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 10px;
-    border: 1px solid;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin: 0.3rem 0;
-  }
-
-  /* Bimbo attempt result */
-  .result-bimbo-heard {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #e2e8f0;
-    margin-bottom: 0.2rem;
-  }
-
-  .result-bimbo-translation {
-    font-size: 0.85rem;
-    color: #c4b5fd;
-    margin-bottom: 0.5rem;
-  }
-
-  .result-bimbo-note {
-    font-size: 0.75rem;
-    color: #a78bfa;
-    margin-bottom: 0.4rem;
-  }
-
-  /* Tier-specific result styles */
-  .speak-result.tier-passable {
-    color: #fbbf24;
-    border: 1px solid rgba(251, 191, 36, 0.25);
-    background: rgba(251, 191, 36, 0.08);
-    border-radius: 8px;
-    padding: 0.5rem 0.75rem;
-  }
-
-  .result-passable-msg {
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin-bottom: 0.3rem;
-  }
-
-  .result-hint {
-    opacity: 0.85;
-  }
-
-  .speak-result.tier-fumble {
-    border: 1px solid rgba(251, 146, 60, 0.25);
-    background: rgba(251, 146, 60, 0.08);
-    border-radius: 8px;
-    padding: 0.5rem 0.75rem;
-  }
-
-  .result-fumble-note {
-    font-size: 0.65rem;
-    color: #fdba74;
-    opacity: 0.7;
-    margin-top: 0.2rem;
-  }
-
-  .speak-result.tier-fail {
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    background: rgba(239, 68, 68, 0.06);
-    border-radius: 8px;
-    padding: 0.5rem 0.75rem;
-  }
-
-  .skip-btn {
-    margin-top: 0.5rem;
-    padding: 0.3rem 1rem;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 6px;
-    color: #a1a1aa;
-    font-size: 0.75rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .skip-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
-  }
-
   @media (max-width: 640px) {
     .audio-controls {
       left: 56px;
@@ -2308,15 +1388,5 @@
       padding: 2.5rem 0.5rem 0.5rem;
       max-height: 40vh;
     }
-
-    .text-box {
-      padding: 0.75rem;
-      min-height: 70px;
-    }
-
-    .narration { font-size: 0.85rem; }
-    .dialogue { font-size: 0.9rem; }
-
-    .game-over-title { font-size: 1.5rem; }
   }
 </style>

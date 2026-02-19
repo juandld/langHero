@@ -8,7 +8,7 @@ from typing import List, Optional
 from langchain_core.messages import HumanMessage
 import config
 import providers
-import voice_select
+from voice import select as voice_select
 import usage_log as usage
 from .scenarios import get_scenario_by_id
 

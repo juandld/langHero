@@ -278,4 +278,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Error: {e}")
 
-        print("\nRun 'python elevenlabs_tts.py voices' to list all available voices")
+        print("\nRun 'python -m voice.elevenlabs voices' to list all available voices")

@@ -119,6 +119,105 @@ Return ONLY valid JSON, no markdown."""
         )
 
 
+# --- Generate Bimbo Reaction (post-speech feedback) ---
+
+class ReactionOption(BaseModel):
+    text: str           # "Identify as castaway"
+    style: str = ""     # "humble"
+    target: str = ""    # "私は漂流者です"
+
+class GenerateReactionRequest(BaseModel):
+    heard: str                                    # ASR transcript
+    heard_translation: str = ""                   # English translation
+    tier: str                                     # "perfect"/"good"/"passable"/"fumble"/"fail"
+    match_level: float = 0.0                      # 0.0-1.0
+    matched_index: int = -1
+    category: str = ""                            # "diplomatic"/"bold"/etc.
+    matched_option: Optional[ReactionOption] = None
+    all_options: list[ReactionOption] = []
+    panel_dialogue: str = ""                      # Bimbo's setup line
+    scene_context: str = ""                       # Brief scene description
+
+class GenerateReactionResponse(BaseModel):
+    bimbo_dialogue: str
+    teaching_note: str = ""    # Optional grammar/vocab note
+
+
+@router.post("/generate-reaction", response_model=GenerateReactionResponse)
+async def generate_reaction(req: GenerateReactionRequest):
+    """Generate a dynamic Bimbo reaction to the player's speech attempt."""
+    print(f"[generate-reaction] heard={req.heard!r}, tier={req.tier}, matched_index={req.matched_index}, category={req.category!r}")
+
+    options_block = "\n".join(
+        f"  {i}. \"{o.text}\" (style: {o.style}) → target: \"{o.target}\""
+        for i, o in enumerate(req.all_options)
+    ) if req.all_options else "(none)"
+
+    matched_block = ""
+    if req.matched_option:
+        matched_block = f"\nThe player matched option: \"{req.matched_option.text}\" (target: \"{req.matched_option.target}\")"
+
+    prompt = f"""You are Bimbo, a witty holographic AI companion teaching a player Japanese through a time-travel story game set in 1600s Japan.
+
+The player just attempted to speak Japanese. React to their attempt in character.
+
+CONTEXT:
+- Scene setup (your earlier line): "{req.panel_dialogue}"
+- Scene: {req.scene_context or "Beach encounter with Japanese farmers"}
+- Available options were:
+{options_block}
+{matched_block}
+
+PLAYER'S ATTEMPT:
+- They said: "{req.heard}"
+- English meaning: "{req.heard_translation or '(unknown)'}"
+- Quality tier: {req.tier} (match level: {req.match_level:.0%})
+- Matched option index: {req.matched_index} (-1 means off-script)
+- Response category: {req.category or 'unknown'}
+
+INSTRUCTIONS:
+- React specifically to what they said and how well they said it. Never be generic.
+- When quoting Japanese words, use Japanese characters followed by romanized pronunciation in brackets, e.g. 私 [watashi]. Always include the romanization so Latin-script readers can connect sound to meaning.
+- Keep your reaction to 1-3 sentences. Be entertaining and in-character.
+- Tier-specific guidance:
+  * perfect/good: Brief praise + one specific language insight about what they said well
+  * passable: Acknowledge the attempt, note what was close and what to improve
+  * fumble: Empathetic correction + specific hint on what to fix
+  * fail: Gentle redirection, tell them what they should try saying
+  * off-script (matched_index=-1): React to whatever they actually said, then redirect toward the available options
+
+Return JSON with exactly these fields:
+- "bimbo_dialogue": your in-character reaction (1-3 sentences)
+- "teaching_note": optional brief grammar/vocab note (1 sentence max, or empty string)
+
+Return ONLY valid JSON, no markdown."""
+
+    try:
+        raw = providers.openai_chat(
+            [HumanMessage(content=prompt)],
+            model="gpt-4o-mini",
+            temperature=0.8,
+        )
+        print(f"[generate-reaction] LLM raw: {raw!r}")
+
+        cleaned = raw.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+
+        parsed = json.loads(cleaned)
+        print(f"[generate-reaction] Parsed: {parsed}")
+
+        return GenerateReactionResponse(
+            bimbo_dialogue=parsed.get("bimbo_dialogue", ""),
+            teaching_note=parsed.get("teaching_note", ""),
+        )
+    except Exception as e:
+        import traceback
+        print(f"[generate-reaction] ERROR: {e}")
+        print(f"[generate-reaction] Traceback:\n{traceback.format_exc()}")
+        return GenerateReactionResponse(bimbo_dialogue="", teaching_note="")
+
+
 @router.post("/interaction")
 async def handle_interaction(
     audio_file: UploadFile = File(...),

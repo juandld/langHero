@@ -8,8 +8,8 @@ Ensures character consistency by:
 """
 
 import asyncio
-from image_gen_google import generate_image
-from story_manifest import (
+from image.google import generate_image
+from story.manifest import (
     SHOGUN_CHARACTERS,
     SHOGUN_LOCATIONS,
     SHOGUN_PANELS,
@@ -17,7 +17,7 @@ from story_manifest import (
     get_panel_character_descriptions,
     PanelSpec,
 )
-from prompt_builder import (
+from image.prompt_builder import (
     BASE_STYLE,
     HOLOGRAPHIC_STYLE,
     CINEMATIC_STYLE,

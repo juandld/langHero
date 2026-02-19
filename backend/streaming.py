@@ -32,6 +32,7 @@ def clamp_float(value: object, default: float = 0.0, lo: float = 0.0, hi: float 
 
 
 MIN_PARTIAL_BYTES = 4000  # lower threshold allows quicker partial turns (~0.15s chunks)
+MIN_AUDIO_RMS = 50  # minimum RMS energy to consider audio as speech (silence threshold)
 DEFAULT_LIVES = 3
 DEFAULT_PENALTY_LIVES = 1
 LANGUAGE_MISMATCH_SCORE_PENALTY = 10
@@ -105,10 +106,15 @@ def compare_vocab_response(transcript: str, expected: str, tag: str = "", target
     success = tier in ("perfect", "good")
     logger.info("[%s] compare_vocab: heard=%r expected=%r match=%.3f tier=%s detected=%s", tag, transcript[:80], expected[:80], match_level, tier, detected)
     heard_translation = "" if success else _quick_translate(transcript)
+    try:
+        heard_pronunciation = providers.romanize(transcript, "Japanese") if transcript.strip() else ""
+    except Exception:
+        heard_pronunciation = ""
 
     return {
         "heard": transcript,
         "heard_translation": heard_translation,
+        "heard_pronunciation": heard_pronunciation,
         "expected": expected,
         "match_level": match_level,
         "score": int(match_level * 100),
@@ -153,9 +159,15 @@ def compare_vocab_multi(transcript: str, expected_list: list, tag: str = "", tar
     logger.info("[%s] compare_vocab_multi: best_index=%d best_level=%.3f tier=%s detected=%s", tag, best_index, best_level, tier, detected)
 
     heard_translation = "" if success else _quick_translate(transcript)
+    try:
+        heard_pronunciation = providers.romanize(transcript, "Japanese") if transcript.strip() else ""
+    except Exception:
+        heard_pronunciation = ""
+
     return {
         "heard": transcript,
         "heard_translation": heard_translation,
+        "heard_pronunciation": heard_pronunciation,
         "expected": expected_list[best_index],
         "match_level": best_level,
         "score": int(best_level * 100),
@@ -253,6 +265,22 @@ def _scenario_config(scenario_id: Optional[int]) -> Dict[str, Any]:
     }
 
 
+def _audio_has_speech(audio_bytes: bytes) -> bool:
+    """Check if audio contains actual speech by measuring RMS energy.
+    Returns False for silence/ambient noise to prevent Whisper hallucination."""
+    try:
+        from pydub import AudioSegment
+        audio = AudioSegment.from_file(io.BytesIO(audio_bytes), format="webm")
+        rms = audio.rms
+        if rms < MIN_AUDIO_RMS:
+            logger.info(f"[silence-check] Audio RMS={rms} below threshold {MIN_AUDIO_RMS}, skipping transcription")
+            return False
+        return True
+    except Exception as e:
+        logger.warning(f"[silence-check] Could not check audio energy: {e}, proceeding with transcription")
+        return True  # fail open — if we can't check, transcribe anyway
+
+
 async def transcribe_audio(audio_bytes: bytes, language: Optional[str] = None) -> str:
     """Run transcription in a background thread (best-effort)."""
     if len(audio_bytes) < MIN_PARTIAL_BYTES:
@@ -261,6 +289,8 @@ async def transcribe_audio(audio_bytes: bytes, language: Optional[str] = None) -
 
     def _call() -> str:
         try:
+            if not _audio_has_speech(audio_bytes):
+                return ""
             start = time.perf_counter()
             result = providers.transcribe_audio(
                 audio_bytes,
@@ -471,6 +501,11 @@ class StreamingSession:
                              tag, audio_hash, cached_transcript[:100])
 
             def _call():
+                # Universal silence check — prevents Whisper hallucination in all modes
+                if not _audio_has_speech(audio_bytes):
+                    logger.info("[%s] FINALIZE skipped — silence detected (pre-mode check)", tag)
+                    return {"error": "silence", "heard": "", "match_level": 0}
+
                 # Vocab mode: direct phrase comparison
                 if (self.expected_response or self.expected_responses) and self.scenario_id is None:
                     # Reuse cached transcript if audio hasn't changed
@@ -512,6 +547,22 @@ class StreamingSession:
 
             loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(None, _call)
+
+        # Silence detected — send a clean "nothing heard" without penalty
+        if isinstance(result, dict) and result.get("error") == "silence":
+            logger.info("[%s] FINALIZE silence — no penalty, sending empty final", self.session_tag)
+            await websocket.send_json({
+                "event": "final",
+                "result": {"heard": "", "match_level": 0, "tier": "silence"},
+                "target_language": self.target_language,
+                "mode": self.mode,
+                "score": self.score,
+                "lives_remaining": self.lives_remaining,
+                "lives_total": self.lives_total,
+            })
+            self.final_event_sent = True
+            return result
+
         tier = result.get("tier", "fail") if isinstance(result, dict) else "fail"
         if tier in ("perfect", "good", "passable"):
             score_delta = 0
@@ -576,6 +627,11 @@ class StreamingSession:
             logger.info("[%s] AUTO-FINALIZE reusing cached transcript (hash=%s): %r", tag, audio_hash, cached_transcript[:100])
 
         def _call():
+            # Universal silence check
+            if not _audio_has_speech(audio_bytes):
+                logger.info("[%s] AUTO-FINALIZE skipped — silence detected", tag)
+                return None
+
             # Vocab mode: direct phrase comparison
             if (self.expected_response or self.expected_responses) and self.scenario_id is None:
                 if cached_transcript is not None:
@@ -618,6 +674,9 @@ class StreamingSession:
 
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(None, _call)
+        if result is None:
+            logger.info("[%s] AUTO-FINALIZE skipped — no result (silence)", tag)
+            return
         should = self._should_auto_finalize(result)
         logger.info("[%s] AUTO-FINALIZE decision: should=%s heard=%r match=%.3f success=%s",
                      tag, should, (result.get("heard") or "")[:80],

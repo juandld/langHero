@@ -11,7 +11,7 @@ from uuid import uuid4
 
 import config
 import providers
-import voice_select
+from voice import select as voice_select
 
 # Synthesizer signature: (text, voice, format, instructions?) -> bytes
 Synthesizer = Callable[[str, str, str], bytes]

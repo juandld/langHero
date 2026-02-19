@@ -7,3 +7,6 @@ export { default as SpeakButton } from './SpeakButton.svelte';
 export { default as GameMenu } from './GameMenu.svelte';
 export { default as GameAssistant } from './GameAssistant.svelte';
 export { default as IntroSequence } from './IntroSequence.svelte';
+export { default as SpeakResultCard } from './SpeakResultCard.svelte';
+export { default as TextBox } from './TextBox.svelte';
+export { default as GameOverOverlay } from './GameOverOverlay.svelte';

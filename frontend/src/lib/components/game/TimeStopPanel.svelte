@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte';
 
   export let options = [];
-  export let selectedOption = null;
+  export const selectedOption = null;
   export let previewedOption = null;
   export let isPreviewPlaying = false;
   export let visible = true;

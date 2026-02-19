@@ -13,7 +13,7 @@ from openai import OpenAI
 import config
 
 if TYPE_CHECKING:
-    from visual_styles import Panel, ArtStyle
+    from image.visual_styles import Panel, ArtStyle
 
 # Cache directory for generated images
 IMAGE_CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "image_cache")
@@ -77,7 +77,7 @@ The image should evoke the feeling of a gentle, encouraging learning environment
 
 def _build_panel_prompt(panel: "Panel", context: str = "") -> str:
     """Build a DALL-E prompt for a panel using visual_styles."""
-    from visual_styles import build_image_prompt
+    from image.visual_styles import build_image_prompt
     return build_image_prompt(panel, context)
 
 
@@ -209,7 +209,7 @@ def generate_panel_image(
             "panel_id": "panel_1"
         }
     """
-    from visual_styles import PanelType
+    from image.visual_styles import PanelType
 
     _ensure_cache_dir()
 
@@ -287,7 +287,7 @@ def generate_sequence_images(
     Returns:
         List of generation results for each panel
     """
-    from visual_styles import VisualSequence
+    from image.visual_styles import VisualSequence
 
     results = []
 

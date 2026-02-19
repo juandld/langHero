@@ -5,10 +5,10 @@ Visual panels API endpoints for manga/webtoon style panels.
 import os
 import asyncio
 from fastapi import APIRouter, Request, HTTPException
-import story_to_panels
-from visual_styles import ArtStyle, Panel, PanelType, Mood, VisualEffect, get_intro_panels
+from story import to_panels as story_to_panels
+from image.visual_styles import ArtStyle, Panel, PanelType, Mood, VisualEffect, get_intro_panels
 from services.scenarios import get_scenario_by_id
-import image_gen
+from image import dalle as image_gen
 
 router = APIRouter(prefix="/api/panels", tags=["panels"])
 

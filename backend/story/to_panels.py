@@ -18,7 +18,7 @@ from langchain_core.messages import HumanMessage
 
 import config
 import providers
-from visual_styles import (
+from image.visual_styles import (
     Panel, VisualSequence, ArtStyle, PanelType,
     VisualEffect, Mood, build_image_prompt
 )

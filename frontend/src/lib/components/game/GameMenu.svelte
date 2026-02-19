@@ -117,13 +117,14 @@
         </div>
 
         <div class="setting-item">
-          <label class="setting-label">
+          <label class="setting-label" for="difficulty-slider">
             Difficulty
             <span class="setting-badge">{judgeLabel}</span>
           </label>
           <div class="slider-row">
             <span class="slider-end">Learning</span>
             <input
+              id="difficulty-slider"
               type="range"
               class="setting-slider"
               min="0"

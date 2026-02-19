@@ -7,13 +7,13 @@ Supports multiple TTS providers:
 """
 
 from fastapi import APIRouter, Request, Response
-import voice_select
-import voice_cache
+from voice import select as voice_select
+from voice import cache as voice_cache
 from services.scenarios import get_scenario_by_id
 
 # Try to import Google TTS
 try:
-    import google_tts
+    from voice import google as google_tts
     GOOGLE_TTS_AVAILABLE = google_tts.GOOGLE_TTS_AVAILABLE
 except ImportError:
     GOOGLE_TTS_AVAILABLE = False
@@ -21,7 +21,7 @@ except ImportError:
 
 # Try to import ElevenLabs TTS
 try:
-    import elevenlabs_tts
+    from voice import elevenlabs as elevenlabs_tts
     ELEVENLABS_AVAILABLE = elevenlabs_tts.ELEVENLABS_AVAILABLE
 except ImportError:
     ELEVENLABS_AVAILABLE = False

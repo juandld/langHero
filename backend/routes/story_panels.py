@@ -11,7 +11,7 @@ import time
 
 # Import voice config
 try:
-    from story_voices import get_story_voice_config, get_panel_voice_config
+    from story.voices import get_story_voice_config, get_panel_voice_config
 except ImportError:
     get_story_voice_config = None
     get_panel_voice_config = None
@@ -126,6 +126,15 @@ SHOGUN_STORY = {
                     "dialogue": "I froze time. I can do that when you need to think. They're asking who you are. You need to answer—and how you answer matters.",
                     "speaker": "bimbo",
                     "effect": "time_freeze",
+                    "branch_point": True,
+                    "category_outcomes": {
+                        "diplomatic":       { "next_panel": "ch1_05_diplomatic",  "life_delta": 0,  "reputation_delta": { "diplomatic": 1 } },
+                        "pragmatic":        { "next_panel": "ch1_05_diplomatic",  "life_delta": 0,  "reputation_delta": { "pragmatic": 1 } },
+                        "bold":             { "next_panel": "ch1_05_bold",        "life_delta": 0,  "reputation_delta": { "bold": 1 } },
+                        "hostile":          { "next_panel": "ch1_05_hostile",     "life_delta": -1, "reputation_delta": { "hostile": 1 } },
+                        "history-breaking": { "next_panel": "ch1_05_insightful",  "life_delta": 0,  "reputation_delta": { "history-breaking": 2 } },
+                    },
+                    "default_outcome": { "next_panel": "ch1_05_diplomatic", "life_delta": 0, "reputation_delta": { "pragmatic": 1 } },
                     "options": [
                         {
                             "text": "Identify as castaway",
@@ -162,6 +171,18 @@ SHOGUN_STORY = {
                                     "pronunciation": "Anata wa dare desu ka"
                                 }
                             ]
+                        },
+                        {
+                            "text": "Threaten them",
+                            "style": "threatening",
+                            "next_scenario": None,
+                            "examples": [
+                                {
+                                    "native": "Don't come closer",
+                                    "target": "近づくな",
+                                    "pronunciation": "Chikazuku na"
+                                }
+                            ]
                         }
                     ]
                 },
@@ -175,56 +196,63 @@ SHOGUN_STORY = {
                     "choice_variants": {
                         "ch1_04_bimbo_teaches": {
                             "0": {
-                                "dialogue": "Good choice. 'Hyouryuusha'—castaway. It marks you as a victim, not an intruder. Say it clearly. Your life depends on it."
+                                "dialogue": "Good choice. '漂流者' (castaway). It marks you as a victim, not an intruder. Say it clearly. Your life depends on it."
                             },
                             "1": {
-                                "dialogue": "'Tasukete kudasai'—please help me. Desperation is honest. They'll see you're no threat. Say it like you mean it."
+                                "dialogue": "'助けてください' (please help me). Desperation is honest. They'll see you're no threat. Say it like you mean it."
                             },
                             "2": {
-                                "dialogue": "Bold. 'Anata wa dare desu ka'—who are you? It shows courage, but be careful. Too much confidence from a stranger can look like arrogance."
+                                "dialogue": "Bold. 'あなたは誰ですか' (who are you?) shows courage, but be careful. Too much confidence from a stranger can look like arrogance."
+                            },
+                            "3": {
+                                "dialogue": "Dangerous. '近づくな' (don't come closer). Threatening words from a stranger on their land. This could cost you."
                             }
                         }
                     },
                 },
+                # === BRANCH: Diplomatic (humble, polite, desperate) ===
                 {
-                    "id": "ch1_05_time_resumes",
+                    "id": "ch1_05_diplomatic",
+                    "branch_of": "ch1_04_bimbo_teaches",
                     "image": f"{IMAGE_BASE_URL}/panels/ch01/ch1_05_time_resumes.png",
                     "aspect": "tall",
-                    "narration": "Time crashes back into motion. The farmers rush toward you, the one with the hoe raising it high. Your heart hammers. This is real. Bimbo warned you—the fear would be real.",
+                    "narration": "Time crashes back into motion. You scramble back, hands up in surrender. The words tumble out—clumsy, desperate, but the right words. The farmer with the hoe hesitates. The others exchange glances. Your humility saved you.",
                     "dialogue": None,
                     "speaker": None,
-                    "effect": "time_resume",
+                    "next_panel": "ch1_07_hana_steps",
                 },
+                # === BRANCH: Bold (direct, bold) ===
                 {
-                    "id": "ch1_06_speak",
-                    "image": f"{IMAGE_BASE_URL}/panels/ch01/ch1_06_speak.png",
-                    "aspect": "square",
-                    "narration": "You scramble back, hands up in surrender. The words tumble out—clumsy, desperate, but the right words:",
-                    "dialogue": "Watashi wa hyouryuusha desu!",
-                    "speaker": "player",
-                    "choice_variants": {
-                        "ch1_04_bimbo_teaches": {
-                            "0": {
-                                "dialogue": "Watashi wa hyouryuusha desu!"
-                            },
-                            "1": {
-                                "narration": "You drop to your knees, hands clasped. The words pour out—raw, desperate:",
-                                "dialogue": "Tasukete kudasai!"
-                            },
-                            "2": {
-                                "narration": "You stand your ground, meeting their eyes. The words come out steady, almost defiant:",
-                                "dialogue": "Anata wa dare desu ka?"
-                            }
-                        }
-                    },
-                },
-                {
-                    "id": "ch1_06b_stop",
-                    "image": f"{IMAGE_BASE_URL}/panels/ch01/ch1_06_speak.png",
-                    "aspect": "square",
-                    "narration": "They stop. The man with the hoe hesitates. The others exchange glances. Your first words in this world, and they didn't get you killed.",
+                    "id": "ch1_05_bold",
+                    "branch_of": "ch1_04_bimbo_teaches",
+                    "image": f"{IMAGE_BASE_URL}/panels/ch01/ch1_05_time_resumes.png",
+                    "aspect": "tall",
+                    "narration": "Time crashes back. You stand your ground, meeting their eyes. The words come out steady, almost defiant. The farmer with the hoe freezes—not in fear, but surprise. A foreigner who speaks? The others mutter among themselves, uncertain.",
                     "dialogue": None,
                     "speaker": None,
+                    "next_panel": "ch1_07_hana_steps",
+                },
+                # === BRANCH: Hostile (threatening, defiant) ===
+                {
+                    "id": "ch1_05_hostile",
+                    "branch_of": "ch1_04_bimbo_teaches",
+                    "image": f"{IMAGE_BASE_URL}/panels/ch01/ch1_05_time_resumes.png",
+                    "aspect": "tall",
+                    "narration": "Time crashes back. You snarl the words, backing away. The farmer swings the hoe. Pain explodes across your shoulder—real, blinding. You hit the sand hard. Through ringing ears, you hear Bimbo's voice: 'That cost you. Words have consequences here.'",
+                    "dialogue": None,
+                    "speaker": None,
+                    "next_panel": "ch1_07_hana_steps",
+                },
+                # === BRANCH: History-Breaking (insightful) ===
+                {
+                    "id": "ch1_05_insightful",
+                    "branch_of": "ch1_04_bimbo_teaches",
+                    "image": f"{IMAGE_BASE_URL}/panels/ch01/ch1_05_time_resumes.png",
+                    "aspect": "tall",
+                    "narration": "Time crashes back. You speak words that shouldn't be possible for a foreigner—words that carry weight beyond their meaning. The farmers freeze. The man with the hoe lowers it slowly. Something has shifted. They're looking at you differently now, as if you might be more than a castaway.",
+                    "dialogue": None,
+                    "speaker": None,
+                    "next_panel": "ch1_07_hana_steps",
                 },
                 {
                     "id": "ch1_07_hana_steps",
@@ -233,6 +261,25 @@ SHOGUN_STORY = {
                     "narration": "One woman—older, face weathered like driftwood—steps forward. She studies you with sharp eyes. Then speaks slowly, as if to a child:",
                     "dialogue": "Doko kara?",
                     "speaker": "hana",
+                    "choice_variants": {
+                        "ch1_04_bimbo_teaches": {
+                            "diplomatic": {
+                                "narration": "The old woman's expression softens as she steps forward. Your humility reached her. She studies you with sharp but not unkind eyes, then speaks slowly, as if to a child:",
+                            },
+                            "pragmatic": {
+                                "narration": "The old woman steps forward cautiously. Your measured words bought you a chance. She studies you with careful eyes, then speaks slowly:",
+                            },
+                            "bold": {
+                                "narration": "The old woman almost smiles as she steps forward. Your directness intrigues her. She studies you with sharp, appraising eyes, then speaks—not slowly, but clearly:",
+                            },
+                            "hostile": {
+                                "narration": "The old woman pushes past the seething farmer, placing herself between you and the hoe. Blood seeps through your shirt. She studies you with cold eyes, then speaks curtly:",
+                            },
+                            "history-breaking": {
+                                "narration": "The old woman steps forward with something like reverence. The others part for her. She studies you with wide eyes—not fear, but recognition of something she can't name. She speaks carefully:",
+                            },
+                        }
+                    },
                 },
                 {
                     "id": "ch1_08_freeze_doko",

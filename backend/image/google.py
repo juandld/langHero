@@ -517,6 +517,6 @@ if __name__ == "__main__":
             results = await generate_all_location_refs(force="--force" in sys.argv)
             print(f"\nGenerated {len(results)} location images")
         else:
-            print("Usage: python image_gen_google.py [bimbo|locations] [--force]")
+            print("Usage: python -m image.google [bimbo|locations] [--force]")
 
     asyncio.run(main())
