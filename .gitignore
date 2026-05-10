@@ -1,0 +1,50 @@
+# Secrets — NEVER commit
+.credentials/
+.env
+.env.*
+*token*.json
+*credentials*.json
+oauth_client*.json
+*.pem
+*.key
+.ssh/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Node
+node_modules/
+.svelte-kit/
+build/
+dist/
+.next/
+
+# Local backups
+*.bak
+*.bak-*
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.log
+
+# Claude local
+.claude/settings.local.json
+
+image_cache/
+examples_audio/
+voice_notes/
+transcriptions/
+narratives/
+*.sqlite
+*.sqlite-*
+*.mp3
+*.wav
+*.m4a

@@ -1,0 +1,15 @@
+# Frontend-specific ignores
+node_modules/
+.svelte-kit/
+build/
+dist/
+.env
+.env.*
+.DS_Store
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
