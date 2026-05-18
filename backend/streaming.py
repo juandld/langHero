@@ -11,24 +11,13 @@ import logging
 
 import providers
 import config
+from helpers import clamp_float
 from language import detect_language_from_text, normalize_language_token
 from services import process_interaction, get_scenario_by_id
 
 _session_counter = 0
 
 logger = logging.getLogger(__name__)
-
-
-def clamp_float(value: object, default: float = 0.0, lo: float = 0.0, hi: float = 1.0) -> float:
-    try:
-        v = float(value)
-    except Exception:
-        v = float(default)
-    if v < lo:
-        return float(lo)
-    if v > hi:
-        return float(hi)
-    return float(v)
 
 
 MIN_PARTIAL_BYTES = 4000  # lower threshold allows quicker partial turns (~0.15s chunks)

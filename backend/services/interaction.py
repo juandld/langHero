@@ -13,6 +13,7 @@ from langchain_core.messages import HumanMessage
 import config
 import providers
 import usage_log as usage
+from helpers import clamp_float
 from language import contains_japanese
 from .scenarios import get_scenario_by_id
 from .feedback import generate_social_feedback
@@ -36,19 +37,6 @@ def _similarity(a: str, b: str) -> float:
     if not na or not nb:
         return 0.0
     return float(SequenceMatcher(a=na, b=nb).ratio())
-
-
-def _clamp_float(value: object, default: float = 0.0, lo: float = 0.0, hi: float = 1.0) -> float:
-    """Clamp a value to a range."""
-    try:
-        v = float(value)
-    except Exception:
-        v = float(default)
-    if v < lo:
-        return float(lo)
-    if v > hi:
-        return float(hi)
-    return float(v)
 
 
 def process_interaction(
@@ -78,6 +66,13 @@ def process_interaction(
             instruction = (
                 "Transcribe this audio recording. "
                 "If the speech is Japanese, write it in Japanese script without romanizing. "
+                "If it is another language, transcribe using that language's normal writing system. "
+                "Do not translate."
+            )
+        elif "mandarin" in lang_hint_value or "chinese" in lang_hint_value or lang_hint_value == "zh":
+            instruction = (
+                "Transcribe this audio recording. "
+                "If the speech is Mandarin Chinese, write it in simplified Chinese characters. "
                 "If it is another language, transcribe using that language's normal writing system. "
                 "Do not translate."
             )
@@ -167,7 +162,7 @@ def process_interaction(
         )
 
         # Judge focus slider
-        judge_story_weight = _clamp_float(judge, default=0.0)
+        judge_story_weight = clamp_float(judge, default=0.0)
 
         success = False
         next_scenario_id = None
