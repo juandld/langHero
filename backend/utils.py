@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import shutil
 import asyncio
 import wave
@@ -9,6 +10,36 @@ from services import transcribe_and_save
 import usage_log as usage
 
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _audio_length_seconds(path: str) -> float | None:
+    try:
+        with contextlib.closing(wave.open(path, 'rb')) as wf:
+            frames = wf.getnframes()
+            rate = wf.getframerate()
+            return round(frames / float(rate), 2) if rate else None
+    except Exception:
+        return None
+
+
+_TOPIC_STOPWORDS = set(
+    "the a an and or but for with without on in at to from of by this that "
+    "those these is are was were be been being i you he she it we they them "
+    "me my your our their as not just into over under again more most some "
+    "any few many much very can could should would".split()
+)
+
+
+def _infer_topics(text: str | None, title: str | None) -> list[str]:
+    src = (title or "").strip() or (text or "").strip()
+    if not src:
+        return []
+    words = re.findall(r"[A-Za-z]{3,}", src.lower())
+    words = [w for w in words if w not in _TOPIC_STOPWORDS]
+    freq: dict[str, int] = {}
+    for w in words:
+        freq[w] = freq.get(w, 0) + 1
+    return sorted(freq, key=lambda k: (-freq[k], k))[:3]
 VOICE_NOTES_DIR = os.path.join(APP_DIR, "voice_notes")
 TRANSCRIPTS_DIR = os.path.join(APP_DIR, "transcriptions")
 EXAMPLES_DIR = os.path.join(APP_DIR, "examples_audio")
@@ -88,31 +119,7 @@ async def on_startup():
                 date_str = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
             except Exception:
                 date_str = None
-            # duration helper
-            def _audio_length_seconds(path: str) -> float | None:
-                try:
-                    with contextlib.closing(wave.open(path, 'rb')) as wf:
-                        frames = wf.getnframes()
-                        rate = wf.getframerate()
-                        return round(frames / float(rate), 2) if rate else None
-                except Exception:
-                    return None
             length_sec = _audio_length_seconds(audio_path)
-            # topics helper
-            def _infer_topics(text: str | None, title: str | None) -> list[str]:
-                STOPWORDS = set(
-                    "the a an and or but for with without on in at to from of by this that those these is are was were be been being i you he she it we they them me my your our their as not just into over under again more most some any few many much very can could should would".split()
-                )
-                src = (title or "").strip() or (text or "").strip()
-                if not src:
-                    return []
-                import re
-                words = re.findall(r"[A-Za-z]{3,}", src.lower())
-                words = [w for w in words if w not in STOPWORDS]
-                freq = {}
-                for w in words:
-                    freq[w] = freq.get(w, 0) + 1
-                return sorted(freq, key=lambda k: (-freq[k], k))[:3]
             topics = _infer_topics(transcription, title_text)
             data = {
                 "filename": wav_file,
@@ -191,32 +198,7 @@ async def on_startup():
                     date_str = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
                 except Exception:
                     date_str = None
-                # duration
-                def _audio_length_seconds(path: str) -> float | None:
-                    try:
-                        with contextlib.closing(wave.open(path, 'rb')) as wf:
-                            frames = wf.getnframes()
-                            rate = wf.getframerate()
-                            return round(frames / float(rate), 2) if rate else None
-                    except Exception:
-                        return None
                 length_sec = _audio_length_seconds(audio_path)
-                # simple topics
-                def _infer_topics(text: str | None, title: str | None) -> list[str]:
-                    STOPWORDS = set(
-                        "the a an and or but for with without on in at to from of by this that those these is are was were be been being i you he she it we they them me my your our their as not just into over under again more most some any few many much very can could should would".split()
-                    )
-                    src = (title or "").strip() or (text or "").strip()
-                    if not src:
-                        return []
-                    import re
-                    words = re.findall(r"[A-Za-z]{3,}", src.lower())
-                    words = [w for w in words if w not in STOPWORDS]
-                    freq = {}
-                    for w in words:
-                        freq[w] = freq.get(w, 0) + 1
-                    return sorted(freq, key=lambda k: (-freq[k], k))[:3]
-
                 topics = _infer_topics(transcription, title)
                 payload = {
                     "filename": wav_file,
