@@ -149,6 +149,16 @@ CHARACTER_VOICES = {
     "player": "none",                     # Player is the user - no TTS
     "villager": "male_warm",
     "elder": "narrator_male",
+    # Journey to the West characters
+    "wukong": "male_authoritative",       # Monkey King - bold, sharp
+    "sanzang": "narrator_male",           # Monk - calm, measured
+    "bajie": "male_warm",                 # Pig - jovial, lazy
+    "wujing": "narrator_dramatic",        # River spirit - deep, steady
+    "innkeeper": "male_warm",
+    "bandit_chief": "male_authoritative",
+    "jade_spirit": "female_young",
+    "magistrate": "male_authoritative",
+    "tea_master": "narrator_male",
 }
 
 
