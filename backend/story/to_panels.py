@@ -215,17 +215,19 @@ No markdown, just JSON."""
     )
 
 
+def _extract_json_array(raw: str) -> list | None:
+    """Extract a JSON array from an LLM response, tolerating markdown fences."""
+    try:
+        match = re.search(r'\[.*\]', raw, re.DOTALL)
+        return json.loads(match.group(0)) if match else json.loads(raw)
+    except json.JSONDecodeError:
+        return None
+
+
 def _parse_panels_json(raw: str, default_style: ArtStyle) -> List[Panel]:
     """Parse LLM response into Panel objects."""
-    # Extract JSON array
-    try:
-        # Find JSON array in response
-        match = re.search(r'\[.*\]', raw, re.DOTALL)
-        if match:
-            data = json.loads(match.group(0))
-        else:
-            data = json.loads(raw)
-    except json.JSONDecodeError:
+    data = _extract_json_array(raw)
+    if data is None:
         # Fallback: create a single default panel
         return [Panel(
             id="panel_fallback",
@@ -431,14 +433,8 @@ Generate 3-8 panels. Return ONLY valid JSON, no markdown."""
 
 def _parse_dialogue_panels_json(raw: str, default_style: ArtStyle, dialogue_lines: List[dict]) -> List[Panel]:
     """Parse LLM response for dialogue panels."""
-    try:
-        match = re.search(r'\[.*\]', raw, re.DOTALL)
-        if match:
-            data = json.loads(match.group(0))
-        else:
-            data = json.loads(raw)
-    except json.JSONDecodeError:
-        # Fallback: create one panel per speaker change
+    data = _extract_json_array(raw)
+    if data is None:
         return _generate_fallback_panels(dialogue_lines, default_style)
 
     panels = []
