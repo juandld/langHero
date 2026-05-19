@@ -1,12 +1,11 @@
 import { getAuthToken } from '$lib/auth';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import { getBackendUrl } from '$lib/config';
 
 /**
  * Get the API base URL
  */
 export function getApiBase(): string {
-  return API_BASE;
+  return getBackendUrl();
 }
 
 export async function apiFetch(input: RequestInfo | URL, init: RequestInit = {}) {

@@ -6,9 +6,9 @@
  */
 
 import { writable, derived, get } from 'svelte/store';
-import { apiFetch } from '$lib/api';
+import { apiFetch, getApiBase } from '$lib/api';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+function getBase() { return getApiBase(); }
 
 // Storage keys
 const STORY_PROGRESS_KEY = 'LANGHERO_STORY_PROGRESS_V1';
@@ -91,12 +91,12 @@ function createStoryManager() {
 
       try {
         // Fetch story data
-        const storyRes = await apiFetch(`${API_BASE}/api/stories/${storyId}`);
+        const storyRes = await apiFetch(`${getBase()}/api/stories/${storyId}`);
         if (!storyRes.ok) throw new Error('Failed to load story');
         const story = await storyRes.json();
 
         // Fetch dialogues
-        const dialoguesRes = await apiFetch(`${API_BASE}/api/stories/${storyId}/dialogues`);
+        const dialoguesRes = await apiFetch(`${getBase()}/api/stories/${storyId}/dialogues`);
         const dialoguesData = dialoguesRes.ok ? await dialoguesRes.json() : { dialogues: {} };
 
         // Check for saved progress
@@ -142,7 +142,7 @@ function createStoryManager() {
      */
     async loadStoryForLanguage(language, forceRestart = false) {
       try {
-        const res = await apiFetch(`${API_BASE}/api/stories/language/${encodeURIComponent(language)}`);
+        const res = await apiFetch(`${getBase()}/api/stories/language/${encodeURIComponent(language)}`);
         if (!res.ok) throw new Error('No story for language');
         const story = await res.json();
         return this.loadStory(story.id, forceRestart);
