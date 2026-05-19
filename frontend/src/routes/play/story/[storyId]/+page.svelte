@@ -159,6 +159,14 @@
     ? skeleton.anchors.length * 5  // ~5 panels per anchor as rough estimate
     : totalPanels;
 
+  // Panel background: image + gradient overlay
+  $: panelBg = (() => {
+    const img = currentPanel?.image;
+    const grad = panelGradient;
+    if (img) return `url(${img}) center/cover no-repeat, ${grad}`;
+    return grad;
+  })();
+
   // Panel gradient based on mood/location
   $: panelGradient = (() => {
     const mood = currentPanel?.mood;
@@ -1388,7 +1396,7 @@
         >
           <div
             class="panel-image"
-            style="background: {currentPanel?.image ? `url(${currentPanel.image}) center/cover no-repeat, ` : ''}{panelGradient}"
+            style="background: {panelBg}"
           ></div>
 
           {#if isTimeFrozen}
@@ -1508,16 +1516,16 @@
   .player {
     min-height: 100vh;
     min-height: 100dvh;
-    background: #0a0a0a;
+    background: transparent;
     color: #fff;
     display: flex;
     flex-direction: column;
     font-family: 'Segoe UI', system-ui, sans-serif;
-    transition: background 0.5s ease;
+    position: relative;
   }
 
   .player.time-frozen {
-    background: #0a0a1a;
+    background: transparent;
   }
 
   .loading {
@@ -1638,8 +1646,8 @@
 
   .panel {
     position: relative;
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 10px 40px rgba(0,0,0,0.5);
@@ -1655,10 +1663,14 @@
   }
 
   .panel-image {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    max-height: 800px;
-    border-radius: 8px;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    background-size: cover;
+    background-position: center;
+    pointer-events: none;
   }
 
   .freeze-overlay {

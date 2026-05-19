@@ -10,15 +10,13 @@ import { env as publicEnv } from '$env/dynamic/public';
 function computeRuntimeBackend(): string {
   try {
     if (typeof window !== 'undefined' && window.location) {
-      const { protocol, hostname } = window.location;
-      if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        return 'http://localhost:8000';
-      }
-      // For tunneled/public access, assume same-origin reverse proxy in prod.
-      return `${protocol}//${hostname}`;
+      const { protocol, hostname, port } = window.location;
+      // Same-origin: works with reverse proxy (serve.py) on any host
+      const portSuffix = port ? `:${port}` : '';
+      return `${protocol}//${hostname}${portSuffix}`;
     }
   } catch {}
-  return 'http://localhost:8000';
+  return '';
 }
 
 let cachedUrl: string | null = null;

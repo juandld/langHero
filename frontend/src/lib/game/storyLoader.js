@@ -7,7 +7,7 @@
 
 import { getApiBase } from '$lib/api';
 
-const API_BASE = getApiBase();
+function getBase() { return getApiBase(); }
 
 export function createStoryLoader(storyId) {
   let skeleton = null;
@@ -18,7 +18,7 @@ export function createStoryLoader(storyId) {
    * Load the story skeleton (lightweight anchor metadata).
    */
   async function loadSkeleton() {
-    const res = await fetch(`${API_BASE}/api/story-panels/stories/${storyId}/skeleton`);
+    const res = await fetch(`${getBase()}/api/story-panels/stories/${storyId}/skeleton`);
     if (!res.ok) throw new Error(`Failed to load skeleton: ${res.status}`);
     skeleton = await res.json();
     return skeleton;
@@ -45,7 +45,7 @@ export function createStoryLoader(storyId) {
 
     loading = true;
     try {
-      const res = await fetch(`${API_BASE}/api/story-panels/stories/${storyId}/segment`, {
+      const res = await fetch(`${getBase()}/api/story-panels/stories/${storyId}/segment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -89,7 +89,7 @@ export function createStoryLoader(storyId) {
     if (segmentCache.has(cacheKey)) return; // Already cached
 
     // Fire and forget
-    fetch(`${API_BASE}/api/story-panels/stories/${storyId}/prefetch`, {
+    fetch(`${getBase()}/api/story-panels/stories/${storyId}/prefetch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
