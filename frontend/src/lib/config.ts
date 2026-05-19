@@ -7,15 +7,15 @@
 
 function getEnvBackendUrl(): string {
   try {
-    // Access the SvelteKit env without importing $env/dynamic/public
-    // which causes effect_orphan errors when called outside component context
-    const env = (globalThis as any).__sveltekit_dev?.env
-      || (globalThis as any).__sveltekit_sghcre?.env
-      || {};
-    return (env.PUBLIC_BACKEND_URL || '').trim();
-  } catch {
-    return '';
-  }
+    // Find the SvelteKit env object dynamically (hash changes per build)
+    const g = globalThis as any;
+    for (const key of Object.keys(g)) {
+      if (key.startsWith('__sveltekit_') && g[key]?.env) {
+        return (g[key].env.PUBLIC_BACKEND_URL || '').trim();
+      }
+    }
+  } catch {}
+  return '';
 }
 
 function computeRuntimeBackend(): string {
