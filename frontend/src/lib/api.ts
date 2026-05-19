@@ -84,11 +84,11 @@ export async function getTTS(options: TTSRequest): Promise<TTSResponse> {
   const res = await apiFetch(`${getApiBase()}/api/tts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(options),
+    body: JSON.stringify({ ...options, inline: true }),
   });
   const data = await res.json();
-  // Prepend API base to relative URL
-  if (data.url && !data.url.startsWith('http')) {
+  // Prepend API base to relative URL (skip for data: URLs)
+  if (data.url && !data.url.startsWith('http') && !data.url.startsWith('data:')) {
     data.url = `${getApiBase()}${data.url}`;
   }
   return data;

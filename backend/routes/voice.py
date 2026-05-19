@@ -6,6 +6,9 @@ Supports multiple TTS providers:
 - google: Google Cloud TTS (Neural2/Journey voices, more natural)
 """
 
+import os
+import base64
+
 from fastapi import APIRouter, Request, Response
 from voice import select as voice_select
 from voice import cache as voice_cache
@@ -44,6 +47,25 @@ async def api_voices():
     }
 
 
+def _inline_audio(result: dict) -> dict:
+    """Convert a file-based TTS result to an inline data URL."""
+    if not result or "file" not in result:
+        return result
+    file_path = os.path.join(EXAMPLES_DIR, result["file"])
+    if not os.path.isfile(file_path):
+        return result
+    with open(file_path, "rb") as f:
+        audio_data = base64.b64encode(f.read()).decode("ascii")
+    fmt = result.get("format", "mp3")
+    mime = "audio/mpeg" if fmt == "mp3" else f"audio/{fmt}"
+    result["url"] = f"data:{mime};base64,{audio_data}"
+    result["inline"] = True
+    return result
+
+
+EXAMPLES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'examples_audio'))
+
+
 @router.post("/tts")
 async def api_tts(request: Request):
     """Return a cached/pre-rendered voice clip for a short phrase.
@@ -61,7 +83,8 @@ async def api_tts(request: Request):
         "character_gender"?: "female",  # hint for auto selection
         "character_type"?: "samurai",   # hint for auto selection
         "sentiment"?: "suspicious",     # emotion/tone for expressive TTS
-        "context"?: "greeting"          # situational context for sentiment inference
+        "context"?: "greeting",         # situational context for sentiment inference
+        "inline"?: false                # return audio as base64 data URL (avoids CORS/Access issues)
     }
     """
     try:
@@ -70,6 +93,7 @@ async def api_tts(request: Request):
         body = {}
 
     text = str((body or {}).get("text") or "").strip()
+    inline = bool((body or {}).get("inline", False))
     if not text:
         return Response(status_code=400)
 
@@ -104,7 +128,7 @@ async def api_tts(request: Request):
             if result.get("skip"):
                 return {"skip": True, "reason": result.get("reason", "no_voice")}
 
-            return {
+            resp = {
                 "clip_id": f"eleven_{result.get('voice', 'unknown')[:8]}",
                 "phrase_id": None,
                 "file": result["file"],
@@ -114,6 +138,7 @@ async def api_tts(request: Request):
                 "provider": "elevenlabs",
                 "cached": result.get("cached", False),
             }
+            return _inline_audio(resp) if inline else resp
         except Exception as e:
             # Fall back to Google if ElevenLabs fails
             print(f"[TTS] ElevenLabs failed, falling back to Google: {e}")
@@ -138,7 +163,7 @@ async def api_tts(request: Request):
                 language=language[:2] if language else None,
                 output_format=fmt,
             )
-            return {
+            resp = {
                 "clip_id": f"gcloud_{result.get('voice', 'unknown')}",
                 "phrase_id": None,
                 "file": result["file"],
@@ -148,6 +173,7 @@ async def api_tts(request: Request):
                 "provider": "google",
                 "cached": result.get("cached", False),
             }
+            return _inline_audio(resp) if inline else resp
         except Exception as e:
             # Fall back to OpenAI if Google fails
             print(f"[TTS] Google TTS failed, falling back to OpenAI: {e}")
@@ -207,7 +233,7 @@ async def api_tts(request: Request):
             fmt=fmt,
             instructions=instructions,
         )
-        return {
+        resp = {
             **meta,
             "url": f"/examples/{meta['file']}",
             "voice": voice,
@@ -215,5 +241,6 @@ async def api_tts(request: Request):
             "instructions": instructions,
             "provider": "openai",
         }
+        return _inline_audio(resp) if inline else resp
     except Exception as e:
         return {"error": str(e)}
