@@ -8,7 +8,6 @@ and easier to scan.
 
 from __future__ import annotations
 
-import io
 from base64 import b64encode
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
@@ -16,12 +15,23 @@ from typing import Any, Dict, List, Optional, Tuple
 import logging
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
-from langchain_openai import ChatOpenAI
 
 import config
 
 # Initialize module logger early (before any usage)
 logger = logging.getLogger("narrative.providers")
+
+# Re-export OpenAI functions so callers can keep using `providers.romanize()` etc.
+from providers_openai import (  # noqa: E402,F401
+    title_with_openai,
+    openai_chat,
+    normalize_title_output,
+    transcribe_with_openai,
+    tts_with_openai,
+    translate_text,
+    romanize,
+    makes_sense,
+)
 
 
 # Initialize Gemini clients (one per API key) for rotation
@@ -245,250 +255,3 @@ def invoke_google(messages: List[HumanMessage], model: str | None = None) -> Tup
     raise RuntimeError("No Google Gemini API keys configured.")
 
 
-def title_with_openai(text: str) -> str:
-    """Generate a short title via OpenAI (LangChain)."""
-    if not config.OPENAI_API_KEY:
-        raise RuntimeError("OpenAI fallback not configured.")
-    llm = ChatOpenAI(model=config.OPENAI_TITLE_MODEL, api_key=config.OPENAI_API_KEY, temperature=0.3)
-    prompt = (
-        "Return exactly one short title (5–8 words) for the transcription below. "
-        "Use the same language as the transcription. Do not include quotes, bullets, markdown, or any extra text. "
-        "Output only the title on a single line.\n\n" + text
-    )
-    resp = llm.invoke(prompt)
-    raw = str(getattr(resp, "content", resp))
-    return normalize_title_output(raw)
-
-
-def openai_chat(messages: list[HumanMessage], model: str | None = None, temperature: float = 0.2) -> str:
-    """Generic OpenAI chat wrapper returning content text."""
-    if not config.OPENAI_API_KEY:
-        raise RuntimeError("OpenAI fallback not configured.")
-    use_model = model or config.OPENAI_NARRATIVE_MODEL
-    llm = ChatOpenAI(model=use_model, api_key=config.OPENAI_API_KEY, temperature=temperature)
-    resp = llm.invoke(messages)
-    return str(getattr(resp, "content", resp))
-
-
-def normalize_title_output(raw: str) -> str:
-    """Coerce LLM output into a single, clean title line.
-
-    - Removes markdown (bullets, bold/italics) and boilerplate prefaces
-    - Picks the first plausible title line
-    - Trims excessive punctuation and length
-    """
-    try:
-        text = (raw or "").strip()
-        if not text:
-            return "Untitled"
-        # Remove obvious prefaces
-        lower = text.lower()
-        if "here are" in lower and ":" in text:
-            # Cut off everything up to and including the first colon
-            text = text.split(":", 1)[-1].strip()
-        # Split lines and scan for first candidate
-        lines = [l.strip() for l in text.splitlines() if l.strip()]
-        candidates = []
-        for line in lines:
-            # Skip section headings that end with a colon
-            if line.endswith(":"):
-                continue
-            # Remove common list markers
-            l = line
-            for prefix in ("- ", "* ", "• ", "1. ", "2. ", "3. ", "-", "*", "•"):
-                if l.startswith(prefix):
-                    l = l[len(prefix):].strip()
-            # Strip markdown bold/italics markers
-            l = l.replace("**", "").replace("__", "").replace("*", "").replace("_", "").strip()
-            if l:
-                candidates.append(l)
-        if not candidates:
-            candidates = [text]
-        title = candidates[0]
-        # If still contains multiple suggestions separated by bullets or semicolons, take first chunk
-        for sep in [" • ", " | ", ";", "  -  ", "  *  "]:
-            if sep in title:
-                title = title.split(sep, 1)[0].strip()
-        # Trim quotes and trailing punctuation
-        title = title.strip().strip('"').strip("'")
-        while title and title[-1] in [".", ":", "-", "|", ";"]:
-            title = title[:-1].rstrip()
-        # Limit length sensibly without cutting words mid-way
-        if len(title) > 80:
-            parts = title.split()
-            out = []
-            for p in parts:
-                if len(" ".join(out + [p])) <= 80:
-                    out.append(p)
-                else:
-                    break
-            if out:
-                title = " ".join(out)
-        return title or "Untitled"
-    except Exception:
-        return "Untitled"
-
-
-def transcribe_with_openai(
-    audio_bytes: bytes,
-    file_ext: str = "wav",
-    language: Optional[str] = None,
-    prompt: Optional[str] = None,
-) -> str:
-    """Transcribe audio using OpenAI Whisper via the official SDK.
-
-    This avoids version mismatches in LangChain parsers and works reliably with bytes.
-    """
-    if not config.OPENAI_API_KEY:
-        raise RuntimeError("OpenAI fallback not configured.")
-    from openai import OpenAI
-    client = OpenAI(api_key=config.OPENAI_API_KEY)
-    bio = io.BytesIO(audio_bytes)
-    bio.name = f"audio.{file_ext}"
-    kwargs = {
-        "model": config.OPENAI_TRANSCRIBE_MODEL,
-        "file": bio,
-        "response_format": "text",
-        "temperature": 0,  # Max determinism — same audio should yield same text
-    }
-    hint = (language or "").strip()
-    # Map language names to ISO 639-1 codes for Whisper
-    _lang_to_iso = {
-        "japanese": "ja", "english": "en", "spanish": "es",
-        "ja": "ja", "en": "en", "es": "es",
-    }
-    iso_code = _lang_to_iso.get(hint.lower()) if hint else None
-    if iso_code:
-        kwargs["language"] = iso_code
-    if prompt:
-        kwargs["prompt"] = prompt
-    elif hint:
-        kwargs["prompt"] = (
-            f"The speaker may be using {hint}. Transcribe in the language actually spoken using its usual writing system. "
-            "Do not translate."
-        )
-    resp = client.audio.transcriptions.create(**kwargs)
-    return resp if isinstance(resp, str) else getattr(resp, "text", "")
-
-
-def tts_with_openai(
-    text: str,
-    voice: str = "alloy",
-    fmt: str = "mp3",
-    instructions: str | None = None,
-) -> bytes:
-    """Synthesize speech for a short phrase using OpenAI TTS.
-
-    Args:
-        text: The text to synthesize
-        voice: Voice name (alloy, echo, fable, onyx, nova, shimmer)
-        fmt: Output format (mp3, wav, opus)
-        instructions: Optional instructions for expressive speech (gpt-4o-mini-tts)
-                     e.g., "Speak warmly and kindly" or "Speak with suspicion"
-
-    Returns:
-        Raw audio bytes. Caller is responsible for persisting to a file.
-    """
-    if not config.OPENAI_API_KEY:
-        raise RuntimeError("OpenAI TTS not configured.")
-    from openai import OpenAI
-    client = OpenAI(api_key=config.OPENAI_API_KEY)
-    # Prefer modern TTS model if available; fallback is handled via config
-    model = config.OPENAI_TTS_MODEL
-
-    # Build request kwargs
-    kwargs = {
-        "model": model,
-        "voice": voice,
-        "input": text,
-    }
-
-    # Add instructions if provided (supported by gpt-4o-mini-tts and similar)
-    if instructions and "gpt-4o" in model:
-        kwargs["instructions"] = instructions
-
-    # API accepts 'audio.speech.create' with input, voice, model
-    # Some SDKs use 'format' or 'response_format'. We'll try 'format'.
-    try:
-        resp = client.audio.speech.create(**kwargs, format=fmt)
-        # Depending on SDK, resp could expose .read() or .content
-        data = getattr(resp, "content", None)
-        if data is None and hasattr(resp, "read"):
-            data = resp.read()
-        if isinstance(data, (bytes, bytearray)):
-            return bytes(data)
-    except Exception:
-        # Fallback older shape (without format param)
-        try:
-            resp = client.audio.speech.create(**kwargs)
-            data = getattr(resp, "content", None)
-            if isinstance(data, (bytes, bytearray)):
-                return bytes(data)
-        except Exception as e:
-            raise e
-    # If all else fails
-    raise RuntimeError("TTS synthesis failed.")
-
-
-def translate_text(text: str, to_language: str, from_language: str | None = None) -> str:
-    """Translate short text into the requested language using OpenAI chat.
-
-    Returns only the translation, no quotes, no extra text.
-    """
-    if not config.OPENAI_API_KEY:
-        raise RuntimeError("OpenAI translation not configured.")
-    llm = ChatOpenAI(model=config.OPENAI_TITLE_MODEL, api_key=config.OPENAI_API_KEY, temperature=0.0)
-    prompt = (
-        (f"Translate this phrase from {from_language} to {to_language}:\n" if from_language else f"Translate this phrase into {to_language}:\n")
-        + text
-        + "\nReturn only the translation, no quotes, no notes."
-    )
-    resp = llm.invoke(prompt)
-    return str(getattr(resp, "content", resp)).strip().strip('"').strip("'")
-
-
-def romanize(text: str, language: str) -> str:
-    """Return a simple pronunciation/romanization line for the target language.
-
-    Currently optimized for Japanese (romaji). For other languages, returns text.
-    """
-    if not text:
-        return ""
-    lang = (language or "").strip().lower()
-    if "japanese" in lang or "ja" == lang:
-        if not config.OPENAI_API_KEY:
-            return ""
-        llm = ChatOpenAI(model=config.OPENAI_TITLE_MODEL, api_key=config.OPENAI_API_KEY, temperature=0.0)
-        prompt = (
-            "Provide romaji for this Japanese phrase. Return only the romaji, no quotes or notes.\n" + text
-        )
-        try:
-            resp = llm.invoke(prompt)
-            return str(getattr(resp, "content", resp)).strip().strip('"').strip("'")
-        except Exception:
-            return ""
-    return ""
-
-
-def makes_sense(text: str, language: str | None = None) -> bool:
-    """Classify whether the text is a simple, coherent utterance in the given language.
-
-    Returns True/False. Uses OpenAI (low temperature) for a strict yes/no.
-    """
-    try:
-        if not text:
-            return False
-        if not config.OPENAI_API_KEY:
-            return bool(text.strip())
-        llm = ChatOpenAI(model=config.OPENAI_TITLE_MODEL, api_key=config.OPENAI_API_KEY, temperature=0.0)
-        lang = (language or "").strip() or "the target language"
-        prompt = (
-            f"Answer yes or no: Is this a short, coherent, appropriate utterance in {lang}?\n"
-            f"Text: {text}\n"
-            "Answer strictly 'yes' or 'no'."
-        )
-        resp = llm.invoke(prompt)
-        out = str(getattr(resp, "content", resp)).strip().lower()
-        return out.startswith('y')
-    except Exception:
-        return False
