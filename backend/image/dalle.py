@@ -38,6 +38,14 @@ def _ensure_cache_dir() -> None:
     os.makedirs(IMAGE_CACHE_DIR, exist_ok=True)
 
 
+def _download_and_cache(image_url: str, cache_path: str) -> None:
+    """Download an image from a URL and save it to the local cache."""
+    img_response = requests.get(image_url, timeout=30)
+    img_response.raise_for_status()
+    with open(cache_path, "wb") as f:
+        f.write(img_response.content)
+
+
 def _cache_key(scenario: dict) -> str:
     """Generate a stable cache key for a scenario."""
     setting = scenario.get("setting", "")
@@ -135,13 +143,7 @@ def generate_scene_image(scenario: dict, force: bool = False) -> dict:
         )
 
         image_url = response.data[0].url
-
-        # Download and save to cache
-        img_response = requests.get(image_url, timeout=30)
-        img_response.raise_for_status()
-
-        with open(cache_path, "wb") as f:
-            f.write(img_response.content)
+        _download_and_cache(image_url, cache_path)
 
         return {
             "url": f"/images/generated/{cache_key}.png",
@@ -251,13 +253,7 @@ def generate_panel_image(
         )
 
         image_url = response.data[0].url
-
-        # Download and save to cache
-        img_response = requests.get(image_url, timeout=30)
-        img_response.raise_for_status()
-
-        with open(cache_path, "wb") as f:
-            f.write(img_response.content)
+        _download_and_cache(image_url, cache_path)
 
         return {
             "url": f"/images/generated/{cache_key}.png",
