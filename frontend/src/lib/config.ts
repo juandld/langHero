@@ -5,7 +5,18 @@
 // - localStorage BACKEND_URL
 // - Compute from window.location (same-origin for non-localhost; http://localhost:8000 for localhost)
 
-import { env as publicEnv } from '$env/dynamic/public';
+function getEnvBackendUrl(): string {
+  try {
+    // Access the SvelteKit env without importing $env/dynamic/public
+    // which causes effect_orphan errors when called outside component context
+    const env = (globalThis as any).__sveltekit_dev?.env
+      || (globalThis as any).__sveltekit_sghcre?.env
+      || {};
+    return (env.PUBLIC_BACKEND_URL || '').trim();
+  } catch {
+    return '';
+  }
+}
 
 function computeRuntimeBackend(): string {
   try {
@@ -23,7 +34,7 @@ let cachedUrl: string | null = null;
 
 export function getBackendUrl(): string {
   if (cachedUrl) return cachedUrl;
-  const envUrl = (publicEnv?.PUBLIC_BACKEND_URL || '').trim();
+  const envUrl = getEnvBackendUrl();
   if (envUrl) {
     cachedUrl = envUrl;
     return envUrl;
