@@ -17,8 +17,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=FRONTEND_DIR, **kwargs)
 
     def do_request(self, method):
-        # Proxy /api/*, /stream/*, /examples/*, /narrative/* to backend
-        if self.path.startswith(("/api/", "/stream/", "/examples/", "/narrative/", "/openapi.json")):
+        # Proxy /api/*, /stream/*, /examples/*, /narrative/*, /images/* to backend
+        if self.path.startswith(("/api/", "/stream/", "/examples/", "/narrative/", "/images/", "/voice_notes/", "/openapi.json")):
             url = BACKEND_URL + self.path
             content_length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(content_length) if content_length > 0 else None

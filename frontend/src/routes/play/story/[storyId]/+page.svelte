@@ -1388,7 +1388,7 @@
         >
           <div
             class="panel-image"
-            style="background: {panelGradient}"
+            style="background: {currentPanel?.image ? `url(${currentPanel.image}) center/cover no-repeat, ` : ''}{panelGradient}"
           ></div>
 
           {#if isTimeFrozen}
