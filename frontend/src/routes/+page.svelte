@@ -37,9 +37,25 @@
 
   async function fetchStories() {
     try {
-      const res = await fetch(`${getBackendUrl()}/api/stories`);
-      const data = await res.json();
-      stories = data.stories || data || [];
+      // Fetch visual novel stories (story-panels system)
+      const panelRes = await fetch(`${getBackendUrl()}/api/story-panels/stories`);
+      const panelData = await panelRes.json();
+      const panelStories = (panelData.stories || []).map(s => ({
+        ...s,
+        type: 'panels',
+        language: s.subtitle || '',
+      }));
+
+      // Fetch scenario-based stories
+      const scenarioRes = await fetch(`${getBackendUrl()}/api/stories`);
+      const scenarioData = await scenarioRes.json();
+      const scenarioStories = (scenarioData.stories || []).map(s => ({
+        ...s,
+        type: 'scenarios',
+      }));
+
+      // Panel stories first, then scenario stories (avoid duplicates by language)
+      stories = [...panelStories, ...scenarioStories];
     } catch (e) {
       console.warn('Failed to fetch stories:', e);
       stories = [];
@@ -111,11 +127,16 @@
     setTimeout(() => (showMenu = true), 600);
   });
 
+  function storyUrl(story) {
+    if (story.type === 'panels') {
+      return `/play/story/${story.id}`;
+    }
+    return `/story?id=${story.id}&lang=${encodeURIComponent(story.language)}`;
+  }
+
   function continueStory(storyId) {
     const story = stories.find((s) => s.id === storyId);
-    if (story) {
-      goto(`/story?id=${storyId}&lang=${encodeURIComponent(story.language)}`);
-    }
+    if (story) goto(storyUrl(story));
   }
 
   function startNewStory(storyId) {
@@ -128,7 +149,7 @@
       } catch {
         // ignore
       }
-      goto(`/story?id=${storyId}&lang=${encodeURIComponent(story.language)}`);
+      goto(storyUrl(story));
     }
   }
 
@@ -353,14 +374,17 @@
               >
                 <div class="card-lang">{story.language}</div>
                 <div class="card-title">{story.title}</div>
-                <div class="card-desc">{story.description}</div>
-                {#if story.tutorial?.scenarios?.length}
-                  <div class="card-meta">
-                    <span class="card-state"
-                      >Tutorial + {story.main?.chapters?.length || 0} chapters</span
-                    >
-                  </div>
-                {/if}
+                <div class="card-desc">{story.description || story.subtitle || ''}</div>
+                <div class="card-meta">
+                  {#if story.chapter_count}
+                    <span class="card-state">{story.chapter_count} chapters</span>
+                  {:else if story.main?.chapters?.length}
+                    <span class="card-state">{story.main.chapters.length} chapters</span>
+                  {/if}
+                  {#if story.type === 'panels'}
+                    <span class="card-badge">Visual Novel</span>
+                  {/if}
+                </div>
                 <div class="card-arrow">Start →</div>
               </button>
             {/each}
@@ -828,6 +852,16 @@
   .card-date {
     color: #64748b;
     padding: 2px 0;
+  }
+  .card-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #c4b5fd;
+    padding: 2px 8px;
+    background: rgba(139, 92, 246, 0.15);
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
   .card-arrow {
     font-size: 0.9rem;
