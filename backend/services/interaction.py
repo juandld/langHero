@@ -81,6 +81,13 @@ def process_interaction(
                 "If it is another language, transcribe using that language's normal writing system. "
                 "Do not translate."
             )
+        elif "mandarin" in lang_hint_value or "chinese" in lang_hint_value or lang_hint_value == "zh":
+            instruction = (
+                "Transcribe this audio recording. "
+                "If the speech is Mandarin Chinese, write it in simplified Chinese characters. "
+                "If it is another language, transcribe using that language's normal writing system. "
+                "Do not translate."
+            )
         elif lang_hint_value:
             instruction = (
                 "Transcribe this audio recording. "

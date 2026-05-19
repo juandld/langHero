@@ -114,7 +114,8 @@ def transcribe_with_openai(
     hint = (language or "").strip()
     _lang_to_iso = {
         "japanese": "ja", "english": "en", "spanish": "es",
-        "ja": "ja", "en": "en", "es": "es",
+        "mandarin": "zh", "chinese": "zh", "mandarin chinese": "zh",
+        "ja": "ja", "en": "en", "es": "es", "zh": "zh", "cmn": "zh",
     }
     iso_code = _lang_to_iso.get(hint.lower()) if hint else None
     if iso_code:
@@ -185,7 +186,10 @@ def translate_text(text: str, to_language: str, from_language: str | None = None
 
 
 def romanize(text: str, language: str) -> str:
-    """Return a simple pronunciation/romanization line for the target language."""
+    """Return a simple pronunciation/romanization line for the target language.
+
+    Supports Japanese (romaji) and Mandarin Chinese (pinyin with tone marks).
+    """
     if not text:
         return ""
     lang = (language or "").strip().lower()
@@ -195,6 +199,19 @@ def romanize(text: str, language: str) -> str:
         llm = ChatOpenAI(model=config.OPENAI_TITLE_MODEL, api_key=config.OPENAI_API_KEY, temperature=0.0)
         prompt = (
             "Provide romaji for this Japanese phrase. Return only the romaji, no quotes or notes.\n" + text
+        )
+        try:
+            resp = llm.invoke(prompt)
+            return str(getattr(resp, "content", resp)).strip().strip('"').strip("'")
+        except Exception:
+            return ""
+    if "mandarin" in lang or "chinese" in lang or lang in ("zh", "cmn"):
+        if not config.OPENAI_API_KEY:
+            return ""
+        llm = ChatOpenAI(model=config.OPENAI_TITLE_MODEL, api_key=config.OPENAI_API_KEY, temperature=0.0)
+        prompt = (
+            "Provide pinyin with tone marks for this Mandarin Chinese phrase. "
+            "Return only the pinyin, no quotes or notes.\n" + text
         )
         try:
             resp = llm.invoke(prompt)
