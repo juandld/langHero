@@ -8,6 +8,7 @@ from fastapi import APIRouter, File, UploadFile, Form, Response
 from pydantic import BaseModel
 from langchain_core.messages import HumanMessage
 import providers
+from security import clean_llm_json, detect_audio_mime
 from services.interaction import process_interaction, imitate_say
 from services.suggestions import generate_option_suggestions
 
@@ -82,9 +83,8 @@ Return ONLY valid JSON, no markdown."""
         print(f"[ask-bimbo] LLM raw response: {raw!r}")
 
         # Parse LLM JSON response
-        cleaned = raw.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+        cleaned = clean_llm_json(raw)
+        if cleaned != raw.strip():
             print(f"[ask-bimbo] Stripped markdown fences: {cleaned!r}")
 
         parsed = json.loads(cleaned)
@@ -200,9 +200,7 @@ Return ONLY valid JSON, no markdown."""
         )
         print(f"[generate-reaction] LLM raw: {raw!r}")
 
-        cleaned = raw.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+        cleaned = clean_llm_json(raw)
 
         parsed = json.loads(cleaned)
         print(f"[generate-reaction] Parsed: {parsed}")
@@ -250,17 +248,7 @@ async def imitate_endpoint(
 
     Returns {success, score, heard, nextScenario?}
     """
-    ct = (audio_file.content_type or '').lower()
-    if 'webm' in ct:
-        mime = 'audio/webm'
-    elif 'ogg' in ct:
-        mime = 'audio/ogg'
-    elif 'm4a' in ct:
-        mime = 'audio/mp4'
-    elif 'mp3' in ct:
-        mime = 'audio/mp3'
-    else:
-        mime = 'audio/wav'
+    mime = detect_audio_mime(audio_file.content_type)
     audio_bytes = audio_file.file.read()
     res = imitate_say(audio_bytes, mime, expected, lang)
     if res.get('success') and next_scenario is not None:
@@ -286,17 +274,7 @@ async def translate_endpoint(
     try:
         # If audio is provided, transcribe it first
         if audio_file is not None:
-            ct = (audio_file.content_type or '').lower()
-            if 'webm' in ct:
-                mime = 'audio/webm'
-            elif 'ogg' in ct:
-                mime = 'audio/ogg'
-            elif 'm4a' in ct:
-                mime = 'audio/mp4'
-            elif 'mp3' in ct:
-                mime = 'audio/mp3'
-            else:
-                mime = 'audio/wav'
+            mime = detect_audio_mime(audio_file.content_type)
             audio_bytes = audio_file.file.read()
             result = providers.transcribe_audio(
                 audio_bytes,

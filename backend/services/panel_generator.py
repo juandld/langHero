@@ -418,13 +418,8 @@ Return ONLY valid JSON, no other text."""
         )
 
         # Parse JSON response
-        # Clean up response - remove markdown code blocks if present
-        response = response.strip()
-        if response.startswith("```"):
-            response = response.split("```")[1]
-            if response.startswith("json"):
-                response = response[4:]
-        response = response.strip()
+        from security import clean_llm_json
+        response = clean_llm_json(response)
 
         data = json.loads(response)
 

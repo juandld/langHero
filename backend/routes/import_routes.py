@@ -12,7 +12,7 @@ import import_cache
 from models import StoryImportRequest, AutoImportRequest
 from story_import import build_imported_scenarios
 from scenario_normalize import normalize_scenarios
-from security import require_admin, require_auth, rate_limit, client_ip_from_headers
+from security import request_guard
 from services.scenarios import reload_scenarios
 from services.video import generate_scenarios_from_video
 
@@ -120,12 +120,13 @@ async def import_story(body: StoryImportRequest, request: Request):
     if not (body.attest_rights is True):
         raise HTTPException(status_code=400, detail="attest_rights_required")
 
-    headers = {k.lower(): v for (k, v) in request.headers.items()}
-    require_admin(headers, flag=bool(config.REQUIRE_ADMIN_FOR_IMPORT))
-    await require_auth(headers, flag=bool(config.REQUIRE_AUTH_FOR_IMPORT))
-
-    ip = (request.client.host if request.client else None) or client_ip_from_headers(headers)
-    rate_limit("import_story", str(ip), int(getattr(config, "RATE_LIMIT_IMPORT_PER_MIN", 10)))
+    await request_guard(
+        request,
+        admin_flag=bool(config.REQUIRE_ADMIN_FOR_IMPORT),
+        auth_flag=bool(config.REQUIRE_AUTH_FOR_IMPORT),
+        rate_bucket="import_story",
+        rate_limit_per_min=int(getattr(config, "RATE_LIMIT_IMPORT_PER_MIN", 10)),
+    )
 
     text = (body.text or "").strip()
     source_meta = None
@@ -197,12 +198,13 @@ async def api_generate_scenarios_from_video(request: Request):
 
     _validate_import_url_or_path(url)
 
-    headers = {k.lower(): v for (k, v) in request.headers.items()}
-    require_admin(headers, flag=bool(config.REQUIRE_ADMIN_FOR_IMPORT))
-    await require_auth(headers, flag=bool(config.REQUIRE_AUTH_FOR_IMPORT))
-
-    ip = (request.client.host if request.client else None) or client_ip_from_headers(headers)
-    rate_limit("import_video", str(ip), int(getattr(config, "RATE_LIMIT_IMPORT_PER_MIN", 10)))
+    await request_guard(
+        request,
+        admin_flag=bool(config.REQUIRE_ADMIN_FOR_IMPORT),
+        auth_flag=bool(config.REQUIRE_AUTH_FOR_IMPORT),
+        rate_bucket="import_video",
+        rate_limit_per_min=int(getattr(config, "RATE_LIMIT_IMPORT_PER_MIN", 10)),
+    )
 
     attest_rights = bool((body or {}).get("attest_rights", False))
     if not attest_rights:
@@ -231,12 +233,13 @@ async def api_import_auto(body: AutoImportRequest, request: Request):
     if not (body.attest_rights is True):
         raise HTTPException(status_code=400, detail="attest_rights_required")
 
-    headers = {k.lower(): v for (k, v) in request.headers.items()}
-    require_admin(headers, flag=bool(config.REQUIRE_ADMIN_FOR_IMPORT))
-    await require_auth(headers, flag=bool(config.REQUIRE_AUTH_FOR_IMPORT))
-
-    ip = (request.client.host if request.client else None) or client_ip_from_headers(headers)
-    rate_limit("import_auto", str(ip), int(getattr(config, "RATE_LIMIT_IMPORT_PER_MIN", 10)))
+    await request_guard(
+        request,
+        admin_flag=bool(config.REQUIRE_ADMIN_FOR_IMPORT),
+        auth_flag=bool(config.REQUIRE_AUTH_FOR_IMPORT),
+        rate_bucket="import_auto",
+        rate_limit_per_min=int(getattr(config, "RATE_LIMIT_IMPORT_PER_MIN", 10)),
+    )
 
     url = (body.url or "").strip()
     text = (body.text or "").strip()
