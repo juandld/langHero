@@ -129,6 +129,14 @@ async def request_guard(
     return headers
 
 
+async def parse_json_body(request) -> dict:
+    """Safely parse JSON body from a request, returning empty dict on failure."""
+    try:
+        return await request.json()
+    except Exception:
+        return {}
+
+
 def detect_audio_mime(content_type: str) -> str:
     """Detect audio MIME type from an upload's content_type string."""
     ct = (content_type or '').lower()

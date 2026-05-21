@@ -8,7 +8,7 @@ from fastapi import APIRouter, Request, Response, HTTPException
 import config
 from image import dalle as image_gen
 import usage_log as usage
-from security import request_guard
+from security import request_guard, parse_json_body
 from services.scenarios import (
     list_scenarios,
     reload_scenarios,
@@ -52,10 +52,7 @@ async def generate_scenario_image(scenario_id: int, request: Request):
     if not scenario:
         raise HTTPException(status_code=404, detail="scenario_not_found")
 
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
+    body = await parse_json_body(request)
 
     force = bool((body or {}).get("force", False))
 
