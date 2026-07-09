@@ -8,7 +8,7 @@ from fastapi import APIRouter, Request, Response, HTTPException
 import config
 from image import dalle as image_gen
 import usage_log as usage
-from security import require_admin, require_auth, rate_limit, client_ip_from_headers
+from security import request_guard
 from services.scenarios import (
     list_scenarios,
     reload_scenarios,
@@ -42,9 +42,11 @@ async def generate_scenario_image(scenario_id: int, request: Request):
 
     Returns {url, cached, cache_key}.
     """
-    headers = {k.lower(): v for (k, v) in request.headers.items()}
-    ip = (request.client.host if request.client else None) or client_ip_from_headers(headers)
-    rate_limit("image_gen", str(ip), int(getattr(config, "RATE_LIMIT_IMPORT_PER_MIN", 10)))
+    await request_guard(
+        request,
+        rate_bucket="image_gen",
+        rate_limit_per_min=int(getattr(config, "RATE_LIMIT_IMPORT_PER_MIN", 10)),
+    )
 
     scenario = get_scenario_by_id(scenario_id)
     if not scenario:
@@ -104,9 +106,12 @@ async def get_scenario_image(scenario_id: int):
 async def api_import_scenarios(request: Request):
     """Replace scenarios with provided list. Body: {"scenarios": [...]}"""
     try:
-        headers = {k.lower(): v for (k, v) in request.headers.items()}
-        require_admin(headers, flag=bool(config.REQUIRE_ADMIN_FOR_IMPORT))
-        await require_auth(headers, flag=bool(config.REQUIRE_AUTH_FOR_IMPORT))
+        await request_guard(
+            request,
+            admin_flag=bool(config.REQUIRE_ADMIN_FOR_IMPORT),
+            auth_flag=bool(config.REQUIRE_AUTH_FOR_IMPORT),
+            rate_bucket="scenarios_import",
+        )
         body = await request.json()
         scenarios = (body or {}).get("scenarios")
         if not isinstance(scenarios, list):

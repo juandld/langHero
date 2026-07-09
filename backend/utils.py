@@ -12,7 +12,8 @@ import usage_log as usage
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def _audio_length_seconds(path: str) -> float | None:
+def audio_length_seconds(path: str) -> float | None:
+    """Return the duration of a WAV file in seconds, or None on error."""
     try:
         with contextlib.closing(wave.open(path, 'rb')) as wf:
             frames = wf.getnframes()
@@ -23,14 +24,14 @@ def _audio_length_seconds(path: str) -> float | None:
 
 
 _TOPIC_STOPWORDS = set(
-    "the a an and or but for with without on in at to from of by this that "
-    "those these is are was were be been being i you he she it we they them "
-    "me my your our their as not just into over under again more most some "
-    "any few many much very can could should would".split()
+    "the a an and or but for with without on in at to from of by this that those these "
+    "is are was were be been being i you he she it we they them me my your our their as "
+    "not just into over under again more most some any few many much very can could should would".split()
 )
 
 
-def _infer_topics(text: str | None, title: str | None) -> list[str]:
+def infer_topics(text: str | None, title: str | None) -> list[str]:
+    """Extract up to 3 topic keywords from text or title."""
     src = (title or "").strip() or (text or "").strip()
     if not src:
         return []
@@ -119,8 +120,8 @@ async def on_startup():
                 date_str = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
             except Exception:
                 date_str = None
-            length_sec = _audio_length_seconds(audio_path)
-            topics = _infer_topics(transcription, title_text)
+            length_sec = audio_length_seconds(audio_path)
+            topics = infer_topics(transcription, title_text)
             data = {
                 "filename": wav_file,
                 "title": title_text,
@@ -198,8 +199,8 @@ async def on_startup():
                     date_str = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
                 except Exception:
                     date_str = None
-                length_sec = _audio_length_seconds(audio_path)
-                topics = _infer_topics(transcription, title)
+                length_sec = audio_length_seconds(audio_path)
+                topics = infer_topics(transcription, title)
                 payload = {
                     "filename": wav_file,
                     "title": title or "",

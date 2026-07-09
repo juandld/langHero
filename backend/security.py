@@ -97,3 +97,55 @@ async def require_auth(headers: dict, *, payload: Optional[dict] = None, flag: b
         raise HTTPException(status_code=401, detail=str(exc))
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+def normalize_headers(request) -> dict:
+    """Normalize request headers to lowercase keys."""
+    return {k.lower(): v for (k, v) in request.headers.items()}
+
+
+def extract_client_ip(request, headers: dict) -> str:
+    """Extract client IP from the request object, falling back to headers."""
+    return (request.client.host if request.client else None) or client_ip_from_headers(headers)
+
+
+async def request_guard(
+    request,
+    *,
+    admin_flag: bool = False,
+    auth_flag: bool = False,
+    rate_bucket: str,
+    rate_limit_per_min: int = 10,
+) -> dict:
+    """Common request validation: normalize headers, check admin/auth, rate-limit.
+
+    Returns the normalized headers dict for further use by the caller.
+    """
+    headers = normalize_headers(request)
+    require_admin(headers, flag=admin_flag)
+    await require_auth(headers, flag=auth_flag)
+    ip = extract_client_ip(request, headers)
+    rate_limit(rate_bucket, str(ip), rate_limit_per_min)
+    return headers
+
+
+def detect_audio_mime(content_type: str) -> str:
+    """Detect audio MIME type from an upload's content_type string."""
+    ct = (content_type or '').lower()
+    if 'webm' in ct:
+        return 'audio/webm'
+    if 'ogg' in ct:
+        return 'audio/ogg'
+    if 'm4a' in ct:
+        return 'audio/mp4'
+    if 'mp3' in ct:
+        return 'audio/mp3'
+    return 'audio/wav'
+
+
+def clean_llm_json(raw: str) -> str:
+    """Strip markdown code fences from LLM JSON responses."""
+    cleaned = raw.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+    return cleaned
