@@ -163,7 +163,7 @@
   $: panelBg = (() => {
     const img = currentPanel?.image;
     const grad = panelGradient;
-    if (img) return `url(${img}) center/cover no-repeat, ${grad}`;
+    if (img) return `url(${img}) center 20%/cover no-repeat, ${grad}`;
     return grad;
   })();
 
@@ -1669,7 +1669,7 @@
     height: 100vh;
     z-index: 0;
     background-size: cover;
-    background-position: center;
+    background-position: center 20%;
     pointer-events: none;
   }
 
