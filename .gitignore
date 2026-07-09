@@ -38,8 +38,13 @@ dist/
 # Claude local
 .claude/settings.local.json
 
+# Playwright MCP session artifacts (console logs, screenshots)
+.playwright-mcp/
+
 image_cache/
 examples_audio/
+# backend/examples_audio is a symlink to root examples_audio (target above)
+backend/examples_audio
 voice_notes/
 transcriptions/
 narratives/
@@ -48,3 +53,9 @@ narratives/
 *.mp3
 *.wav
 *.m4a
+
+# Root-only scratch (nested images under content/, frontend/static/, etc. stay tracked)
+/*.png
+/*.jpg
+/*.jpeg
+/wip_*.md
