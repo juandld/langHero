@@ -3,14 +3,79 @@ Visual panels API endpoints for manga/webtoon style panels.
 """
 
 import os
+import json as json_mod
 import asyncio
 from fastapi import APIRouter, Request, HTTPException
 from story import to_panels as story_to_panels
 from image.visual_styles import ArtStyle, Panel, PanelType, Mood, VisualEffect, get_intro_panels
 from services.scenarios import get_scenario_by_id
 from image import dalle as image_gen
+from security import parse_json_body
 
 router = APIRouter(prefix="/api/panels", tags=["panels"])
+
+_STORIES_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "stories.json")
+
+
+def _load_stories_data() -> dict:
+    """Load and return stories.json, raising HTTPException on failure."""
+    try:
+        with open(_STORIES_PATH, "r") as f:
+            return json_mod.load(f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load stories: {e}")
+
+
+def _find_story(stories_data: dict, story_id: str) -> dict:
+    """Find a story by ID in stories data, raising 404 if not found."""
+    for s in stories_data.get("stories", []):
+        if s.get("id") == story_id:
+            return s
+    raise HTTPException(status_code=404, detail="story_not_found")
+
+
+def _parse_art_style(style_str: str, default: ArtStyle = ArtStyle.MANHWA) -> ArtStyle:
+    """Parse an art style string, returning default on invalid values."""
+    try:
+        return ArtStyle(style_str.lower())
+    except ValueError:
+        return default
+
+
+def _lookup_panel(panels_db: dict, panel_id: str) -> dict:
+    """Look up a panel by ID across all categories in the panels database."""
+    for cat, cat_panels in panels_db.items():
+        if panel_id in cat_panels:
+            panel_data = cat_panels[panel_id]
+            return {
+                "id": panel_data.get("id", panel_id),
+                "category": cat,
+                "scene_description": panel_data.get("scene_description", ""),
+                "mood": panel_data.get("mood", "warm"),
+                "effects": panel_data.get("effects", []),
+                "art_style": panel_data.get("art_style", "manhwa"),
+                "image_url": panel_data.get("image_url"),
+            }
+    return {
+        "id": panel_id,
+        "category": "unknown",
+        "scene_description": f"Panel {panel_id}",
+        "mood": "warm",
+        "effects": [],
+        "art_style": "manhwa",
+        "image_url": None,
+    }
+
+
+def _resolve_panel_assignments(assigned) -> dict:
+    """Convert any panel assignment format (dict, list, str) to line-indexed dict."""
+    if isinstance(assigned, dict):
+        return assigned
+    if isinstance(assigned, list):
+        return {str(idx): pid for idx, pid in enumerate(assigned)}
+    if isinstance(assigned, str):
+        return {"0": assigned}
+    raise HTTPException(status_code=500, detail="invalid_panel_assignment_format")
 
 
 @router.post("/from-story")
@@ -27,10 +92,7 @@ async def api_story_to_panels(request: Request):
 
     Returns: {sequence with panels}
     """
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
+    body = await parse_json_body(request)
 
     narrative = str((body or {}).get("narrative", "")).strip()
     if not narrative:
@@ -39,13 +101,7 @@ async def api_story_to_panels(request: Request):
     title = str((body or {}).get("title", "Scene")).strip()
     max_panels = int((body or {}).get("max_panels", 12))
     target_language = str((body or {}).get("target_language", "Japanese")).strip()
-
-    # Parse art style
-    style_str = str((body or {}).get("art_style", "manhwa")).lower()
-    try:
-        art_style = ArtStyle(style_str)
-    except ValueError:
-        art_style = ArtStyle.MANHWA
+    art_style = _parse_art_style(str((body or {}).get("art_style", "manhwa")))
 
     try:
         sequence = await asyncio.to_thread(
@@ -71,16 +127,8 @@ async def api_scenario_to_panels(scenario_id: int, request: Request):
     if not scenario:
         raise HTTPException(status_code=404, detail="scenario_not_found")
 
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
-
-    style_str = str((body or {}).get("art_style", "manhwa")).lower()
-    try:
-        art_style = ArtStyle(style_str)
-    except ValueError:
-        art_style = ArtStyle.MANHWA
+    body = await parse_json_body(request)
+    art_style = _parse_art_style(str((body or {}).get("art_style", "manhwa")))
 
     try:
         sequence = await asyncio.to_thread(
@@ -105,10 +153,7 @@ async def api_generate_panel_images(request: Request):
 
     Returns: {results: [{url, panel_id, cached, error?}]}
     """
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
+    body = await parse_json_body(request)
 
     panels_data = (body or {}).get("panels", [])
     context = str((body or {}).get("context", "")).strip()
@@ -125,10 +170,7 @@ async def api_generate_panel_images(request: Request):
         except ValueError:
             panel_type = PanelType.FULL
 
-        try:
-            art_style = ArtStyle(p.get("art_style", "manhwa"))
-        except ValueError:
-            art_style = ArtStyle.MANHWA
+        art_style = _parse_art_style(p.get("art_style", "manhwa"))
 
         try:
             mood = Mood(p.get("mood", "warm"))
@@ -181,32 +223,13 @@ async def api_get_panel_by_id(panel_id: str):
 
     Returns: {panel data} or 404
     """
-    import json as json_mod
-    stories_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "stories.json")
+    stories_data = _load_stories_data()
+    panels_db = stories_data.get("panels", {})
+    result = _lookup_panel(panels_db, panel_id)
 
-    try:
-        with open(stories_path, "r") as f:
-            stories_data = json_mod.load(f)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to load stories: {e}")
-
-    panels = stories_data.get("panels", {})
-
-    # Search through all categories
-    for category, category_panels in panels.items():
-        if panel_id in category_panels:
-            panel_data = category_panels[panel_id]
-            return {
-                "id": panel_data.get("id", panel_id),
-                "category": category,
-                "scene_description": panel_data.get("scene_description", ""),
-                "mood": panel_data.get("mood", "warm"),
-                "effects": panel_data.get("effects", []),
-                "art_style": panel_data.get("art_style", "manhwa"),
-                "image_url": panel_data.get("image_url"),
-            }
-
-    raise HTTPException(status_code=404, detail="panel_not_found")
+    if result["category"] == "unknown":
+        raise HTTPException(status_code=404, detail="panel_not_found")
+    return result
 
 
 @router.get("/sequence/{dialogue_key}")
@@ -218,76 +241,18 @@ async def api_get_panel_sequence(dialogue_key: str, story_id: str = "shogun"):
 
     Returns: {panels: {"0": {...}, "1": {...}, ...}, dialogue_key, story_id}
     """
-    import json as json_mod
-    stories_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "stories.json")
+    stories_data = _load_stories_data()
+    story = _find_story(stories_data, story_id)
 
-    try:
-        with open(stories_path, "r") as f:
-            stories_data = json_mod.load(f)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to load stories: {e}")
-
-    # Find the story
-    story = None
-    for s in stories_data.get("stories", []):
-        if s.get("id") == story_id:
-            story = s
-            break
-
-    if not story:
-        raise HTTPException(status_code=404, detail="story_not_found")
-
-    # Get panel assignments for this dialogue
     panel_assignments = story.get("panel_assignments", {})
     assigned = panel_assignments.get(dialogue_key)
 
     if not assigned:
         raise HTTPException(status_code=404, detail="no_panels_assigned")
 
-    # Look up each panel in the panels database
     panels_db = stories_data.get("panels", {})
-
-    def lookup_panel(panel_id):
-        """Look up a panel by ID across all categories."""
-        for cat, cat_panels in panels_db.items():
-            if panel_id in cat_panels:
-                panel_data = cat_panels[panel_id]
-                return {
-                    "id": panel_data.get("id", panel_id),
-                    "category": cat,
-                    "scene_description": panel_data.get("scene_description", ""),
-                    "mood": panel_data.get("mood", "warm"),
-                    "effects": panel_data.get("effects", []),
-                    "art_style": panel_data.get("art_style", "manhwa"),
-                    "image_url": panel_data.get("image_url"),
-                }
-        # Panel not found, create placeholder
-        return {
-            "id": panel_id,
-            "category": "unknown",
-            "scene_description": f"Panel {panel_id}",
-            "mood": "warm",
-            "effects": [],
-            "art_style": "manhwa",
-            "image_url": None,
-        }
-
-    # Handle both old array format and new line-indexed object format
-    if isinstance(assigned, dict):
-        # New line-indexed format: {"0": "panel_id", "1": "panel_id", ...}
-        result_panels = {}
-        for line_idx, panel_id in assigned.items():
-            result_panels[line_idx] = lookup_panel(panel_id)
-    elif isinstance(assigned, list):
-        # Legacy array format: ["panel_id", "panel_id", ...]
-        result_panels = {}
-        for idx, panel_id in enumerate(assigned):
-            result_panels[str(idx)] = lookup_panel(panel_id)
-    elif isinstance(assigned, str):
-        # Single panel for all lines
-        result_panels = {"0": lookup_panel(assigned)}
-    else:
-        raise HTTPException(status_code=500, detail="invalid_panel_assignment_format")
+    indexed = _resolve_panel_assignments(assigned)
+    result_panels = {idx: _lookup_panel(panels_db, pid) for idx, pid in indexed.items()}
 
     return {
         "story_id": story_id,
@@ -347,25 +312,8 @@ async def api_dialogue_to_panels(story_id: str, dialogue_key: str, request: Requ
 
     Returns: {sequence with panels}
     """
-    # Load stories.json
-    import json as json_mod
-    stories_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "stories.json")
-
-    try:
-        with open(stories_path, "r") as f:
-            stories_data = json_mod.load(f)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to load stories: {e}")
-
-    # Find the story
-    story = None
-    for s in stories_data.get("stories", []):
-        if s.get("id") == story_id:
-            story = s
-            break
-
-    if not story:
-        raise HTTPException(status_code=404, detail="story_not_found")
+    stories_data = _load_stories_data()
+    story = _find_story(stories_data, story_id)
 
     # Get the dialogue
     dialogue_lines = stories_data.get("dialogues", {}).get(dialogue_key)
@@ -385,10 +333,7 @@ async def api_dialogue_to_panels(story_id: str, dialogue_key: str, request: Requ
         aesthetic = "holographic"  # Briefing still in simulation
 
     # Parse request body
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
+    body = await parse_json_body(request)
 
     story_context = str((body or {}).get("story_context", story.get("description", ""))).strip()
 
@@ -436,24 +381,8 @@ async def api_generate_all_story_panels(story_id: str):
         ]
     }
     """
-    import json as json_mod
-    stories_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "stories.json")
-
-    try:
-        with open(stories_path, "r") as f:
-            stories_data = json_mod.load(f)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to load stories: {e}")
-
-    # Find the story
-    story = None
-    for s in stories_data.get("stories", []):
-        if s.get("id") == story_id:
-            story = s
-            break
-
-    if not story:
-        raise HTTPException(status_code=404, detail="story_not_found")
+    stories_data = _load_stories_data()
+    story = _find_story(stories_data, story_id)
 
     # Get all dialogues referenced by this story
     tutorial = story.get("tutorial", {})
@@ -487,18 +416,7 @@ async def api_generate_all_story_panels(story_id: str):
         else:
             aesthetic = main.get("aesthetic", "cinematic")
 
-        # Handle different assignment formats
-        if isinstance(assignment, dict):
-            # New line-indexed format
-            assigned_panels = list(assignment.values())
-        elif isinstance(assignment, list):
-            # Legacy array format
-            assigned_panels = assignment
-        elif isinstance(assignment, str):
-            # Single panel
-            assigned_panels = [assignment]
-        else:
-            assigned_panels = []
+        assigned_panels = list(_resolve_panel_assignments(assignment).values()) if assignment else []
 
         result.append({
             "key": key,

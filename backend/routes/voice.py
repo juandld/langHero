@@ -13,6 +13,7 @@ from fastapi import APIRouter, Request, Response
 from voice import select as voice_select
 from voice import cache as voice_cache
 from services.scenarios import get_scenario_by_id
+from security import parse_json_body
 
 # Try to import Google TTS
 try:
@@ -87,10 +88,7 @@ async def api_tts(request: Request):
         "inline"?: false                # return audio as base64 data URL (avoids CORS/Access issues)
     }
     """
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
+    body = await parse_json_body(request)
 
     text = str((body or {}).get("text") or "").strip()
     inline = bool((body or {}).get("inline", False))
