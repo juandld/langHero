@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import { fly, fade } from 'svelte/transition';
 
   const dispatch = createEventDispatcher();
@@ -8,54 +8,151 @@
   export let isPlaying = false;
   export let minimized = false;
 
+  // Typewriter state
+  let displayedNarration = '';
+  let displayedDialogue = '';
+  let isTyping = false;
+  let typeInterval = null;
+
   function getSpeakerName(speaker) {
-    const names = { bimbo: 'Bimbo', hana: 'Hana', samurai: 'Samurai', player: 'You' };
+    const names = {
+      bimbo: 'Bimbo', hana: 'Hana', samurai: 'Samurai', player: 'You',
+      wukong: 'Sun Wukong', sanzang: 'Sanzang', bajie: 'Zhu Bajie',
+      wujing: 'Sha Wujing', innkeeper: 'Innkeeper', bandit_chief: 'Bandit Chief',
+      jade_spirit: 'Jade Spirit', magistrate: 'Magistrate Wang',
+      tea_master: 'Master Lü', narrator: 'Narrator',
+    };
     return names[speaker] || speaker;
   }
 
   function getSpeakerColor(speaker) {
-    const colors = { bimbo: '#a855f7', hana: '#78716c', samurai: '#dc2626', player: '#10b981' };
+    const colors = {
+      bimbo: '#a855f7', hana: '#78716c', samurai: '#dc2626', player: '#10b981',
+      wukong: '#f59e0b', sanzang: '#fbbf24', bajie: '#fb923c',
+      wujing: '#38bdf8', innkeeper: '#a3a3a3', bandit_chief: '#ef4444',
+      jade_spirit: '#34d399', magistrate: '#818cf8', tea_master: '#94a3b8',
+    };
     return colors[speaker] || '#fff';
+  }
+
+  function getSpeakerIcon(speaker) {
+    const icons = {
+      bimbo: '◈', wukong: '🐵', sanzang: '📿', bajie: '🐷',
+      wujing: '🌊', jade_spirit: '✦', tea_master: '🍵',
+      player: '▸', samurai: '⚔', hana: '❀',
+    };
+    return icons[speaker] || '●';
+  }
+
+  // Typewriter effect
+  function typeText(fullText, setter, speed = 25) {
+    return new Promise((resolve) => {
+      if (!fullText) { setter(''); resolve(); return; }
+      let i = 0;
+      isTyping = true;
+      setter('');
+      clearInterval(typeInterval);
+      typeInterval = setInterval(() => {
+        if (i < fullText.length) {
+          // Add chars in chunks for speed
+          const chunk = Math.min(3, fullText.length - i);
+          setter(fullText.slice(0, i + chunk));
+          i += chunk;
+        } else {
+          clearInterval(typeInterval);
+          isTyping = false;
+          resolve();
+        }
+      }, speed);
+    });
+  }
+
+  // Skip to full text
+  function skipTyping() {
+    clearInterval(typeInterval);
+    isTyping = false;
+    if (currentPanel?.narration) displayedNarration = currentPanel.narration;
+    if (currentPanel?.dialogue) displayedDialogue = currentPanel.dialogue;
+  }
+
+  // React to panel changes
+  $: if (currentPanel?.id) {
+    clearInterval(typeInterval);
+    const panel = currentPanel;
+    displayedNarration = '';
+    displayedDialogue = '';
+    // Start typewriter
+    (async () => {
+      if (panel.narration) {
+        await typeText(panel.narration, (t) => { displayedNarration = t; }, 20);
+      }
+      if (panel.dialogue) {
+        await typeText(panel.dialogue, (t) => { displayedDialogue = t; }, 20);
+      }
+    })();
   }
 </script>
 
-<div class="text-box" class:minimized>
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div class="text-box" class:minimized on:click={() => isTyping && skipTyping()}>
   {#key currentPanel?.id}
     <div class="text-content" in:fly={{ y: 20, duration: 300 }}>
       {#if currentPanel?.narration}
-        <p class="narration clickable" role="button" tabindex="0" on:click|stopPropagation={() => dispatch('playNarration')} on:keydown|stopPropagation={(e) => { if (e.key === 'Enter' || e.key === ' ') dispatch('playNarration'); }}>
-          {currentPanel.narration}
-          <span class="audio-hint">🔊</span>
+        <p class="narration clickable" role="button" tabindex="0"
+           on:click|stopPropagation={() => { skipTyping(); dispatch('playNarration'); }}
+           on:keydown|stopPropagation={(e) => { if (e.key === 'Enter' || e.key === ' ') dispatch('playNarration'); }}>
+          {displayedNarration}{#if isTyping && !displayedDialogue}<span class="cursor">▌</span>{/if}
+          {#if !isTyping}<span class="audio-hint">🔊</span>{/if}
         </p>
       {/if}
-      {#if currentPanel?.dialogue}
-        <p class="dialogue">
+      {#if currentPanel?.dialogue && displayedDialogue}
+        <p class="dialogue" in:fly={{ y: 10, duration: 200 }}>
           {#if currentPanel?.speaker}
             {#if currentPanel.speaker === 'player'}
-              <span class="speaker" style="color: {getSpeakerColor(currentPanel.speaker)}">
-                {getSpeakerName(currentPanel.speaker)}:
+              <span class="speaker-tag player-tag">
+                <span class="speaker-icon">{getSpeakerIcon(currentPanel.speaker)}</span>
+                <span class="speaker-name" style="color: {getSpeakerColor(currentPanel.speaker)}">
+                  {getSpeakerName(currentPanel.speaker)}
+                </span>
               </span>
             {:else}
               <button
-                class="speaker-btn"
-                style="color: {getSpeakerColor(currentPanel.speaker)}"
-                on:click|stopPropagation={() => dispatch('playDialogue')}
+                class="speaker-tag"
+                on:click|stopPropagation={() => { skipTyping(); dispatch('playDialogue'); }}
               >
-                {getSpeakerName(currentPanel.speaker)}:
+                <span class="speaker-icon">{getSpeakerIcon(currentPanel.speaker)}</span>
+                <span class="speaker-name" style="color: {getSpeakerColor(currentPanel.speaker)}">
+                  {getSpeakerName(currentPanel.speaker)}
+                </span>
                 <span class="audio-hint">🔊</span>
               </button>
             {/if}
           {/if}
-          "{currentPanel.dialogue}"
+          <span class="dialogue-text">"{displayedDialogue}{#if isTyping}<span class="cursor">▌</span>{:else}"{/if}</span>
         </p>
       {/if}
     </div>
   {/key}
 
+  {#if isTyping}
+    <div class="typing-indicator">
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+    </div>
+  {/if}
+
   {#if isPlaying}
     <div class="playing-bar" transition:fade={{ duration: 200 }}>
-      <span class="playing-dot"></span>
-      <span>Playing...</span>
+      <div class="sound-wave">
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+      </div>
+      <span>Narrating...</span>
       <button class="stop-btn" on:click|stopPropagation={() => dispatch('stopAudio')}>Stop</button>
     </div>
   {/if}
@@ -64,7 +161,7 @@
 <style>
   .text-box {
     background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.8));
-    padding: 1rem;
+    padding: 1rem 1.25rem;
     min-height: 80px;
     transition: min-height 0.3s ease, opacity 0.3s ease;
   }
@@ -81,7 +178,7 @@
 
   .narration {
     font-size: 0.95rem;
-    line-height: 1.6;
+    line-height: 1.7;
     color: #d4d4d8;
     margin: 0 0 0.5rem 0;
     font-style: italic;
@@ -97,6 +194,16 @@
     color: #fff;
   }
 
+  .cursor {
+    color: #a78bfa;
+    animation: blink 0.6s step-end infinite;
+    font-style: normal;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
   .audio-hint {
     font-size: 0.75em;
     opacity: 0.4;
@@ -106,41 +213,85 @@
   }
 
   .narration.clickable:hover .audio-hint,
-  .speaker-btn:hover .audio-hint {
+  .speaker-tag:hover .audio-hint {
     opacity: 0.8;
   }
 
   .dialogue {
-    font-size: 1rem;
+    font-size: 1.05rem;
     line-height: 1.6;
     color: #fff;
     margin: 0;
   }
 
-  .speaker {
-    font-weight: 600;
-    margin-right: 0.5rem;
+  .dialogue-text {
+    display: inline;
   }
 
-  .speaker-btn {
+  /* Speaker tag */
+  .speaker-tag {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    font-weight: 600;
+    gap: 0.35rem;
     margin-right: 0.5rem;
-    background: none;
-    border: none;
-    padding: 0;
+    margin-bottom: 0.25rem;
+    padding: 0.2rem 0.6rem 0.2rem 0.4rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
     font-size: inherit;
     font-family: inherit;
+    font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: background 0.2s, border-color 0.2s;
+    color: inherit;
   }
 
-  .speaker-btn:hover {
-    opacity: 0.8;
+  .speaker-tag:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
   }
 
+  .speaker-tag.player-tag {
+    cursor: default;
+    background: rgba(16,185,129,0.1);
+    border-color: rgba(16,185,129,0.2);
+  }
+
+  .speaker-icon {
+    font-size: 0.9em;
+    font-style: normal;
+  }
+
+  .speaker-name {
+    font-weight: 700;
+  }
+
+  /* Typing indicator */
+  .typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: 0.4rem 0;
+    justify-content: center;
+  }
+
+  .typing-dot {
+    width: 6px;
+    height: 6px;
+    background: #a78bfa;
+    border-radius: 50%;
+    animation: typing-bounce 1.2s ease-in-out infinite;
+  }
+
+  .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes typing-bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* Playing bar with sound wave */
   .playing-bar {
     display: flex;
     align-items: center;
@@ -150,17 +301,29 @@
     color: #a78bfa;
   }
 
-  .playing-dot {
-    width: 8px;
-    height: 8px;
-    background: #a78bfa;
-    border-radius: 50%;
-    animation: pulse-dot 1s ease-in-out infinite;
+  .sound-wave {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 16px;
   }
 
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.8); }
+  .wave-bar {
+    width: 3px;
+    background: #a78bfa;
+    border-radius: 2px;
+    animation: wave 1s ease-in-out infinite;
+  }
+
+  .wave-bar:nth-child(1) { height: 6px; animation-delay: 0s; }
+  .wave-bar:nth-child(2) { height: 12px; animation-delay: 0.15s; }
+  .wave-bar:nth-child(3) { height: 8px; animation-delay: 0.3s; }
+  .wave-bar:nth-child(4) { height: 14px; animation-delay: 0.45s; }
+  .wave-bar:nth-child(5) { height: 6px; animation-delay: 0.6s; }
+
+  @keyframes wave {
+    0%, 100% { transform: scaleY(0.5); }
+    50% { transform: scaleY(1); }
   }
 
   .stop-btn {

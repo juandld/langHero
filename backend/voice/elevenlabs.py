@@ -6,10 +6,10 @@ Supports voice cloning, multilingual, and fine-tuned control.
 """
 
 import os
-import hashlib
-from pathlib import Path
 from typing import Optional
 from dotenv import load_dotenv
+
+from voice.cache import tts_cache_key, tts_cache_lookup, tts_cache_path, tts_response
 
 load_dotenv()
 
@@ -20,10 +20,6 @@ try:
 except ImportError:
     ELEVENLABS_AVAILABLE = False
     ElevenLabs = None
-
-# Cache directory - same as other TTS providers
-CACHE_DIR = Path(__file__).parent.parent / "examples_audio" / "phrases"
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 # Get API key
 API_KEY = os.getenv("ELEVENLABS_API_KEY")
@@ -153,6 +149,16 @@ CHARACTER_VOICES = {
     "player": "none",                     # Player is the user - no TTS
     "villager": "male_warm",
     "elder": "narrator_male",
+    # Journey to the West characters
+    "wukong": "male_authoritative",       # Monkey King - bold, sharp
+    "sanzang": "narrator_male",           # Monk - calm, measured
+    "bajie": "male_warm",                 # Pig - jovial, lazy
+    "wujing": "narrator_dramatic",        # River spirit - deep, steady
+    "innkeeper": "male_warm",
+    "bandit_chief": "male_authoritative",
+    "jade_spirit": "female_young",
+    "magistrate": "male_authoritative",
+    "tea_master": "narrator_male",
 }
 
 
@@ -215,21 +221,13 @@ def synthesize_speech(
             voice_id = RECOMMENDED_VOICES["narrator_female"]["voice_id"]
 
     # Build cache key
-    cache_key = hashlib.md5(
-        f"{text}:{voice_id}:{stability}:{similarity_boost}:{style}:{output_format}".encode()
-    ).hexdigest()[:16]
+    key = tts_cache_key(text, voice_id, str(stability), str(similarity_boost), str(style), output_format)
 
-    cache_file = CACHE_DIR / f"eleven-{cache_key}.{output_format}"
+    hit = tts_cache_lookup("eleven", key, output_format, voice_id, "elevenlabs")
+    if hit:
+        return hit
 
-    # Check cache
-    if cache_file.exists():
-        return {
-            "file": f"phrases/{cache_file.name}",
-            "voice": voice_id,
-            "format": output_format,
-            "cached": True,
-            "provider": "elevenlabs",
-        }
+    cache_file = tts_cache_path("eleven", key, output_format)
 
     # Generate speech
     client = get_client()
@@ -252,13 +250,7 @@ def synthesize_speech(
         for chunk in audio:
             f.write(chunk)
 
-    return {
-        "file": f"phrases/{cache_file.name}",
-        "voice": voice_id,
-        "format": output_format,
-        "cached": False,
-        "provider": "elevenlabs",
-    }
+    return tts_response(cache_file, voice_id, output_format, "elevenlabs")
 
 
 # Quick test / voice browser

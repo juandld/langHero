@@ -8,11 +8,10 @@
    * Default story is Shogun (Japanese).
    */
   import { StoryOrchestrator } from '$lib/components/story';
+  import { page } from '$app/stores';
 
-  // Default to Shogun story for now
-  // Later can be configured via query params or user selection
-  const storyId = 'shogun';
-  const language = 'Japanese';
+  $: storyId = $page.url.searchParams.get('id') || 'shogun';
+  $: language = $page.url.searchParams.get('lang') || 'Japanese';
 </script>
 
 <StoryOrchestrator {storyId} {language} />

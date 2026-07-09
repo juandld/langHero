@@ -6,10 +6,10 @@ Supports SSML for pauses, emphasis, and prosody control.
 """
 
 import os
-import hashlib
-from pathlib import Path
 from typing import Optional
 from dotenv import load_dotenv
+
+from voice.cache import tts_cache_key, tts_cache_lookup, tts_cache_path, tts_response
 
 load_dotenv()
 
@@ -22,10 +22,6 @@ try:
 except ImportError:
     GOOGLE_TTS_AVAILABLE = False
     texttospeech = None
-
-# Cache directory - use same location as OpenAI TTS (examples_audio relative to project root)
-CACHE_DIR = Path(__file__).parent.parent / "examples_audio" / "phrases"
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # Google Cloud TTS Voice Catalog
@@ -251,21 +247,13 @@ def synthesize_speech(
     pitch = CHARACTER_PITCH.get(character, 0)
 
     # Build cache key
-    cache_key = hashlib.md5(
-        f"{text}:{voice_name}:{speaking_rate}:{pitch}:{output_format}".encode()
-    ).hexdigest()[:16]
+    key = tts_cache_key(text, voice_name, str(speaking_rate), str(pitch), output_format)
 
-    cache_file = CACHE_DIR / f"google-{cache_key}.{output_format}"
+    hit = tts_cache_lookup("google", key, output_format, voice_name, "google")
+    if hit:
+        return hit
 
-    # Check cache
-    if cache_file.exists():
-        return {
-            "file": f"phrases/{cache_file.name}",
-            "voice": voice_name,
-            "format": output_format,
-            "cached": True,
-            "provider": "google",
-        }
+    cache_file = tts_cache_path("google", key, output_format)
 
     # Build input (SSML or plain text)
     if use_ssml:
@@ -326,13 +314,7 @@ def synthesize_speech(
     with open(cache_file, "wb") as f:
         f.write(response.audio_content)
 
-    return {
-        "file": f"phrases/{cache_file.name}",
-        "voice": voice_name,
-        "format": output_format,
-        "cached": False,
-        "provider": "google",
-    }
+    return tts_response(cache_file, voice_name, output_format, "google")
 
 
 def list_available_voices(language_code: Optional[str] = None) -> list:

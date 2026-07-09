@@ -5,27 +5,36 @@
 // - localStorage BACKEND_URL
 // - Compute from window.location (same-origin for non-localhost; http://localhost:8000 for localhost)
 
-import { env as publicEnv } from '$env/dynamic/public';
+function getEnvBackendUrl(): string {
+  try {
+    // Find the SvelteKit env object dynamically (hash changes per build)
+    const g = globalThis as any;
+    for (const key of Object.keys(g)) {
+      if (key.startsWith('__sveltekit_') && g[key]?.env) {
+        return (g[key].env.PUBLIC_BACKEND_URL || '').trim();
+      }
+    }
+  } catch {}
+  return '';
+}
 
 function computeRuntimeBackend(): string {
   try {
     if (typeof window !== 'undefined' && window.location) {
-      const { protocol, hostname } = window.location;
-      if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        return 'http://localhost:8000';
-      }
-      // For tunneled/public access, assume same-origin reverse proxy in prod.
-      return `${protocol}//${hostname}`;
+      const { protocol, hostname, port } = window.location;
+      // Same-origin: works with reverse proxy (serve.py) on any host
+      const portSuffix = port ? `:${port}` : '';
+      return `${protocol}//${hostname}${portSuffix}`;
     }
   } catch {}
-  return 'http://localhost:8000';
+  return '';
 }
 
 let cachedUrl: string | null = null;
 
 export function getBackendUrl(): string {
   if (cachedUrl) return cachedUrl;
-  const envUrl = (publicEnv?.PUBLIC_BACKEND_URL || '').trim();
+  const envUrl = getEnvBackendUrl();
   if (envUrl) {
     cachedUrl = envUrl;
     return envUrl;

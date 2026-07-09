@@ -24,6 +24,12 @@ export const LANGUAGE_MAP: Record<string, string> = {
   spanish: 'Spanish',
   espanol: 'Spanish',
   español: 'Spanish',
+
+  // Mandarin Chinese
+  zh: 'Mandarin Chinese',
+  cmn: 'Mandarin Chinese',
+  mandarin: 'Mandarin Chinese',
+  chinese: 'Mandarin Chinese',
 };
 
 /**

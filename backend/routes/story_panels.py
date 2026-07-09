@@ -18,14 +18,24 @@ except ImportError:
     get_story_voice_config = None
     get_panel_voice_config = None
 
-# Import skeleton system
+# Import skeleton system — merge registries from all stories
 try:
-    from story.shogun import get_skeleton, STORY_SKELETONS, CHARACTERS, LOCATIONS
+    from story.shogun import get_skeleton, STORY_SKELETONS as _SHOGUN_SKELETONS, CHARACTERS, LOCATIONS
+    STORY_SKELETONS = dict(_SHOGUN_SKELETONS)
 except ImportError:
     get_skeleton = None
     STORY_SKELETONS = {}
     CHARACTERS = {}
     LOCATIONS = {}
+
+try:
+    from story.journey import STORY_SKELETONS as _JOURNEY_SKELETONS, CHARACTERS as _JW_CHARS, LOCATIONS as _JW_LOCS
+    STORY_SKELETONS.update(_JOURNEY_SKELETONS)
+    CHARACTERS.update(_JW_CHARS)
+    LOCATIONS.update(_JW_LOCS)
+except Exception as e:
+    import logging
+    logging.getLogger(__name__).warning(f"Failed to import journey story: {e}")
 
 # Import generator
 try:
@@ -78,7 +88,7 @@ def _get_story(story_id: str):
     if not get_skeleton:
         return None
 
-    skeleton = get_skeleton(story_id)
+    skeleton = STORY_SKELETONS.get(story_id)
     if not skeleton:
         return None
 
@@ -199,7 +209,7 @@ async def get_story_skeleton(story_id: str):
     if not get_skeleton:
         raise HTTPException(status_code=501, detail="Skeleton system not available")
 
-    skeleton = get_skeleton(story_id)
+    skeleton = STORY_SKELETONS.get(story_id)
     if not skeleton:
         raise HTTPException(status_code=404, detail="Story skeleton not found")
 
@@ -222,7 +232,7 @@ async def get_segment(story_id: str, req: SegmentRequest):
     if not get_skeleton:
         raise HTTPException(status_code=501, detail="Skeleton system not available")
 
-    skeleton = get_skeleton(story_id)
+    skeleton = STORY_SKELETONS.get(story_id)
     if not skeleton:
         raise HTTPException(status_code=404, detail="Story skeleton not found")
 
@@ -286,7 +296,7 @@ async def prefetch_segment(story_id: str, req: SegmentRequest):
     if not get_skeleton:
         raise HTTPException(status_code=501, detail="Skeleton system not available")
 
-    skeleton = get_skeleton(story_id)
+    skeleton = STORY_SKELETONS.get(story_id)
     if not skeleton:
         raise HTTPException(status_code=404, detail="Story skeleton not found")
 

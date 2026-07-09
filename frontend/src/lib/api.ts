@@ -1,12 +1,11 @@
 import { getAuthToken } from '$lib/auth';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import { getBackendUrl } from '$lib/config';
 
 /**
  * Get the API base URL
  */
 export function getApiBase(): string {
-  return API_BASE;
+  return getBackendUrl();
 }
 
 export async function apiFetch(input: RequestInfo | URL, init: RequestInit = {}) {
@@ -74,7 +73,7 @@ export interface VoicesResponse {
  * Get available TTS voices
  */
 export async function getVoices(): Promise<VoicesResponse> {
-  const res = await apiFetch(`${API_BASE}/api/voices`);
+  const res = await apiFetch(`${getApiBase()}/api/voices`);
   return res.json();
 }
 
@@ -82,15 +81,15 @@ export async function getVoices(): Promise<VoicesResponse> {
  * Generate or retrieve a TTS audio clip for text
  */
 export async function getTTS(options: TTSRequest): Promise<TTSResponse> {
-  const res = await apiFetch(`${API_BASE}/api/tts`, {
+  const res = await apiFetch(`${getApiBase()}/api/tts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(options),
+    body: JSON.stringify({ ...options, inline: true }),
   });
   const data = await res.json();
-  // Prepend API base to relative URL
-  if (data.url && !data.url.startsWith('http')) {
-    data.url = `${API_BASE}${data.url}`;
+  // Prepend API base to relative URL (skip for data: URLs)
+  if (data.url && !data.url.startsWith('http') && !data.url.startsWith('data:')) {
+    data.url = `${getApiBase()}${data.url}`;
   }
   return data;
 }
@@ -168,7 +167,7 @@ export interface PanelsResponse {
  * Get pre-defined intro panels
  */
 export async function getIntroPanels(): Promise<PanelsResponse> {
-  const res = await apiFetch(`${API_BASE}/api/panels/intro`);
+  const res = await apiFetch(`${getApiBase()}/api/panels/intro`);
   return res.json();
 }
 
@@ -179,7 +178,7 @@ export async function generatePanelImages(
   panels: Panel[],
   options: { context?: string; force?: boolean } = {}
 ): Promise<{ results: Array<{ panel_id: string; url?: string; error?: string }> }> {
-  const res = await apiFetch(`${API_BASE}/api/panels/generate-images`, {
+  const res = await apiFetch(`${getApiBase()}/api/panels/generate-images`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

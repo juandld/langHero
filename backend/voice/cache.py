@@ -13,6 +13,53 @@ import config
 import providers
 from voice import select as voice_select
 
+# ---------------------------------------------------------------------------
+# Shared TTS caching helpers (used by elevenlabs.py and google.py)
+# ---------------------------------------------------------------------------
+
+TTS_CACHE_DIR = Path(__file__).parent.parent / "examples_audio" / "phrases"
+TTS_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def tts_cache_key(*parts: str) -> str:
+    """Build a 16-char hex cache key from variable TTS parameters."""
+    return hashlib.md5(":".join(parts).encode()).hexdigest()[:16]
+
+
+def tts_cache_lookup(
+    prefix: str, cache_key: str, output_format: str, voice: str, provider: str
+) -> dict | None:
+    """Return a cache-hit response dict, or None on miss."""
+    cache_file = TTS_CACHE_DIR / f"{prefix}-{cache_key}.{output_format}"
+    if cache_file.exists():
+        return {
+            "file": f"phrases/{cache_file.name}",
+            "voice": voice,
+            "format": output_format,
+            "cached": True,
+            "provider": provider,
+        }
+    return None
+
+
+def tts_cache_path(prefix: str, cache_key: str, output_format: str) -> Path:
+    """Return the Path where a TTS result should be saved."""
+    return TTS_CACHE_DIR / f"{prefix}-{cache_key}.{output_format}"
+
+
+def tts_response(
+    cache_file: Path, voice: str, output_format: str, provider: str, cached: bool = False
+) -> dict:
+    """Build the standard TTS response dict."""
+    return {
+        "file": f"phrases/{cache_file.name}",
+        "voice": voice,
+        "format": output_format,
+        "cached": cached,
+        "provider": provider,
+    }
+
+
 # Synthesizer signature: (text, voice, format, instructions?) -> bytes
 Synthesizer = Callable[[str, str, str], bytes]
 SynthesizerWithInstructions = Callable[[str, str, str, Optional[str]], bytes]

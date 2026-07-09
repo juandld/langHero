@@ -9,8 +9,13 @@
     "lives": 3,
     "reward_points": 10,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 10 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
     },
     "audio_to_play_url": "/audio/scenario1.mp3",
     "image_url": "/images/ramen_stall.png",
@@ -19,15 +24,36 @@
         "text": "Yes, I am!",
         "style": "polite",
         "next_scenario": 2,
-        "keywords": ["はい", "お願いします", "おねがいします", "うん"],
-        "examples": [{"native": "Yes, please.", "target": "はい、お願いします。", "pronunciation": "Hai, onegaishimasu."}]
+        "keywords": [
+          "はい",
+          "お願いします",
+          "おねがいします",
+          "うん"
+        ],
+        "examples": [
+          {
+            "native": "Yes, please.",
+            "target": "はい、お願いします。",
+            "pronunciation": "Hai, onegaishimasu."
+          }
+        ]
       },
       {
         "text": "No, thank you.",
         "style": "polite",
         "next_scenario": 3,
-        "keywords": ["いいえ", "結構です", "いえ"],
-        "examples": [{"native": "No, thank you.", "target": "いいえ、結構です。", "pronunciation": "Iie, kekkou desu."}]
+        "keywords": [
+          "いいえ",
+          "結構です",
+          "いえ"
+        ],
+        "examples": [
+          {
+            "native": "No, thank you.",
+            "target": "いいえ、結構です。",
+            "pronunciation": "Iie, kekkou desu."
+          }
+        ]
       }
     ]
   },
@@ -41,16 +67,49 @@
     "lives": 3,
     "reward_points": 10,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 10 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
     },
     "audio_to_play_url": "/audio/scenario2.mp3",
     "image_url": "/images/ramen_bowl.png",
     "options": [
-      { "text": "Thank you!", "style": "polite", "next_scenario": 4, "keywords": ["ありがとう", "ありがとうございます"],
-        "examples": [{"native": "Thank you!", "target": "ありがとうございます。", "pronunciation": "Arigatou gozaimasu."}] },
-      { "text": "Looks delicious!", "style": "charming", "next_scenario": 5, "keywords": ["おいしそう", "美味しそう"],
-        "examples": [{"native": "Looks delicious!", "target": "おいしそう！", "pronunciation": "Oishisou!"}] }
+      {
+        "text": "Thank you!",
+        "style": "polite",
+        "next_scenario": 4,
+        "keywords": [
+          "ありがとう",
+          "ありがとうございます"
+        ],
+        "examples": [
+          {
+            "native": "Thank you!",
+            "target": "ありがとうございます。",
+            "pronunciation": "Arigatou gozaimasu."
+          }
+        ]
+      },
+      {
+        "text": "Looks delicious!",
+        "style": "charming",
+        "next_scenario": 5,
+        "keywords": [
+          "おいしそう",
+          "美味しそう"
+        ],
+        "examples": [
+          {
+            "native": "Looks delicious!",
+            "target": "おいしそう！",
+            "pronunciation": "Oishisou!"
+          }
+        ]
+      }
     ]
   },
   {
@@ -63,14 +122,33 @@
     "lives": 3,
     "reward_points": 10,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 10 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
     },
     "audio_to_play_url": "/audio/scenario3.mp3",
     "image_url": "/images/ramen_stall.png",
     "options": [
-      { "text": "Say goodbye politely", "style": "polite", "next_scenario": 6, "keywords": ["失礼します", "さようなら"],
-        "examples": [{"native": "Goodbye.", "target": "失礼します。", "pronunciation": "Shitsurei shimasu."}] }
+      {
+        "text": "Say goodbye politely",
+        "style": "polite",
+        "next_scenario": 6,
+        "keywords": [
+          "失礼します",
+          "さようなら"
+        ],
+        "examples": [
+          {
+            "native": "Goodbye.",
+            "target": "失礼します。",
+            "pronunciation": "Shitsurei shimasu."
+          }
+        ]
+      }
     ]
   },
   {
@@ -83,16 +161,49 @@
     "lives": 2,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "audio_to_play_url": "/audio/scenario4.mp3",
     "image_url": "/images/ramen_bowl.png",
     "options": [
-      { "text": "It's delicious!", "style": "charming", "next_scenario": 5, "keywords": ["おいしい", "美味しい"],
-        "examples": [{"native": "It's delicious!", "target": "おいしいです！", "pronunciation": "Oishii desu!"}] },
-      { "text": "Could I have water?", "style": "direct", "next_scenario": 7, "keywords": ["お水", "ください"],
-        "examples": [{"native": "Water, please.", "target": "お水をください。", "pronunciation": "Omizu o kudasai."}] }
+      {
+        "text": "It's delicious!",
+        "style": "charming",
+        "next_scenario": 5,
+        "keywords": [
+          "おいしい",
+          "美味しい"
+        ],
+        "examples": [
+          {
+            "native": "It's delicious!",
+            "target": "おいしいです！",
+            "pronunciation": "Oishii desu!"
+          }
+        ]
+      },
+      {
+        "text": "Could I have water?",
+        "style": "direct",
+        "next_scenario": 7,
+        "keywords": [
+          "お水",
+          "ください"
+        ],
+        "examples": [
+          {
+            "native": "Water, please.",
+            "target": "お水をください。",
+            "pronunciation": "Omizu o kudasai."
+          }
+        ]
+      }
     ]
   },
   {
@@ -105,16 +216,49 @@
     "lives": 2,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "audio_to_play_url": "/audio/scenario5.mp3",
     "image_url": "/images/ramen_bowl.png",
     "options": [
-      { "text": "Ask for extra egg", "style": "bold", "next_scenario": 7, "keywords": ["卵", "玉子", "ください"],
-        "examples": [{"native": "An extra egg, please.", "target": "味玉をください。", "pronunciation": "Ajitama o kudasai."}] },
-      { "text": "Ask for the bill", "style": "direct", "next_scenario": 8, "keywords": ["お会計"],
-        "examples": [{"native": "The bill, please.", "target": "お会計お願いします。", "pronunciation": "Okaikei onegaishimasu."}] }
+      {
+        "text": "Ask for extra egg",
+        "style": "bold",
+        "next_scenario": 7,
+        "keywords": [
+          "卵",
+          "玉子",
+          "ください"
+        ],
+        "examples": [
+          {
+            "native": "An extra egg, please.",
+            "target": "味玉をください。",
+            "pronunciation": "Ajitama o kudasai."
+          }
+        ]
+      },
+      {
+        "text": "Ask for the bill",
+        "style": "direct",
+        "next_scenario": 8,
+        "keywords": [
+          "お会計"
+        ],
+        "examples": [
+          {
+            "native": "The bill, please.",
+            "target": "お会計お願いします。",
+            "pronunciation": "Okaikei onegaishimasu."
+          }
+        ]
+      }
     ]
   },
   {
@@ -127,8 +271,13 @@
     "lives": 2,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "audio_to_play_url": "/audio/scenario6.mp3",
     "image_url": "/images/ramen_stall.png",
@@ -144,14 +293,33 @@
     "lives": 2,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "audio_to_play_url": "/audio/scenario7.mp3",
     "image_url": "/images/ramen_bowl.png",
     "options": [
-      { "text": "Thank you", "style": "polite", "next_scenario": 8, "keywords": ["ありがとう", "ありがとうございます"],
-        "examples": [{"native": "Thank you.", "target": "ありがとうございます。", "pronunciation": "Arigatou gozaimasu."}] }
+      {
+        "text": "Thank you",
+        "style": "polite",
+        "next_scenario": 8,
+        "keywords": [
+          "ありがとう",
+          "ありがとうございます"
+        ],
+        "examples": [
+          {
+            "native": "Thank you.",
+            "target": "ありがとうございます。",
+            "pronunciation": "Arigatou gozaimasu."
+          }
+        ]
+      }
     ]
   },
   {
@@ -164,14 +332,18 @@
     "lives": 2,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "audio_to_play_url": "/audio/scenario8.mp3",
     "image_url": "/images/ramen_stall.png",
     "options": []
   },
-
   {
     "id": 100,
     "story_id": "shogun",
@@ -185,26 +357,47 @@
     "lives": 3,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
       {
         "text": "Identify yourself",
         "style": "polite",
         "next_scenario": 101,
-        "keywords": ["私は", "わたしは", "です"],
+        "keywords": [
+          "私は",
+          "わたしは",
+          "です"
+        ],
         "examples": [
-          {"native": "I am... a traveler.", "target": "私は...旅人です。", "pronunciation": "Watashi wa... tabibito desu."}
+          {
+            "native": "I am... a traveler.",
+            "target": "私は...旅人です。",
+            "pronunciation": "Watashi wa... tabibito desu."
+          }
         ]
       },
       {
         "text": "Plead for mercy",
         "style": "humble",
         "next_scenario": 102,
-        "keywords": ["お願い", "助けて", "命"],
+        "keywords": [
+          "お願い",
+          "助けて",
+          "命"
+        ],
         "examples": [
-          {"native": "Please... spare my life.", "target": "お願いします...命だけは。", "pronunciation": "Onegaishimasu... inochi dake wa."}
+          {
+            "native": "Please... spare my life.",
+            "target": "お願いします...命だけは。",
+            "pronunciation": "Onegaishimasu... inochi dake wa."
+          }
         ]
       }
     ]
@@ -222,26 +415,47 @@
     "lives": 3,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
       {
         "text": "From a faraway land",
         "style": "honest",
         "next_scenario": 103,
-        "keywords": ["遠い", "国", "から"],
+        "keywords": [
+          "遠い",
+          "国",
+          "から"
+        ],
         "examples": [
-          {"native": "From a faraway land.", "target": "遠い国から来ました。", "pronunciation": "Tooi kuni kara kimashita."}
+          {
+            "native": "From a faraway land.",
+            "target": "遠い国から来ました。",
+            "pronunciation": "Tooi kuni kara kimashita."
+          }
         ]
       },
       {
         "text": "Point to the shipwreck",
         "style": "direct",
         "next_scenario": 103,
-        "keywords": ["船", "あの", "あそこ"],
+        "keywords": [
+          "船",
+          "あの",
+          "あそこ"
+        ],
         "examples": [
-          {"native": "That ship... was mine.", "target": "あの船...私のです。", "pronunciation": "Ano fune... watashi no desu."}
+          {
+            "native": "That ship... was mine.",
+            "target": "あの船...私のです。",
+            "pronunciation": "Ano fune... watashi no desu."
+          }
         ]
       }
     ]
@@ -259,17 +473,30 @@
     "lives": 3,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
       {
         "text": "Show respect",
         "style": "humble",
         "next_scenario": 103,
-        "keywords": ["すみません", "ごめんなさい", "申し訳"],
+        "keywords": [
+          "すみません",
+          "ごめんなさい",
+          "申し訳"
+        ],
         "examples": [
-          {"native": "I meant no disrespect.", "target": "失礼しました。", "pronunciation": "Shitsurei shimashita."}
+          {
+            "native": "I meant no disrespect.",
+            "target": "失礼しました。",
+            "pronunciation": "Shitsurei shimashita."
+          }
         ]
       }
     ]
@@ -287,26 +514,47 @@
     "lives": 3,
     "reward_points": 20,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
       {
         "text": "Follow obediently",
         "style": "humble",
         "next_scenario": 104,
-        "keywords": ["はい", "分かりました", "わかりました"],
+        "keywords": [
+          "はい",
+          "分かりました",
+          "わかりました"
+        ],
         "examples": [
-          {"native": "Yes, I understand.", "target": "はい、分かりました。", "pronunciation": "Hai, wakarimashita."}
+          {
+            "native": "Yes, I understand.",
+            "target": "はい、分かりました。",
+            "pronunciation": "Hai, wakarimashita."
+          }
         ]
       },
       {
         "text": "Ask where you're going",
         "style": "curious",
         "next_scenario": 104,
-        "keywords": ["どこ", "行く", "どちら"],
+        "keywords": [
+          "どこ",
+          "行く",
+          "どちら"
+        ],
         "examples": [
-          {"native": "Where are we going?", "target": "どこへ行くのですか？", "pronunciation": "Doko e iku no desu ka?"}
+          {
+            "native": "Where are we going?",
+            "target": "どこへ行くのですか？",
+            "pronunciation": "Doko e iku no desu ka?"
+          }
         ]
       }
     ]
@@ -324,26 +572,45 @@
     "lives": 3,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
       {
         "text": "Greet the villagers",
         "style": "friendly",
         "next_scenario": 105,
-        "keywords": ["こんにちは", "よろしく"],
+        "keywords": [
+          "こんにちは",
+          "よろしく"
+        ],
         "examples": [
-          {"native": "Hello.", "target": "こんにちは。", "pronunciation": "Konnichiwa."}
+          {
+            "native": "Hello.",
+            "target": "こんにちは。",
+            "pronunciation": "Konnichiwa."
+          }
         ]
       },
       {
         "text": "Keep your head down",
         "style": "cautious",
         "next_scenario": 105,
-        "keywords": ["すみません", "通ります"],
+        "keywords": [
+          "すみません",
+          "通ります"
+        ],
         "examples": [
-          {"native": "Excuse me.", "target": "すみません。", "pronunciation": "Sumimasen."}
+          {
+            "native": "Excuse me.",
+            "target": "すみません。",
+            "pronunciation": "Sumimasen."
+          }
         ]
       }
     ]
@@ -361,27 +628,52 @@
     "lives": 3,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
       {
         "text": "Thank her gratefully",
         "style": "polite",
         "next_scenario": 106,
-        "keywords": ["ありがとう", "ございます", "いただきます"],
+        "keywords": [
+          "ありがとう",
+          "ございます",
+          "いただきます"
+        ],
         "examples": [
-          {"native": "Thank you very much.", "target": "ありがとうございます。", "pronunciation": "Arigatou gozaimasu."},
-          {"native": "I gratefully receive.", "target": "いただきます。", "pronunciation": "Itadakimasu."}
+          {
+            "native": "Thank you very much.",
+            "target": "ありがとうございます。",
+            "pronunciation": "Arigatou gozaimasu."
+          },
+          {
+            "native": "I gratefully receive.",
+            "target": "いただきます。",
+            "pronunciation": "Itadakimasu."
+          }
         ]
       },
       {
         "text": "Ask her name",
         "style": "friendly",
         "next_scenario": 106,
-        "keywords": ["名前", "お名前", "何という"],
+        "keywords": [
+          "名前",
+          "お名前",
+          "何という"
+        ],
         "examples": [
-          {"native": "What is your name?", "target": "お名前は何ですか？", "pronunciation": "Onamae wa nan desu ka?"}
+          {
+            "native": "What is your name?",
+            "target": "お名前は何ですか？",
+            "pronunciation": "Onamae wa nan desu ka?"
+          }
         ]
       }
     ]
@@ -399,26 +691,47 @@
     "lives": 2,
     "reward_points": 20,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 20 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 20
+      }
     },
     "options": [
       {
         "text": "Express gratitude for the kindness",
         "style": "humble",
         "next_scenario": 107,
-        "keywords": ["ありがとう", "親切", "感謝"],
+        "keywords": [
+          "ありがとう",
+          "親切",
+          "感謝"
+        ],
         "examples": [
-          {"native": "Your kindness is appreciated.", "target": "ご親切にありがとうございます。", "pronunciation": "Goshinsetsu ni arigatou gozaimasu."}
+          {
+            "native": "Your kindness is appreciated.",
+            "target": "ご親切にありがとうございます。",
+            "pronunciation": "Goshinsetsu ni arigatou gozaimasu."
+          }
         ]
       },
       {
         "text": "Ask about the lord",
         "style": "curious",
         "next_scenario": 107,
-        "keywords": ["殿様", "どんな", "どういう"],
+        "keywords": [
+          "殿様",
+          "どんな",
+          "どういう"
+        ],
         "examples": [
-          {"native": "What is the lord like?", "target": "殿様はどんな方ですか？", "pronunciation": "Tonosama wa donna kata desu ka?"}
+          {
+            "native": "What is the lord like?",
+            "target": "殿様はどんな方ですか？",
+            "pronunciation": "Tonosama wa donna kata desu ka?"
+          }
         ]
       }
     ]
@@ -436,17 +749,30 @@
     "lives": 2,
     "reward_points": 20,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 20 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 20
+      }
     },
     "options": [
       {
         "text": "Thank her for the warning",
         "style": "polite",
         "next_scenario": 108,
-        "keywords": ["ありがとう", "気をつけ", "わかりました"],
+        "keywords": [
+          "ありがとう",
+          "気をつけ",
+          "わかりました"
+        ],
         "examples": [
-          {"native": "I understand. Thank you.", "target": "分かりました。ありがとうございます。", "pronunciation": "Wakarimashita. Arigatou gozaimasu."}
+          {
+            "native": "I understand. Thank you.",
+            "target": "分かりました。ありがとうございます。",
+            "pronunciation": "Wakarimashita. Arigatou gozaimasu."
+          }
         ]
       }
     ]
@@ -464,8 +790,13 @@
     "lives": 2,
     "reward_points": 25,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 25 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 25
+      }
     },
     "options": [
       {
@@ -474,16 +805,28 @@
         "next_scenario": 109,
         "keywords": [],
         "examples": [
-          {"native": "(Let the samurai speak)", "target": "（侍に任せる）", "pronunciation": "(Samurai ni makaseru)"}
+          {
+            "native": "(Let the samurai speak)",
+            "target": "（侍に任せる）",
+            "pronunciation": "(Samurai ni makaseru)"
+          }
         ]
       },
       {
         "text": "Bow respectfully",
         "style": "humble",
         "next_scenario": 109,
-        "keywords": ["失礼", "お邪魔", "参りました"],
+        "keywords": [
+          "失礼",
+          "お邪魔",
+          "参りました"
+        ],
         "examples": [
-          {"native": "I have come to see the lord.", "target": "殿様にお目にかかりに参りました。", "pronunciation": "Tonosama ni ome ni kakari ni mairimashita."}
+          {
+            "native": "I have come to see the lord.",
+            "target": "殿様にお目にかかりに参りました。",
+            "pronunciation": "Tonosama ni ome ni kakari ni mairimashita."
+          }
         ]
       }
     ]
@@ -501,17 +844,30 @@
     "lives": 2,
     "reward_points": 20,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 20 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 20
+      }
     },
     "options": [
       {
         "text": "Acknowledge the instruction",
         "style": "obedient",
         "next_scenario": 110,
-        "keywords": ["はい", "分かりました", "承知"],
+        "keywords": [
+          "はい",
+          "分かりました",
+          "承知"
+        ],
         "examples": [
-          {"native": "Understood.", "target": "承知しました。", "pronunciation": "Shouchi shimashita."}
+          {
+            "native": "Understood.",
+            "target": "承知しました。",
+            "pronunciation": "Shouchi shimashita."
+          }
         ]
       }
     ]
@@ -529,17 +885,30 @@
     "lives": 2,
     "reward_points": 30,
     "penalties": {
-      "incorrect_answer": { "lives": 2 },
-      "language_mismatch": { "lives": 2, "points": 30 }
+      "incorrect_answer": {
+        "lives": 2
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 30
+      }
     },
     "options": [
       {
         "text": "Give your name respectfully",
         "style": "humble",
         "next_scenario": 111,
-        "keywords": ["私は", "申します", "と言います"],
+        "keywords": [
+          "私は",
+          "申します",
+          "と言います"
+        ],
         "examples": [
-          {"native": "My name is...", "target": "私は...と申します。", "pronunciation": "Watashi wa... to moushimasu."}
+          {
+            "native": "My name is...",
+            "target": "私は...と申します。",
+            "pronunciation": "Watashi wa... to moushimasu."
+          }
         ]
       }
     ]
@@ -557,9 +926,885 @@
     "lives": 2,
     "reward_points": 35,
     "penalties": {
-      "incorrect_answer": { "lives": 2 },
-      "language_mismatch": { "lives": 2, "points": 35 }
+      "incorrect_answer": {
+        "lives": 2
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 35
+      }
     },
     "options": []
+  },
+  {
+    "id": 200,
+    "setting": "Busy street in Tsim Sha Tsui, hailing a red taxi",
+    "description": "You get into a taxi. The driver asks where you're going.",
+    "character_dialogue_zh": "去哪里？",
+    "character_dialogue_en": "Where to?",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Tell the driver to go to Mong Kok",
+        "style": "direct",
+        "next_scenario": 201,
+        "keywords": [
+          "旺角",
+          "去",
+          "麻烦"
+        ],
+        "examples": [
+          {
+            "native": "Mong Kok, please.",
+            "target": "麻烦去旺角。",
+            "pronunciation": "Máfan qù Wàngjiǎo."
+          },
+          {
+            "native": "Go to Mong Kok.",
+            "target": "去旺角。",
+            "pronunciation": "Qù Wàngjiǎo."
+          }
+        ]
+      },
+      {
+        "text": "Ask how much to Central",
+        "style": "polite",
+        "next_scenario": 201,
+        "keywords": [
+          "中环",
+          "多少钱",
+          "多少"
+        ],
+        "examples": [
+          {
+            "native": "How much to Central?",
+            "target": "去中环多少钱？",
+            "pronunciation": "Qù Zhōnghuán duōshao qián?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 201,
+    "setting": "Inside the MTR station, looking at the map",
+    "description": "You're at the MTR station. A station worker is nearby.",
+    "character_dialogue_zh": "需要帮忙吗？",
+    "character_dialogue_en": "Do you need help?",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Ask which line goes to Causeway Bay",
+        "style": "polite",
+        "next_scenario": 202,
+        "keywords": [
+          "铜锣湾",
+          "哪条线",
+          "怎么去",
+          "坐"
+        ],
+        "examples": [
+          {
+            "native": "How do I get to Causeway Bay?",
+            "target": "请问铜锣湾怎么去？",
+            "pronunciation": "Qǐngwèn Tóngluówān zěnme qù?"
+          }
+        ]
+      },
+      {
+        "text": "Ask where to buy a ticket",
+        "style": "polite",
+        "next_scenario": 202,
+        "keywords": [
+          "买票",
+          "哪里",
+          "在哪"
+        ],
+        "examples": [
+          {
+            "native": "Where can I buy a ticket?",
+            "target": "请问在哪里买票？",
+            "pronunciation": "Qǐngwèn zài nǎlǐ mǎi piào?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 202,
+    "setting": "On a minibus, approaching your stop",
+    "description": "You need to tell the driver your stop is coming up.",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Tell the driver to stop here",
+        "style": "direct",
+        "next_scenario": 203,
+        "keywords": [
+          "下车",
+          "停",
+          "这里"
+        ],
+        "examples": [
+          {
+            "native": "I'm getting off here.",
+            "target": "这里下车，谢谢。",
+            "pronunciation": "Zhèlǐ xiàchē, xièxiè."
+          },
+          {
+            "native": "Stop here please.",
+            "target": "麻烦停一下。",
+            "pronunciation": "Máfan tíng yíxià."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 203,
+    "setting": "Street corner, looking for a building",
+    "description": "You're lost and need to ask a passerby for directions.",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Ask where the nearest MTR station is",
+        "style": "polite",
+        "next_scenario": 204,
+        "keywords": [
+          "地铁站",
+          "哪里",
+          "在哪",
+          "怎么走"
+        ],
+        "examples": [
+          {
+            "native": "Excuse me, where is the nearest MTR station?",
+            "target": "请问，最近的地铁站在哪里？",
+            "pronunciation": "Qǐngwèn, zuìjìn de dìtiězhàn zài nǎlǐ?"
+          }
+        ]
+      },
+      {
+        "text": "Ask if this is the right direction",
+        "style": "polite",
+        "next_scenario": 204,
+        "keywords": [
+          "这个方向",
+          "对不对",
+          "对吗"
+        ],
+        "examples": [
+          {
+            "native": "Is this the right way?",
+            "target": "这个方向对吗？",
+            "pronunciation": "Zhège fāngxiàng duì ma?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 204,
+    "setting": "Cha chaan teng, sitting at a table",
+    "description": "The waiter comes to take your order.",
+    "character_dialogue_zh": "你要喝什么？",
+    "character_dialogue_en": "What would you like to drink?",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Order iced lemon tea",
+        "style": "direct",
+        "next_scenario": 205,
+        "keywords": [
+          "冻柠茶",
+          "柠檬茶",
+          "冰",
+          "要"
+        ],
+        "examples": [
+          {
+            "native": "Iced lemon tea, please.",
+            "target": "一杯冻柠茶，谢谢。",
+            "pronunciation": "Yì bēi dòng níngchá, xièxiè."
+          }
+        ]
+      },
+      {
+        "text": "Order milk tea",
+        "style": "direct",
+        "next_scenario": 205,
+        "keywords": [
+          "奶茶",
+          "要",
+          "一杯"
+        ],
+        "examples": [
+          {
+            "native": "A milk tea, please.",
+            "target": "一杯奶茶。",
+            "pronunciation": "Yì bēi nǎichá."
+          },
+          {
+            "native": "Hot milk tea, please.",
+            "target": "热奶茶，谢谢。",
+            "pronunciation": "Rè nǎichá, xièxiè."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 205,
+    "setting": "Cha chaan teng, waiter waiting for food order",
+    "description": "The waiter asks what you want to eat.",
+    "character_dialogue_zh": "吃什么？",
+    "character_dialogue_en": "What do you want to eat?",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Order a set meal",
+        "style": "direct",
+        "next_scenario": 206,
+        "keywords": [
+          "套餐",
+          "A餐",
+          "B餐",
+          "要"
+        ],
+        "examples": [
+          {
+            "native": "Set meal A, please.",
+            "target": "我要A餐。",
+            "pronunciation": "Wǒ yào A cān."
+          },
+          {
+            "native": "What set meals do you have?",
+            "target": "有什么套餐？",
+            "pronunciation": "Yǒu shénme tàocān?"
+          }
+        ]
+      },
+      {
+        "text": "Ask for a recommendation",
+        "style": "polite",
+        "next_scenario": 206,
+        "keywords": [
+          "推荐",
+          "什么好吃"
+        ],
+        "examples": [
+          {
+            "native": "What do you recommend?",
+            "target": "有什么推荐的？",
+            "pronunciation": "Yǒu shénme tuījiàn de?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 206,
+    "setting": "Dim sum restaurant, steaming carts rolling by",
+    "description": "A cart stops at your table.",
+    "character_dialogue_zh": "要什么？",
+    "character_dialogue_en": "What do you want?",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Ask what's in the cart",
+        "style": "polite",
+        "next_scenario": 207,
+        "keywords": [
+          "这是什么",
+          "有什么",
+          "那个"
+        ],
+        "examples": [
+          {
+            "native": "What's this?",
+            "target": "这是什么？",
+            "pronunciation": "Zhè shì shénme?"
+          },
+          {
+            "native": "What do you have?",
+            "target": "有什么？",
+            "pronunciation": "Yǒu shénme?"
+          }
+        ]
+      },
+      {
+        "text": "Order shrimp dumplings",
+        "style": "direct",
+        "next_scenario": 207,
+        "keywords": [
+          "虾饺",
+          "要",
+          "一笼"
+        ],
+        "examples": [
+          {
+            "native": "Shrimp dumplings, please.",
+            "target": "要一笼虾饺。",
+            "pronunciation": "Yào yì lóng xiājiǎo."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 207,
+    "setting": "Street food stall, skewers and fish balls",
+    "description": "You want to order some snacks.",
+    "character_dialogue_zh": "要什么？",
+    "character_dialogue_en": "What do you want?",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Order fish balls",
+        "style": "direct",
+        "next_scenario": 208,
+        "keywords": [
+          "鱼蛋",
+          "鱼丸",
+          "要"
+        ],
+        "examples": [
+          {
+            "native": "Fish balls, please.",
+            "target": "要鱼蛋，谢谢。",
+            "pronunciation": "Yào yúdàn, xièxiè."
+          },
+          {
+            "native": "Two skewers of fish balls.",
+            "target": "两串鱼蛋。",
+            "pronunciation": "Liǎng chuàn yúdàn."
+          }
+        ]
+      },
+      {
+        "text": "Ask how much",
+        "style": "polite",
+        "next_scenario": 208,
+        "keywords": [
+          "多少钱",
+          "几块"
+        ],
+        "examples": [
+          {
+            "native": "How much is one skewer?",
+            "target": "一串多少钱？",
+            "pronunciation": "Yì chuàn duōshao qián?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 208,
+    "setting": "7-Eleven counter, buying water",
+    "description": "The cashier tells you the total.",
+    "character_dialogue_zh": "一共二十三块。",
+    "character_dialogue_en": "That's 23 dollars total.",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Ask if you can pay with Octopus",
+        "style": "polite",
+        "next_scenario": 209,
+        "keywords": [
+          "八达通",
+          "可以",
+          "刷"
+        ],
+        "examples": [
+          {
+            "native": "Can I pay with Octopus?",
+            "target": "可以刷八达通吗？",
+            "pronunciation": "Kěyǐ shuā Bādátōng ma?"
+          }
+        ]
+      },
+      {
+        "text": "Pay cash",
+        "style": "direct",
+        "next_scenario": 209,
+        "keywords": [
+          "现金",
+          "付",
+          "给"
+        ],
+        "examples": [
+          {
+            "native": "I'll pay cash.",
+            "target": "付现金。",
+            "pronunciation": "Fù xiànjīn."
+          },
+          {
+            "native": "Here you go.",
+            "target": "给你。",
+            "pronunciation": "Gěi nǐ."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 209,
+    "setting": "Coffee shop counter",
+    "description": "The barista greets you.",
+    "character_dialogue_zh": "你好，喝点什么？",
+    "character_dialogue_en": "Hi, what would you like?",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Order an iced Americano",
+        "style": "direct",
+        "next_scenario": 210,
+        "keywords": [
+          "美式",
+          "冰",
+          "咖啡",
+          "要"
+        ],
+        "examples": [
+          {
+            "native": "An iced Americano, please.",
+            "target": "一杯冰美式，谢谢。",
+            "pronunciation": "Yì bēi bīng měishì, xièxiè."
+          }
+        ]
+      },
+      {
+        "text": "Ask what they recommend",
+        "style": "polite",
+        "next_scenario": 210,
+        "keywords": [
+          "推荐",
+          "什么好喝"
+        ],
+        "examples": [
+          {
+            "native": "What do you recommend?",
+            "target": "有什么推荐的吗？",
+            "pronunciation": "Yǒu shénme tuījiàn de ma?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 210,
+    "setting": "Wet market, colorful fruit stalls",
+    "description": "You want to buy some fruit.",
+    "character_dialogue_zh": "要什么水果？",
+    "character_dialogue_en": "What fruit do you want?",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Ask for mangoes",
+        "style": "direct",
+        "next_scenario": 211,
+        "keywords": [
+          "芒果",
+          "要",
+          "一斤"
+        ],
+        "examples": [
+          {
+            "native": "I'd like some mangoes.",
+            "target": "要芒果，一斤。",
+            "pronunciation": "Yào mángguǒ, yì jīn."
+          },
+          {
+            "native": "How much are the mangoes?",
+            "target": "芒果多少钱？",
+            "pronunciation": "Mángguǒ duōshao qián?"
+          }
+        ]
+      },
+      {
+        "text": "Ask what's fresh today",
+        "style": "polite",
+        "next_scenario": 211,
+        "keywords": [
+          "新鲜",
+          "今天",
+          "什么"
+        ],
+        "examples": [
+          {
+            "native": "What's fresh today?",
+            "target": "今天什么新鲜？",
+            "pronunciation": "Jīntiān shénme xīnxiān?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 211,
+    "setting": "Phone shop, SIM cards on counter",
+    "description": "You need a local SIM card.",
+    "character_dialogue_zh": "你好，需要什么？",
+    "character_dialogue_en": "Hello, what do you need?",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Ask for a prepaid SIM",
+        "style": "direct",
+        "next_scenario": 212,
+        "keywords": [
+          "电话卡",
+          "SIM卡",
+          "要",
+          "预付"
+        ],
+        "examples": [
+          {
+            "native": "I'd like a prepaid SIM card.",
+            "target": "我要一张预付电话卡。",
+            "pronunciation": "Wǒ yào yì zhāng yùfù diànhuàkǎ."
+          }
+        ]
+      },
+      {
+        "text": "Ask about data plans",
+        "style": "polite",
+        "next_scenario": 212,
+        "keywords": [
+          "流量",
+          "数据",
+          "套餐"
+        ],
+        "examples": [
+          {
+            "native": "How much data is included?",
+            "target": "有多少流量？",
+            "pronunciation": "Yǒu duōshao liúliàng?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 212,
+    "setting": "Pharmacy, medicine behind counter",
+    "description": "You have a headache.",
+    "character_dialogue_zh": "哪里不舒服？",
+    "character_dialogue_en": "What's bothering you?",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Say you have a headache",
+        "style": "direct",
+        "next_scenario": 213,
+        "keywords": [
+          "头疼",
+          "头痛",
+          "疼"
+        ],
+        "examples": [
+          {
+            "native": "I have a headache.",
+            "target": "我头疼。",
+            "pronunciation": "Wǒ tóuténg."
+          },
+          {
+            "native": "Do you have painkillers?",
+            "target": "有止痛药吗？",
+            "pronunciation": "Yǒu zhǐtòngyào ma?"
+          }
+        ]
+      },
+      {
+        "text": "Say you have a cold",
+        "style": "direct",
+        "next_scenario": 213,
+        "keywords": [
+          "感冒",
+          "鼻塞",
+          "咳嗽"
+        ],
+        "examples": [
+          {
+            "native": "I have a cold.",
+            "target": "我感冒了。",
+            "pronunciation": "Wǒ gǎnmào le."
+          },
+          {
+            "native": "Do you have cold medicine?",
+            "target": "有感冒药吗？",
+            "pronunciation": "Yǒu gǎnmàoyào ma?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 213,
+    "setting": "Apartment lobby, talking to the guard",
+    "description": "The security guard stops you.",
+    "character_dialogue_zh": "你好，你找谁？",
+    "character_dialogue_en": "Hello, who are you looking for?",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Say you live here",
+        "style": "direct",
+        "next_scenario": 214,
+        "keywords": [
+          "住",
+          "这里",
+          "我住在"
+        ],
+        "examples": [
+          {
+            "native": "I live here.",
+            "target": "我住在这里。",
+            "pronunciation": "Wǒ zhù zài zhèlǐ."
+          },
+          {
+            "native": "I live on the 12th floor.",
+            "target": "我住十二楼。",
+            "pronunciation": "Wǒ zhù shí'èr lóu."
+          }
+        ]
+      },
+      {
+        "text": "Say you're visiting a friend",
+        "style": "polite",
+        "next_scenario": 214,
+        "keywords": [
+          "找",
+          "朋友",
+          "来"
+        ],
+        "examples": [
+          {
+            "native": "I'm visiting a friend.",
+            "target": "我来找朋友。",
+            "pronunciation": "Wǒ lái zhǎo péngyou."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 214,
+    "setting": "Small restaurant, asking for the bill",
+    "description": "You've finished your meal and want to pay.",
+    "mode": "beginner",
+    "lives": 3,
+    "reward_points": 10,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
+    },
+    "options": [
+      {
+        "text": "Ask for the bill",
+        "style": "direct",
+        "next_scenario": null,
+        "keywords": [
+          "买单",
+          "结账",
+          "埋单"
+        ],
+        "examples": [
+          {
+            "native": "The bill, please.",
+            "target": "买单，谢谢。",
+            "pronunciation": "Mǎidān, xièxiè."
+          },
+          {
+            "native": "Can I have the bill?",
+            "target": "可以结账吗？",
+            "pronunciation": "Kěyǐ jiézhàng ma?"
+          }
+        ]
+      },
+      {
+        "text": "Ask if they take card",
+        "style": "polite",
+        "next_scenario": null,
+        "keywords": [
+          "刷卡",
+          "可以",
+          "信用卡",
+          "微信"
+        ],
+        "examples": [
+          {
+            "native": "Can I pay by card?",
+            "target": "可以刷卡吗？",
+            "pronunciation": "Kěyǐ shuākǎ ma?"
+          },
+          {
+            "native": "Do you accept WeChat Pay?",
+            "target": "可以微信支付吗？",
+            "pronunciation": "Kěyǐ Wēixìn zhīfù ma?"
+          }
+        ]
+      }
+    ]
   }
 ]

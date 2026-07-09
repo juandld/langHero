@@ -14,6 +14,8 @@ def normalize_language_token(value: Optional[str]) -> Optional[str]:
         return "english"
     if v in {"es", "spa", "spanish", "espanol", "español"}:
         return "spanish"
+    if v in {"zh", "mandarin", "chinese", "普通话", "中文", "cmn"}:
+        return "mandarin"
     return v or None
 
 
@@ -28,27 +30,55 @@ def normalize_target_language(value: Optional[str]) -> str:
         return "English"
     if raw in {"es", "spa", "spanish", "espanol", "español"}:
         return "Spanish"
+    if raw in {"zh", "mandarin", "chinese", "普通话", "中文", "cmn"}:
+        return "Mandarin Chinese"
     return (value or "").strip() or "English"
 
 
+def _has_kana(text: str) -> bool:
+    """Return True if text contains hiragana or katakana (uniquely Japanese)."""
+    for ch in text or "":
+        o = ord(ch)
+        if (0x3040 <= o <= 0x30FF) or (0x31F0 <= o <= 0x31FF):
+            return True
+    return False
+
+
+def _has_cjk(text: str) -> bool:
+    """Return True if text contains CJK Unified Ideographs (shared by Chinese and Japanese)."""
+    for ch in text or "":
+        o = ord(ch)
+        if 0x4E00 <= o <= 0x9FFF:
+            return True
+    return False
+
+
 def contains_japanese(text: str) -> bool:
+    """Text is Japanese if it has kana, or CJK+kana together."""
     try:
-        for ch in text or "":
-            o = ord(ch)
-            if (0x3040 <= o <= 0x30FF) or (0x31F0 <= o <= 0x31FF) or (0x4E00 <= o <= 0x9FFF):
-                return True
+        return _has_kana(text)
     except Exception:
         return False
-    return False
+
+
+def contains_chinese(text: str) -> bool:
+    """Return True if text contains CJK characters but no Japanese kana."""
+    try:
+        return _has_cjk(text) and not _has_kana(text)
+    except Exception:
+        return False
 
 
 def infer_target_language(setting: Optional[str] = None, text: Optional[str] = None) -> str:
     """Best-effort heuristic for inferring the target language for a story/scene."""
     t = (text or "").strip()
     s = (setting or "").strip().lower()
-    # Strong signal: Japanese script present
+    # Strong signal: Japanese kana present
     if contains_japanese(t):
         return "Japanese"
+    # Strong signal: CJK without kana → Chinese
+    if contains_chinese(t):
+        return "Mandarin Chinese"
     # Spanish hints: punctuation/diacritics and common words
     if any(ch in t for ch in "áéíóúñÁÉÍÓÚÑ¿¡"):
         return "Spanish"
@@ -58,39 +88,43 @@ def infer_target_language(setting: Optional[str] = None, text: Optional[str] = N
     # Setting hints (very lightweight)
     if any(k in s for k in ("japan", "tokyo", "kyoto", "osaka", "samurai", "shogun", "edo", "feudal japan")):
         return "Japanese"
+    if any(k in s for k in ("china", "beijing", "shanghai", "hong kong", "guangzhou", "shenzhen", "mandarin", "chinese")):
+        return "Mandarin Chinese"
     if any(k in s for k in ("spain", "madrid", "barcelona", "mexico", "bogota", "colombia", "argentina", "latam", "latin america")):
         return "Spanish"
     return "English"
 
 
 def detect_language_from_text(text: str) -> str:
-    """Very lightweight language heuristic (Japanese vs Spanish vs English vs Unknown)."""
+    """Very lightweight language heuristic (Japanese vs Mandarin vs Spanish vs English vs Unknown)."""
     if not text:
         return "unknown"
-    jp_count = 0
+    kana_count = 0
+    cjk_count = 0
     es_count = 0
     en_count = 0
     for ch in text:
         code = ord(ch)
         if "a" <= ch.lower() <= "z":
             en_count += 1
-        elif (
-            0x3040 <= code <= 0x30FF  # Hiragana + Katakana
-            or 0x31F0 <= code <= 0x31FF  # Katakana Phonetic Extensions
-            or 0x4E00 <= code <= 0x9FFF  # CJK Unified Ideographs (common Kanji)
-        ):
-            jp_count += 1
+        elif (0x3040 <= code <= 0x30FF) or (0x31F0 <= code <= 0x31FF):
+            kana_count += 1
+        elif 0x4E00 <= code <= 0x9FFF:
+            cjk_count += 1
         elif ch in "áéíóúÁÉÍÓÚ¿¡ñÑ":
             es_count += 2
-    if jp_count > max(en_count, 3):
+    # Kana present → Japanese (CJK chars are kanji in this context)
+    if kana_count > 0 and (kana_count + cjk_count) > max(en_count, 3):
         return "japanese"
+    # CJK without kana → Mandarin Chinese
+    if cjk_count > max(en_count, 3) and kana_count == 0:
+        return "mandarin"
     lowered = text.lower()
-    if jp_count == 0:
+    if cjk_count == 0 and kana_count == 0:
         if es_count >= 2:
             return "spanish"
         if any(tok in lowered.split() for tok in ("hola", "gracias", "por", "favor", "buenos", "dias", "adios", "perdon")):
             return "spanish"
-    if en_count > 0 and en_count >= jp_count:
+    if en_count > 0 and en_count >= (kana_count + cjk_count):
         return "english"
     return "unknown"
-
