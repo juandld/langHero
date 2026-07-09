@@ -21,11 +21,7 @@
     }
   }
 
-  function handleKeydown(e) {
-    if (e.key === 'Escape') {
-      close();
-    }
-  }
+  // ESC is handled by the parent page's keydown handler
 
   function updateJudgeFocus(e) {
     const val = parseFloat(e.currentTarget.value);
@@ -65,7 +61,6 @@
   ];
 </script>
 
-<svelte:window on:keydown={handleKeydown}/>
 
 {#if visible}
   <!-- svelte-ignore a11y-click-events-have-key-events -->
