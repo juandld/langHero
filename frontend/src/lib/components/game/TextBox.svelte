@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onDestroy } from 'svelte';
   import { fly, fade } from 'svelte/transition';
 
   const dispatch = createEventDispatcher();
@@ -13,6 +13,10 @@
   let displayedDialogue = '';
   let isTyping = false;
   let typeInterval = null;
+  let lastPanelId = null;
+  let typeGeneration = 0; // cancellation token for stale typing sessions
+
+  onDestroy(() => { clearInterval(typeInterval); });
 
   function getSpeakerName(speaker) {
     const names = {
@@ -46,6 +50,7 @@
 
   // Typewriter effect
   function typeText(fullText, setter, speed = 25) {
+    const gen = typeGeneration; // capture current generation
     return new Promise((resolve) => {
       if (!fullText) { setter(''); resolve(); return; }
       let i = 0;
@@ -53,8 +58,8 @@
       setter('');
       clearInterval(typeInterval);
       typeInterval = setInterval(() => {
+        if (gen !== typeGeneration) { clearInterval(typeInterval); resolve(); return; }
         if (i < fullText.length) {
-          // Add chars in chunks for speed
           const chunk = Math.min(3, fullText.length - i);
           setter(fullText.slice(0, i + chunk));
           i += chunk;
@@ -75,12 +80,15 @@
     if (currentPanel?.dialogue) displayedDialogue = currentPanel.dialogue;
   }
 
-  // React to panel changes
-  $: if (currentPanel?.id) {
+  // React to panel changes — only fire when ID actually changes
+  $: if (currentPanel?.id && currentPanel.id !== lastPanelId) {
+    lastPanelId = currentPanel.id;
+    typeGeneration++; // cancel any in-flight typing
     clearInterval(typeInterval);
     const panel = currentPanel;
     displayedNarration = '';
     displayedDialogue = '';
+    isTyping = false;
     // Start typewriter
     (async () => {
       if (panel.narration) {
