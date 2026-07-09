@@ -11,11 +11,9 @@ from models import TagsUpdate
 from services.transcription import transcribe_and_save
 from services.notes import get_notes
 import config
+from utils import VOICE_NOTES_DIR, TRANSCRIPTS_DIR
 
 router = APIRouter(prefix="/api/notes", tags=["notes"])
-
-VOICE_NOTES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'voice_notes'))
-TRANSCRIPTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'transcriptions'))
 
 
 @router.get("")

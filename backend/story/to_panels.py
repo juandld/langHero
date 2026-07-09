@@ -24,6 +24,17 @@ from image.visual_styles import (
 )
 
 
+def _invoke_llm(prompt: str) -> str:
+    """Invoke LLM with Gemini-first, OpenAI-fallback strategy."""
+    try:
+        response, _ = providers.invoke_google([
+            HumanMessage(content=[{"type": "text", "text": prompt}])
+        ])
+        return str(getattr(response, "content", response))
+    except Exception:
+        return providers.openai_chat([HumanMessage(content=prompt)])
+
+
 def adapt_story_to_panels(
     narrative: str,
     *,
@@ -79,15 +90,7 @@ GUIDELINES:
 
 Return ONLY valid JSON array, no markdown, no explanation."""
 
-    try:
-        # Try Gemini first
-        response, _ = providers.invoke_google([
-            HumanMessage(content=[{"type": "text", "text": prompt}])
-        ])
-        raw = str(getattr(response, "content", response))
-    except Exception:
-        # Fallback to OpenAI
-        raw = providers.openai_chat([HumanMessage(content=prompt)])
+    raw = _invoke_llm(prompt)
 
     # Parse JSON response
     panels = _parse_panels_json(raw, art_style)
@@ -139,13 +142,7 @@ OUTPUT: Return ONLY a JSON array of panels with these fields:
 
 Maximum {max_panels} panels. No markdown, just JSON."""
 
-    try:
-        response, _ = providers.invoke_google([
-            HumanMessage(content=[{"type": "text", "text": prompt}])
-        ])
-        raw = str(getattr(response, "content", response))
-    except Exception:
-        raw = providers.openai_chat([HumanMessage(content=prompt)])
+    raw = _invoke_llm(prompt)
 
     panels = _parse_panels_json(raw, art_style)
 
@@ -197,13 +194,7 @@ OUTPUT: JSON array of panels with: id, type, scene_description, mood, effects, d
 
 No markdown, just JSON."""
 
-    try:
-        response, _ = providers.invoke_google([
-            HumanMessage(content=[{"type": "text", "text": prompt}])
-        ])
-        raw = str(getattr(response, "content", response))
-    except Exception:
-        raw = providers.openai_chat([HumanMessage(content=prompt)])
+    raw = _invoke_llm(prompt)
 
     panels = _parse_panels_json(raw, art_style)
 
@@ -224,11 +215,40 @@ def _extract_json_array(raw: str) -> list | None:
         return None
 
 
+def _parse_panel_fields(item: dict) -> tuple:
+    """Parse common panel fields (type, mood, effects) from an LLM item dict.
+
+    Returns (panel_type, mood, effects).
+    """
+    panel_type = PanelType.FULL
+    type_str = str(item.get("type", "full")).lower()
+    try:
+        panel_type = PanelType(type_str)
+    except ValueError:
+        pass
+
+    mood = Mood.WARM
+    mood_str = str(item.get("mood", "warm")).lower()
+    try:
+        mood = Mood(mood_str)
+    except ValueError:
+        pass
+
+    effects = []
+    for eff in item.get("effects", []):
+        eff_str = str(eff).lower().replace(" ", "_")
+        try:
+            effects.append(VisualEffect(eff_str))
+        except ValueError:
+            pass
+
+    return panel_type, mood, effects
+
+
 def _parse_panels_json(raw: str, default_style: ArtStyle) -> List[Panel]:
     """Parse LLM response into Panel objects."""
     data = _extract_json_array(raw)
     if data is None:
-        # Fallback: create a single default panel
         return [Panel(
             id="panel_fallback",
             type=PanelType.FULL,
@@ -241,30 +261,7 @@ def _parse_panels_json(raw: str, default_style: ArtStyle) -> List[Panel]:
         if not isinstance(item, dict):
             continue
 
-        # Parse panel type
-        panel_type = PanelType.FULL
-        type_str = str(item.get("type", "full")).lower()
-        try:
-            panel_type = PanelType(type_str)
-        except ValueError:
-            pass
-
-        # Parse mood
-        mood = Mood.WARM
-        mood_str = str(item.get("mood", "warm")).lower()
-        try:
-            mood = Mood(mood_str)
-        except ValueError:
-            pass
-
-        # Parse effects
-        effects = []
-        for eff in item.get("effects", []):
-            eff_str = str(eff).lower().replace(" ", "_")
-            try:
-                effects.append(VisualEffect(eff_str))
-            except ValueError:
-                pass
+        panel_type, mood, effects = _parse_panel_fields(item)
 
         panels.append(Panel(
             id=item.get("id", f"panel_{i}"),
@@ -413,13 +410,7 @@ OUTPUT: Return a JSON array of panels with:
 
 Generate 3-8 panels. Return ONLY valid JSON, no markdown."""
 
-    try:
-        response, _ = providers.invoke_google([
-            HumanMessage(content=[{"type": "text", "text": prompt}])
-        ])
-        raw = str(getattr(response, "content", response))
-    except Exception:
-        raw = providers.openai_chat([HumanMessage(content=prompt)])
+    raw = _invoke_llm(prompt)
 
     panels = _parse_dialogue_panels_json(raw, art_style, dialogue_lines)
 
@@ -442,27 +433,7 @@ def _parse_dialogue_panels_json(raw: str, default_style: ArtStyle, dialogue_line
         if not isinstance(item, dict):
             continue
 
-        panel_type = PanelType.FULL
-        type_str = str(item.get("type", "full")).lower()
-        try:
-            panel_type = PanelType(type_str)
-        except ValueError:
-            pass
-
-        mood = Mood.WARM
-        mood_str = str(item.get("mood", "warm")).lower()
-        try:
-            mood = Mood(mood_str)
-        except ValueError:
-            pass
-
-        effects = []
-        for eff in item.get("effects", []):
-            eff_str = str(eff).lower().replace(" ", "_")
-            try:
-                effects.append(VisualEffect(eff_str))
-            except ValueError:
-                pass
+        panel_type, mood, effects = _parse_panel_fields(item)
 
         # Extract dialogue for this panel based on indices
         dialogue_indices = item.get("dialogue_indices", [])

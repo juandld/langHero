@@ -11,11 +11,11 @@ from langchain_core.messages import HumanMessage
 import config
 import providers
 import usage_log as usage
+from utils import TRANSCRIPTS_DIR
 
 router = APIRouter(prefix="/api/narratives", tags=["narratives"])
 
 NARRATIVES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'narratives'))
-TRANSCRIPTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'transcriptions'))
 
 
 @router.get("")

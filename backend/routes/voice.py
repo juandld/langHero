@@ -14,6 +14,7 @@ from voice import select as voice_select
 from voice import cache as voice_cache
 from services.scenarios import get_scenario_by_id
 from security import parse_json_body
+from utils import EXAMPLES_DIR
 
 # Try to import Google TTS
 try:
@@ -62,9 +63,6 @@ def _inline_audio(result: dict) -> dict:
     result["url"] = f"data:{mime};base64,{audio_data}"
     result["inline"] = True
     return result
-
-
-EXAMPLES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'examples_audio'))
 
 
 @router.post("/tts")
