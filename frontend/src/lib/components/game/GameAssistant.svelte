@@ -12,6 +12,12 @@
 
   let expanded = false;
 
+  // Prefer a generated portrait if one has been produced via the manifest
+  // pipeline (see scripts/gen_roberto.py). Falls back to the hat emoji until then.
+  export let avatarImageUrl = '/images/generated/characters/roberto.png';
+  let avatarImageLoaded = false;
+  let avatarImageFailed = false;
+
   function toggleExpand() {
     expanded = !expanded;
   }
@@ -80,7 +86,19 @@
     <button class="assistant-avatar" on:click={toggleExpand} aria-label="Toggle assistant">
       <div class="avatar-glow" class:time-stopped={isTimeStopped}></div>
       <div class="avatar-face">
-        <span class="avatar-emoji">🎩</span>
+        {#if avatarImageUrl && !avatarImageFailed}
+          <img
+            class="avatar-portrait"
+            class:loaded={avatarImageLoaded}
+            src={avatarImageUrl}
+            alt="Roberto"
+            on:load={() => (avatarImageLoaded = true)}
+            on:error={() => (avatarImageFailed = true)}
+          />
+        {/if}
+        {#if !avatarImageLoaded}
+          <span class="avatar-emoji">🎩</span>
+        {/if}
       </div>
       {#if !expanded}
         <div class="mini-indicator" class:live={!isTimeStopped}>
@@ -158,6 +176,24 @@
 
   .assistant-avatar:hover {
     transform: scale(1.1);
+  }
+
+  .avatar-portrait {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center 30%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(139, 92, 246, 0.55);
+  }
+
+  .avatar-portrait.loaded {
+    opacity: 1;
   }
 
   .avatar-glow {

@@ -292,6 +292,152 @@ SHOGUN_PANELS = [
 ]
 
 
+# ============================================================
+# MANUELA STORY MANIFEST (Spanish immersion — Quito, 1822)
+# ============================================================
+
+MANUELA_CHARACTERS = {
+    # The in-game Spanish-speaking guide / narrator who appears in the HUD
+    "roberto": Character(
+        id="roberto",
+        name="Roberto",
+        description=(
+            "Latin American man in his late forties, warm intelligent eyes, "
+            "neatly trimmed dark beard flecked with gray, olive-tan skin, "
+            "high cheekbones. 1820s formal attire: white high-collared shirt, "
+            "dark silk cravat tied in a soft bow, deep burgundy brocade waistcoat, "
+            "charcoal frock coat with velvet trim. A worn beaver top hat held in one hand. "
+            "Calm fatherly presence, half-smile that suggests a storyteller. "
+            "Painterly manhwa portrait, soft rim light from a nearby candelabrum."
+        ),
+        reference_path=os.path.join(CHARACTER_REF_DIR, "roberto.png"),
+        variants={
+            "warm":    os.path.join(CHARACTER_REF_DIR, "roberto_warm.png"),
+            "serious": os.path.join(CHARACTER_REF_DIR, "roberto_serious.png"),
+        },
+    ),
+    # The player character — only used for third-person panels, not POV
+    "manuela": Character(
+        id="manuela",
+        name="Doña Manuela Sáenz",
+        description=(
+            "Young woman, 24, Quiteña criolla aristocrat of the 1820s. "
+            "Rich dark hair pinned up with a mother-of-pearl comb, loose curls at the temples. "
+            "Deep brown eyes, strong brows, warm olive complexion. "
+            "An empire-waist silk gown in deep emerald with lace at the neckline, "
+            "elbow-length white gloves, a short red-and-white ribbon pinned at her shoulder "
+            "— the patriot colors. Confident, slightly defiant expression. Painterly manhwa portrait."
+        ),
+        reference_path=os.path.join(CHARACTER_REF_DIR, "manuela.png"),
+    ),
+    # The Liberator
+    "bolivar": Character(
+        id="bolivar",
+        name="Simón Bolívar",
+        description=(
+            "Simón Bolívar at 39 as he looked in 1822. Lean sharp-featured criollo general, "
+            "high forehead, dark alert eyes, long sideburns, a thin moustache. "
+            "Dark blue dress uniform of the Gran Colombian army with heavy gold-braid epaulets, "
+            "a red-and-gold sash, white cravat, high stiff collar. Carries a bicorne hat in his left hand. "
+            "Composed, charismatic, every inch the Libertador. Painterly manhwa portrait."
+        ),
+        reference_path=os.path.join(CHARACTER_REF_DIR, "bolivar.png"),
+    ),
+    # Manuela's sister
+    "maria_josefa": Character(
+        id="maria_josefa",
+        name="María Josefa Sáenz",
+        description=(
+            "Woman in her early thirties, warmly protective older-sister energy. "
+            "Dark hair in a chignon, honey-brown eyes, soft rounded features. "
+            "A conservative gown of pale ivory silk, pearl earrings, a mantilla draped on her shoulders. "
+            "Worried but kind expression. Painterly manhwa."
+        ),
+        reference_path=os.path.join(CHARACTER_REF_DIR, "maria_josefa.png"),
+    ),
+}
+
+MANUELA_LOCATIONS = {
+    "quito_balcony_night": Location(
+        id="quito_balcony_night",
+        name="Quito Balcony — Night of the Victory Ball",
+        description=(
+            "Wrought-iron balcony overlooking the plaza mayor of Quito at dusk, 16 June 1822. "
+            "Lanterns and torches below, hundreds of silhouetted celebrants, "
+            "the twin bell-towers of a colonial cathedral in the near distance, "
+            "a bruised violet sky with the first stars. Period Andean architecture, warm firelight."
+        ),
+        reference_path=os.path.join(LOCATION_REF_DIR, "quito_balcony_night.png"),
+    ),
+    "salon_candelabra": Location(
+        id="salon_candelabra",
+        name="Candlelit Salon",
+        description=(
+            "Interior of an 1820s Quito aristocratic salon. Tall silver candelabras, "
+            "French Empire furniture, a crystal chandelier overhead, portraits of saints on the walls. "
+            "Warm amber light, polished parquet, embroidered silk curtains."
+        ),
+        reference_path=os.path.join(LOCATION_REF_DIR, "salon_candelabra.png"),
+    ),
+    "plaza_torches": Location(
+        id="plaza_torches",
+        name="Plaza Mayor at Night with Torches",
+        description=(
+            "Plaza mayor of Quito at night, 16 June 1822. Hundreds of torches, "
+            "celebrating criollos packed shoulder to shoulder, colonial cathedral facade on one side, "
+            "the Audiencia palace on the other. Caballeros on horseback in dress uniforms."
+        ),
+        reference_path=os.path.join(LOCATION_REF_DIR, "plaza_torches.png"),
+    ),
+}
+
+# Only one panel is strictly needed for Roberto's HUD portrait today.
+# More panels (one per scenario) can be added as the manifest fills out.
+MANUELA_PANELS = [
+    PanelSpec(
+        id="manuela_roberto_portrait",
+        chapter="hud",
+        panel_type="emotional",
+        description=(
+            "Formal three-quarter portrait of Roberto, the Spanish-language guide. "
+            "He faces the viewer with a composed, warmly conspiratorial half-smile, "
+            "as if about to begin a story. Soft rim light from a candelabrum just out of frame. "
+            "Rich dark background, painterly texture. The portrait reads as a HUD avatar — "
+            "framed tightly from mid-chest up, head not cut off at crown."
+        ),
+        characters=["roberto"],
+        location="salon_candelabra",
+        speaker="roberto",
+        mood="warm",
+    ),
+    PanelSpec(
+        id="manuela_ch4_01_balcony",
+        chapter="ch04",
+        panel_type="establishing",
+        description=(
+            "Wide establishing shot of the Quito balcony on the night of the victory ball. "
+            "Manuela and María Josefa seen from behind, leaning on the wrought-iron rail, "
+            "looking down into the torchlit plaza where the Libertador has just entered."
+        ),
+        characters=["manuela", "maria_josefa"],
+        location="quito_balcony_night",
+        mood="electric",
+    ),
+    PanelSpec(
+        id="manuela_ch4_06_corona",
+        chapter="ch04",
+        panel_type="action",
+        description=(
+            "POV from the balcony looking down. Manuela's gloved hand releasing a laurel wreath. "
+            "Bolívar on horseback below, bicorne in hand, just beginning to look up — their eyes about to meet."
+        ),
+        characters=["manuela", "bolivar"],
+        location="plaza_torches",
+        mood="decisive",
+    ),
+]
+
+
 def get_panel_references(panel: PanelSpec, characters: dict, locations: dict) -> list[str]:
     """Get all reference image paths for a panel."""
     refs = []
