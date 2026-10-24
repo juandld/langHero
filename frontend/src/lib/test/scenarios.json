@@ -918,16 +918,16 @@
     "description": "Tu hermana María Josefa te saluda al llegar al balcón. El baile en honor al Libertador está por comenzar.",
     "character_dialogue_es": "¡Manuela, por fin llegaste! ¿Dónde te metiste tanto rato?",
     "character_dialogue_en": "Manuela, finally! Where did you disappear to all this time?",
-    "mode": "advanced",
-    "lives": 2,
+    "mode": "beginner",
+    "lives": 3,
     "reward_points": 15,
     "penalties": {
       "incorrect_answer": {
         "lives": 1
       },
       "language_mismatch": {
-        "lives": 2,
-        "points": 15
+        "lives": 1,
+        "points": 5
       }
     },
     "options": [
@@ -996,16 +996,16 @@
     "description": "Doña Rosalía comenta con malicia sobre el Libertador. Te mira esperando tu reacción.",
     "character_dialogue_es": "Dicen que el Libertador tiene una amante en cada ciudad que libera. ¿Será verdad, querida?",
     "character_dialogue_en": "They say the Liberator has a lover in every city he frees. Could it be true, dear?",
-    "mode": "advanced",
-    "lives": 2,
+    "mode": "beginner",
+    "lives": 3,
     "reward_points": 15,
     "penalties": {
       "incorrect_answer": {
         "lives": 1
       },
       "language_mismatch": {
-        "lives": 2,
-        "points": 15
+        "lives": 1,
+        "points": 5
       }
     },
     "options": [
@@ -1074,16 +1074,16 @@
     "description": "Simón Bolívar entra a caballo a la plaza. La multitud estalla en vítores.",
     "character_dialogue_es": "¡Viva el Libertador! ¡Viva Bolívar! ¡Viva Colombia libre!",
     "character_dialogue_en": "Long live the Liberator! Long live Bolívar! Long live free Colombia!",
-    "mode": "advanced",
-    "lives": 2,
+    "mode": "beginner",
+    "lives": 3,
     "reward_points": 15,
     "penalties": {
       "incorrect_answer": {
         "lives": 1
       },
       "language_mismatch": {
-        "lives": 2,
-        "points": 15
+        "lives": 1,
+        "points": 5
       }
     },
     "options": [
@@ -1150,16 +1150,16 @@
     "description": "El teniente Fausto, oficial del batallón, sonríe mientras te ofrece una copa.",
     "character_dialogue_es": "Doña Manuela, qué belleza esta noche. ¿Me permite acompañarla con una copa?",
     "character_dialogue_en": "Doña Manuela, what beauty tonight. May I join you with a glass?",
-    "mode": "advanced",
-    "lives": 2,
+    "mode": "beginner",
+    "lives": 3,
     "reward_points": 15,
     "penalties": {
       "incorrect_answer": {
         "lives": 1
       },
       "language_mismatch": {
-        "lives": 2,
-        "points": 15
+        "lives": 1,
+        "points": 5
       }
     },
     "options": [
@@ -1226,16 +1226,16 @@
     "description": "Miras la corona de laurel. María Josefa adivina tu intención y te advierte.",
     "character_dialogue_es": "No se te ocurra, Manuela. Esa corona es para la ceremonia.",
     "character_dialogue_en": "Don't even think about it, Manuela. That crown is for the ceremony.",
-    "mode": "advanced",
-    "lives": 2,
+    "mode": "beginner",
+    "lives": 3,
     "reward_points": 15,
     "penalties": {
       "incorrect_answer": {
         "lives": 1
       },
       "language_mismatch": {
-        "lives": 2,
-        "points": 15
+        "lives": 1,
+        "points": 5
       }
     },
     "options": [
@@ -1303,16 +1303,16 @@
     "description": "Tienes la corona. El Libertador está a punto de pasar bajo el balcón. Tu hermana suplica.",
     "character_dialogue_es": "Manuela, por el amor de Dios, ¡no lo hagas!",
     "character_dialogue_en": "Manuela, for the love of God, don't do it!",
-    "mode": "advanced",
-    "lives": 2,
+    "mode": "beginner",
+    "lives": 3,
     "reward_points": 20,
     "penalties": {
       "incorrect_answer": {
         "lives": 1
       },
       "language_mismatch": {
-        "lives": 2,
-        "points": 20
+        "lives": 1,
+        "points": 5
       }
     },
     "options": [
@@ -1378,16 +1378,16 @@
     "description": "La corona ha caído sobre él. Levanta la vista buscando a quien se la arrojó. Sus ojos encuentran los tuyos.",
     "character_dialogue_es": "¿Y a quién debo tan dulce agresión, señora?",
     "character_dialogue_en": "And to whom do I owe such a sweet assault, madam?",
-    "mode": "advanced",
-    "lives": 2,
+    "mode": "beginner",
+    "lives": 3,
     "reward_points": 20,
     "penalties": {
       "incorrect_answer": {
         "lives": 1
       },
       "language_mismatch": {
-        "lives": 2,
-        "points": 20
+        "lives": 1,
+        "points": 5
       }
     },
     "options": [
@@ -1453,16 +1453,16 @@
     "description": "Bolívar atraviesa el salón. Todas las miradas se posan en ustedes. Se detiene frente a ti.",
     "character_dialogue_es": "Doña Manuela, me parece que me debe un baile. ¿O quizás soy yo quien se lo debe a usted?",
     "character_dialogue_en": "Doña Manuela, it seems you owe me a dance. Or perhaps it is I who owes you one?",
-    "mode": "advanced",
-    "lives": 2,
+    "mode": "beginner",
+    "lives": 3,
     "reward_points": 25,
     "penalties": {
       "incorrect_answer": {
         "lives": 1
       },
       "language_mismatch": {
-        "lives": 2,
-        "points": 25
+        "lives": 1,
+        "points": 5
       }
     },
     "options": [

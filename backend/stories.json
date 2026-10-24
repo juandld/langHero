@@ -479,144 +479,171 @@
     ],
     "manuela_tutorial_intro": [
       {
-        "speaker": "bimbo",
-        "text": "Hey! Time for your Spanish lesson.",
+        "speaker": "roberto",
+        "text": "Hola. Soy Roberto, tu guía.",
+        "sub": "Hi. I'm Roberto, your guide.",
+        "sentiment": "warm"
+      },
+      {
+        "speaker": "roberto",
+        "text": "Vamos a 1822. A Quito. A una noche que la historia nunca olvidó.",
+        "sub": "We're going to 1822. To Quito. To a night history never forgot.",
         "sentiment": "excited"
       },
       {
-        "speaker": "bimbo",
-        "text": "We're going somewhere romantic. Dangerous. 1822. Quito, Ecuador.",
-        "sentiment": "warm"
-      },
-      {
-        "speaker": "bimbo",
-        "text": "You'll be Manuela Sáenz — the woman about to steal the heart of a Liberator.",
+        "speaker": "roberto",
+        "text": "Vas a ser Manuela Sáenz, la mujer que robó el corazón del Libertador.",
+        "sub": "You'll be Manuela Sáenz, the woman who stole the Liberator's heart.",
         "sentiment": "encouraging"
       },
       {
-        "speaker": "bimbo",
-        "text": "I'll start you safe. A simulation. A ball in his honor. Flirting, defending, teasing.",
+        "speaker": "roberto",
+        "text": "Empezaremos con calma. Yo detengo el tiempo cuando lo necesites.",
+        "sub": "We'll start slowly. I'll stop time whenever you need it.",
         "sentiment": "warm"
       },
       {
-        "speaker": "bimbo",
-        "text": "Don't worry — I can freeze time whenever you need to think.",
+        "speaker": "roberto",
+        "text": "Tú solo escucha y habla. ¿Lista?",
+        "sub": "You just listen and speak. Ready?",
         "sentiment": "friendly"
-      },
-      {
-        "speaker": "bimbo",
-        "text": "Ready to begin?",
-        "sentiment": "warm"
       }
     ],
     "manuela_tutorial_to_story": [
       {
-        "speaker": "bimbo",
-        "text": "You're doing well. But that was practice."
+        "speaker": "roberto",
+        "text": "Muy bien. Eso era solo práctica.",
+        "sub": "Good. That was only practice."
       },
       {
         "speaker": "player",
-        "text": "I want the real thing."
+        "text": "Quiero algo real.",
+        "sub": "I want something real."
       },
       {
-        "speaker": "bimbo",
-        "text": "The real Quito. The real Bolívar. Real stakes."
+        "speaker": "roberto",
+        "text": "El Quito real. El Bolívar real. Y consecuencias reales.",
+        "sub": "The real Quito. The real Bolívar. And real consequences."
       },
       {
-        "speaker": "bimbo",
-        "text": "There are things history will remember you for. Mistakes you won't be able to undo."
+        "speaker": "roberto",
+        "text": "La historia recordará lo que hagas esta noche. Nada se podrá deshacer.",
+        "sub": "History will remember what you do tonight. Nothing can be undone."
       },
       {
         "speaker": "player",
-        "text": "Take me there."
+        "text": "Llévame allí.",
+        "sub": "Take me there."
       }
     ],
     "manuela_story_intro": [
       {
-        "speaker": "bimbo",
-        "text": "Alright. Quito. June 16, 1822."
+        "speaker": "roberto",
+        "text": "Muy bien. Quito. Dieciséis de junio de mil ochocientos veintidós.",
+        "sub": "All right. Quito. June sixteenth, 1822."
       },
       {
-        "speaker": "bimbo",
-        "text": "The Spanish are defeated. The Liberator rides in victorious."
+        "speaker": "roberto",
+        "text": "Los españoles han sido vencidos. El Libertador entra victorioso.",
+        "sub": "The Spanish have been defeated. The Liberator rides in victorious."
       },
       {
-        "speaker": "bimbo",
-        "text": "You are Manuela Sáenz — 24, married to a man you despise. Tonight the city holds a ball for the man you haven't met yet."
+        "speaker": "roberto",
+        "text": "Tú eres Manuela Sáenz. Veinticuatro años. Casada con un hombre al que desprecias.",
+        "sub": "You are Manuela Sáenz. Twenty-four. Married to a man you despise."
       },
       {
-        "speaker": "bimbo",
-        "text": "What you do changes everything."
+        "speaker": "roberto",
+        "text": "Esta noche la ciudad celebra un baile en honor al hombre que todavía no conoces.",
+        "sub": "Tonight the city holds a ball for the man you haven't yet met."
       },
       {
-        "speaker": "bimbo",
-        "text": "I can still freeze time. But every spoken word is yours."
+        "speaker": "roberto",
+        "text": "Lo que hagas esta noche lo cambia todo.",
+        "sub": "What you do tonight changes everything."
       },
       {
-        "speaker": "bimbo",
-        "text": "Ready?"
+        "speaker": "roberto",
+        "text": "Puedo detener el tiempo. Pero cada palabra es tuya.",
+        "sub": "I can stop time. But every word is yours."
+      },
+      {
+        "speaker": "roberto",
+        "text": "¿Lista?",
+        "sub": "Ready?"
       }
     ],
     "manuela_drop": [
       {
-        "speaker": "bimbo",
-        "text": "Opening portal. Quito, 1822."
+        "speaker": "roberto",
+        "text": "Abriendo el portal. Quito, mil ochocientos veintidós.",
+        "sub": "Opening the portal. Quito, 1822."
       },
       {
-        "speaker": "bimbo",
-        "text": "Buena suerte, Doña Manuela."
+        "speaker": "roberto",
+        "text": "Buena suerte, Doña Manuela.",
+        "sub": "Good luck, Doña Manuela."
       }
     ],
     "manuela_awakening": [
       {
         "speaker": "narration",
-        "text": "Candlelight. The scent of jasmine. Music drifts up from the plaza."
+        "text": "Luz de velas. Aroma de jazmín. La música sube desde la plaza.",
+        "sub": "Candlelight. Scent of jasmine. Music rises from the plaza."
       },
       {
         "speaker": "narration",
-        "text": "You are at the Aguirre balcony. Below, the city roars for the Liberator."
+        "text": "Estás en el balcón de los Aguirre. Abajo, la ciudad ruge por el Libertador.",
+        "sub": "You're on the Aguirre balcony. Below, the city roars for the Liberator."
       },
       {
         "speaker": "sister",
-        "text": "「¡Manuela, por fin llegaste!」",
-        "sub": "Manuela, finally you're here!"
+        "text": "¡Manuela, por fin llegaste!",
+        "sub": "Manuela, you're finally here!"
       },
       {
-        "speaker": "bimbo",
-        "text": "Your sister María Josefa. She wants to know where you've been."
+        "speaker": "roberto",
+        "text": "Es tu hermana María Josefa. Quiere saber dónde estuviste.",
+        "sub": "That's your sister María Josefa. She wants to know where you've been."
       },
       {
-        "speaker": "bimbo",
-        "text": "Time to think. I'll freeze things while you plan what to say."
+        "speaker": "roberto",
+        "text": "Momento de pensar. Voy a detener el tiempo.",
+        "sub": "Time to think. I'll stop time."
       }
     ],
     "manuela_time_freeze_lesson": [
       {
-        "speaker": "bimbo",
-        "text": "There. Time stopped. Breathe."
+        "speaker": "roberto",
+        "text": "Listo. Tiempo detenido. Respira.",
+        "sub": "Done. Time stopped. Breathe."
       },
       {
-        "speaker": "bimbo",
-        "text": "Your sister wants an answer. Pick what you want to say in Spanish."
+        "speaker": "roberto",
+        "text": "Tu hermana espera. Elige qué quieres decir en español.",
+        "sub": "Your sister is waiting. Pick what you want to say in Spanish."
       },
       {
-        "speaker": "bimbo",
-        "text": "Tap a phrase to hear it. Then say it back when you're ready."
+        "speaker": "roberto",
+        "text": "Toca una frase para escucharla. Luego dila cuando estés lista.",
+        "sub": "Tap a phrase to hear it. Then say it when you're ready."
       }
     ],
     "manuela_first_success": [
       {
         "speaker": "sister",
-        "text": "「¡Mira! ¡Está entrando a la plaza!」",
+        "text": "¡Mira! ¡Está entrando a la plaza!",
         "sub": "Look! He's coming into the plaza!"
       },
       {
-        "speaker": "bimbo",
-        "text": "Nice. She bought it. Now the real night begins."
+        "speaker": "roberto",
+        "text": "Perfecto. Se lo creyó. Ahora empieza la verdadera noche.",
+        "sub": "Perfect. She bought it. Now the real night begins."
       },
       {
-        "speaker": "bimbo",
-        "text": "Welcome to 1822. The hard part starts now."
+        "speaker": "roberto",
+        "text": "Bienvenida a 1822. Lo difícil empieza ahora.",
+        "sub": "Welcome to 1822. The hard part starts now."
       }
     ]
   },
