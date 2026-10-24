@@ -108,6 +108,19 @@ app.include_router(practice_router)
 app.include_router(progress_router)
 app.include_router(observability_router)
 
+
+@app.post("/api/admin/reload-data")
+def admin_reload_data():
+    """Re-read scenarios.json and stories.json from disk after a git sync."""
+    import json as _json
+    from services import scenarios as _sc
+    from services.stories import reload_stories as _rs
+    with open(_sc.scenarios_path, 'r', encoding='utf-8') as f:
+        _sc.scenarios_data = _json.load(f)
+    _rs()
+    return {"ok": True, "scenarios": len(_sc.scenarios_data)}
+
+
 # ----------------- Entry Point -----------------
 
 if __name__ == "__main__":
