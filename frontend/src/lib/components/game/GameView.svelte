@@ -129,7 +129,7 @@
     onResult: (result, opts) => applyInteractionResult(result, opts),
     onPenalty: (data) => {
       if (lives === 0) {
-        alert('Out of lives. Try a different option.');
+        alert('Se te acabaron las vidas. Prueba otra opción.');
         requireRepeat = false;
       }
     },
@@ -814,8 +814,8 @@
     <div class="dialogue-area">
       <DialogueBox
         speakerEmoji=""
-        dialogueTarget={$storyStore.character_dialogue_jp || ''}
-        dialogueNative={$storyStore.character_dialogue_en || ''}
+        dialogueTarget={$storyStore.character_dialogue_es || $storyStore.character_dialogue_zh || $storyStore.character_dialogue_jp || ''}
+        dialogueNative={$storyStore.character_dialogue_es ? '' : ($storyStore.character_dialogue_en || '')}
       />
     </div>
 
@@ -832,7 +832,7 @@
     {:else}
       <div class="live-indicator">
         <span class="live-dot"></span>
-        <span class="live-text">LIVE - Respond naturally</span>
+        <span class="live-text">EN VIVO — Responde con naturalidad</span>
       </div>
     {/if}
 
@@ -844,7 +844,7 @@
 
     {#if lastHeard && !requireRepeat}
       <div class="heard-text">
-        Heard: <em>{lastHeard}</em>
+        Oí: <em>{lastHeard}</em>
       </div>
     {/if}
 
@@ -894,15 +894,21 @@
     bottom: 0;
     left: 0;
     right: 0;
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
     gap: 12px;
     padding: 16px;
+    padding-top: 60px;
     padding-bottom: max(16px, env(safe-area-inset-bottom));
     background: linear-gradient(
       to top,
       rgba(15, 23, 42, 0.95) 0%,
-      rgba(15, 23, 42, 0.8) 50%,
+      rgba(15, 23, 42, 0.9) 40%,
+      rgba(15, 23, 42, 0.7) 80%,
       transparent 100%
     );
     pointer-events: none;

@@ -99,7 +99,7 @@
   });
 
   $: buttonLabel = isTimeStopped
-    ? (isRecording ? 'Stop & Submit' : 'Release Time & Speak')
+    ? (isRecording ? 'Detener y enviar' : 'Soltar el tiempo y hablar')
     : (isRecording ? 'Stop Speaking' : 'Speak');
 
   $: buttonIcon = isRecording ? 'stop' : 'mic';

@@ -80,7 +80,7 @@
     <button class="assistant-avatar" on:click={toggleExpand} aria-label="Toggle assistant">
       <div class="avatar-glow" class:time-stopped={isTimeStopped}></div>
       <div class="avatar-face">
-        <span class="avatar-emoji">🔮</span>
+        <span class="avatar-emoji">🎩</span>
       </div>
       {#if !expanded}
         <div class="mini-indicator" class:live={!isTimeStopped}>
@@ -92,8 +92,8 @@
     {#if expanded}
       <div class="assistant-panel" transition:fade={{ duration: 150 }}>
         <div class="assistant-header">
-          <span class="assistant-name">Bimbo</span>
-          <span class="assistant-title">Time Guide</span>
+          <span class="assistant-name">Roberto</span>
+          <span class="assistant-title">Guía del tiempo</span>
         </div>
 
         <div class="assistant-message">

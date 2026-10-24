@@ -251,7 +251,7 @@
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
           </svg>
-          {isPlayingAudio ? 'Playing...' : 'Listen again'}
+          {isPlayingAudio ? 'Reproduciendo...' : 'Escuchar otra vez'}
         </button>
 
         {#if lastHeard && matchResult === 'retry'}
@@ -273,7 +273,7 @@
         </button>
 
         <div class="mic-hint">
-          {isListening ? 'Listening... Speak now!' : 'Tap to speak'}
+          {isListening ? 'Escuchando... ¡Habla ahora!' : 'Toca para hablar'}
         </div>
       </div>
     {/if}
@@ -287,7 +287,7 @@
           </svg>
         </div>
         <div class="success-text">
-          {matchResult === 'pass' ? 'Good effort!' : 'Perfect!'}
+          {matchResult === 'pass' ? '¡Buen intento!' : '¡Perfecto!'}
         </div>
       </div>
     {/if}

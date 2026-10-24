@@ -124,7 +124,6 @@
               {#if opt.examples[0].pronunciation}
                 <div class="choice-pron">{opt.examples[0].pronunciation}</div>
               {/if}
-              <div class="choice-native">{opt.examples[0].native || ''}</div>
               <span class="choice-indicator" aria-label="Tap to hear">
                 {#if isActive && isPreviewPlaying}
                   <span class="waveform-bars">
