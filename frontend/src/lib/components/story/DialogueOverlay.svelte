@@ -150,8 +150,8 @@
   // State-specific messaging - show keyboard hint on PC
   $: continueText = (() => {
     if (isComplete) return 'Continue';
-    if (isTouchDevice) return 'Tap to continue';
-    return 'Press SPACE to continue';
+    if (isTouchDevice) return 'Toca para continuar';
+    return 'Pulsa ESPACIO para continuar';
   })();
 </script>
 
@@ -214,7 +214,7 @@
 
   <!-- Skip button -->
   <button class="skip-btn" on:click|stopPropagation={() => dispatch('skip')}>
-    Skip
+    Saltar
   </button>
 </div>
 

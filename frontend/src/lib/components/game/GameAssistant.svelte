@@ -136,8 +136,8 @@
 <style>
   .assistant-container {
     position: fixed;
-    bottom: 160px;
-    left: 16px;
+    bottom: 20px;
+    right: 16px;
     z-index: 200;
     display: flex;
     align-items: flex-end;
@@ -345,11 +345,12 @@
     color: #fca5a5;
   }
 
-  /* Responsive: move to bottom on smaller screens */
+  /* Responsive: keep assistant out of the content column on narrow screens */
   @media (max-width: 480px) {
     .assistant-container {
-      bottom: 200px;
-      left: 12px;
+      bottom: 100px;
+      right: 12px;
+      left: auto;
     }
 
     .assistant-panel {

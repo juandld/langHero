@@ -563,7 +563,6 @@
           <span class="state-badge">{$storyState}</span>
           <span class="aesthetic-badge">{aestheticMode}</span>
           <button on:click={skipToPlaying}>Saltar a la historia</button>
-          <button on:click={replay}>Repetir</button>
         </div>
       {/if}
     {/if}

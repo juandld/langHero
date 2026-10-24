@@ -482,13 +482,10 @@
   }
 
   onMount(() => {
-    // Check if intro has been seen
-    try {
-      const introSeen = localStorage.getItem(INTRO_SEEN_KEY);
-      showIntro = !introSeen;
-    } catch (_) {
-      showIntro = true;
-    }
+    // IntroSequence contains hardcoded Shogun-era dialogue; StoryOrchestrator
+    // already drives a per-story intro via stories.json dialogues, so skip the legacy cutscene.
+    showIntro = false;
+    try { localStorage.setItem(INTRO_SEEN_KEY, '1'); } catch (_) {}
 
     try {
       const path = typeof window !== 'undefined' ? (window.location?.pathname || '') : '';
