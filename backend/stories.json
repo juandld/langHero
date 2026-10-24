@@ -191,18 +191,15 @@
       "tutorial": {
         "scenarios": [
           1000,
-          1001,
-          1002,
-          1003,
-          1004
+          1001
         ],
-        "min_complete": 3,
+        "min_complete": 2,
         "aesthetic": "cinematic",
         "intro_dialogue": "manuela_tutorial_intro",
         "transition_dialogue": "manuela_tutorial_to_story"
       },
       "main": {
-        "first_scenario_id": 1000,
+        "first_scenario_id": 1002,
         "aesthetic": "cinematic",
         "chapters": [
           {
@@ -210,8 +207,6 @@
             "title": "El baile de Quito",
             "description": "La noche en que Manuela conoció al Libertador.",
             "scenarios": [
-              1000,
-              1001,
               1002,
               1003,
               1004,
