@@ -59,3 +59,4 @@ narratives/
 /*.jpg
 /*.jpeg
 /wip_*.md
+backend/.env
