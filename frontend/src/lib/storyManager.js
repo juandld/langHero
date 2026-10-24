@@ -303,7 +303,7 @@ function createStoryManager() {
      */
     startAwakening() {
       update(s => {
-        const awakeningKey = 'awakening';
+        const awakeningKey = s.story?.main?.awakening_dialogue || 'awakening';
         const awakeningDialogue = s.dialogues?.[awakeningKey] || [];
 
         return {
@@ -322,7 +322,7 @@ function createStoryManager() {
      */
     startTimeFreeze() {
       update(s => {
-        const lessonKey = 'time_freeze_lesson';
+        const lessonKey = s.story?.main?.time_freeze_lesson || 'time_freeze_lesson';
         const lessonDialogue = s.dialogues?.[lessonKey] || [];
 
         return {
@@ -354,7 +354,7 @@ function createStoryManager() {
      */
     startFirstSuccess() {
       update(s => {
-        const successKey = 'first_success';
+        const successKey = s.story?.main?.first_success || 'first_success';
         const successDialogue = s.dialogues?.[successKey] || [];
 
         return {
@@ -412,7 +412,8 @@ function createStoryManager() {
      */
     getTimeFreezeLesson() {
       const s = get({ subscribe });
-      return s.dialogues?.['time_freeze_lesson'] || [];
+      const key = s.story?.main?.time_freeze_lesson || 'time_freeze_lesson';
+      return s.dialogues?.[key] || [];
     },
 
     /**
@@ -420,7 +421,8 @@ function createStoryManager() {
      */
     getFirstSuccessDialogue() {
       const s = get({ subscribe });
-      return s.dialogues?.['first_success'] || [];
+      const key = s.story?.main?.first_success || 'first_success';
+      return s.dialogues?.[key] || [];
     },
 
     /**

@@ -10,8 +10,13 @@
     "lives": 3,
     "reward_points": 10,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 10 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
     },
     "options": [
       {
@@ -19,7 +24,11 @@
         "text": "Yes, please.",
         "next_scenario": 2,
         "examples": [
-          { "native": "Yes, please.", "target": "はい、お願いします。", "pronunciation": "Hai, onegaishimasu." }
+          {
+            "native": "Yes, please.",
+            "target": "はい、お願いします。",
+            "pronunciation": "Hai, onegaishimasu."
+          }
         ]
       },
       {
@@ -27,7 +36,11 @@
         "text": "Yeah, I'm starving!",
         "next_scenario": 2,
         "examples": [
-          { "native": "Yeah, I'm starving!", "target": "うん、めっちゃ腹減った！", "pronunciation": "Un, meccha hara hetta!" }
+          {
+            "native": "Yeah, I'm starving!",
+            "target": "うん、めっちゃ腹減った！",
+            "pronunciation": "Un, meccha hara hetta!"
+          }
         ]
       },
       {
@@ -35,7 +48,11 @@
         "text": "No, thank you.",
         "next_scenario": 3,
         "examples": [
-          { "native": "No, thank you.", "target": "いいえ、結構です。", "pronunciation": "Iie, kekkou desu." }
+          {
+            "native": "No, thank you.",
+            "target": "いいえ、結構です。",
+            "pronunciation": "Iie, kekkou desu."
+          }
         ]
       },
       {
@@ -43,7 +60,11 @@
         "text": "Not interested.",
         "next_scenario": 3,
         "examples": [
-          { "native": "Not interested.", "target": "興味ない。", "pronunciation": "Kyoumi nai." }
+          {
+            "native": "Not interested.",
+            "target": "興味ない。",
+            "pronunciation": "Kyoumi nai."
+          }
         ]
       }
     ]
@@ -59,14 +80,39 @@
     "lives": 3,
     "reward_points": 10,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 10 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
     },
     "options": [
-      { "style": "polite", "text": "Thank you!", "next_scenario": 4,
-        "examples": [{"native": "Thank you!", "target": "ありがとうございます。", "pronunciation": "Arigatou gozaimasu."}] },
-      { "style": "casual", "text": "Looks delicious!", "next_scenario": 5,
-        "examples": [{"native": "Looks delicious!", "target": "おいしそう！", "pronunciation": "Oishisou!"}] }
+      {
+        "style": "polite",
+        "text": "Thank you!",
+        "next_scenario": 4,
+        "examples": [
+          {
+            "native": "Thank you!",
+            "target": "ありがとうございます。",
+            "pronunciation": "Arigatou gozaimasu."
+          }
+        ]
+      },
+      {
+        "style": "casual",
+        "text": "Looks delicious!",
+        "next_scenario": 5,
+        "examples": [
+          {
+            "native": "Looks delicious!",
+            "target": "おいしそう！",
+            "pronunciation": "Oishisou!"
+          }
+        ]
+      }
     ]
   },
   {
@@ -80,12 +126,27 @@
     "lives": 3,
     "reward_points": 10,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 10 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 10
+      }
     },
     "options": [
-      { "style": "polite", "text": "Say goodbye politely", "next_scenario": 6,
-        "examples": [{"native": "Goodbye.", "target": "失礼します。", "pronunciation": "Shitsurei shimasu."}] }
+      {
+        "style": "polite",
+        "text": "Say goodbye politely",
+        "next_scenario": 6,
+        "examples": [
+          {
+            "native": "Goodbye.",
+            "target": "失礼します。",
+            "pronunciation": "Shitsurei shimasu."
+          }
+        ]
+      }
     ]
   },
   {
@@ -99,14 +160,39 @@
     "lives": 2,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
-      { "style": "polite", "text": "It's delicious!", "next_scenario": 5,
-        "examples": [{"native": "It's delicious!", "target": "おいしいです！", "pronunciation": "Oishii desu!"}] },
-      { "style": "polite", "text": "Could I have water?", "next_scenario": 7,
-        "examples": [{"native": "Water, please.", "target": "お水をください。", "pronunciation": "Omizu o kudasai."}] }
+      {
+        "style": "polite",
+        "text": "It's delicious!",
+        "next_scenario": 5,
+        "examples": [
+          {
+            "native": "It's delicious!",
+            "target": "おいしいです！",
+            "pronunciation": "Oishii desu!"
+          }
+        ]
+      },
+      {
+        "style": "polite",
+        "text": "Could I have water?",
+        "next_scenario": 7,
+        "examples": [
+          {
+            "native": "Water, please.",
+            "target": "お水をください。",
+            "pronunciation": "Omizu o kudasai."
+          }
+        ]
+      }
     ]
   },
   {
@@ -120,14 +206,39 @@
     "lives": 2,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
-      { "style": "polite", "text": "Ask for extra egg", "next_scenario": 7,
-        "examples": [{"native": "An extra egg, please.", "target": "味玉をください。", "pronunciation": "Ajitama o kudasai."}] },
-      { "style": "polite", "text": "Ask for the bill", "next_scenario": 8,
-        "examples": [{"native": "The bill, please.", "target": "お会計お願いします。", "pronunciation": "Okaikei onegaishimasu."}] }
+      {
+        "style": "polite",
+        "text": "Ask for extra egg",
+        "next_scenario": 7,
+        "examples": [
+          {
+            "native": "An extra egg, please.",
+            "target": "味玉をください。",
+            "pronunciation": "Ajitama o kudasai."
+          }
+        ]
+      },
+      {
+        "style": "polite",
+        "text": "Ask for the bill",
+        "next_scenario": 8,
+        "examples": [
+          {
+            "native": "The bill, please.",
+            "target": "お会計お願いします。",
+            "pronunciation": "Okaikei onegaishimasu."
+          }
+        ]
+      }
     ]
   },
   {
@@ -141,8 +252,13 @@
     "lives": 2,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": []
   },
@@ -157,12 +273,27 @@
     "lives": 2,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
-      { "style": "polite", "text": "Thank you", "next_scenario": 8,
-        "examples": [{"native": "Thank you.", "target": "ありがとうございます。", "pronunciation": "Arigatou gozaimasu."}] }
+      {
+        "style": "polite",
+        "text": "Thank you",
+        "next_scenario": 8,
+        "examples": [
+          {
+            "native": "Thank you.",
+            "target": "ありがとうございます。",
+            "pronunciation": "Arigatou gozaimasu."
+          }
+        ]
+      }
     ]
   },
   {
@@ -176,12 +307,16 @@
     "lives": 2,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": []
   },
-
   {
     "id": 100,
     "story_id": "shogun",
@@ -195,26 +330,47 @@
     "lives": 3,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
       {
         "text": "Identify yourself",
         "style": "polite",
         "next_scenario": 101,
-        "keywords": ["私は", "わたしは", "です"],
+        "keywords": [
+          "私は",
+          "わたしは",
+          "です"
+        ],
         "examples": [
-          {"native": "I am... a traveler.", "target": "私は...旅人です。", "pronunciation": "Watashi wa... tabibito desu."}
+          {
+            "native": "I am... a traveler.",
+            "target": "私は...旅人です。",
+            "pronunciation": "Watashi wa... tabibito desu."
+          }
         ]
       },
       {
         "text": "Plead for mercy",
         "style": "humble",
         "next_scenario": 102,
-        "keywords": ["お願い", "助けて", "命"],
+        "keywords": [
+          "お願い",
+          "助けて",
+          "命"
+        ],
         "examples": [
-          {"native": "Please... spare my life.", "target": "お願いします...命だけは。", "pronunciation": "Onegaishimasu... inochi dake wa."}
+          {
+            "native": "Please... spare my life.",
+            "target": "お願いします...命だけは。",
+            "pronunciation": "Onegaishimasu... inochi dake wa."
+          }
         ]
       }
     ]
@@ -232,26 +388,47 @@
     "lives": 3,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
       {
         "text": "From a faraway land",
         "style": "honest",
         "next_scenario": 103,
-        "keywords": ["遠い", "国", "から"],
+        "keywords": [
+          "遠い",
+          "国",
+          "から"
+        ],
         "examples": [
-          {"native": "From a faraway land.", "target": "遠い国から来ました。", "pronunciation": "Tooi kuni kara kimashita."}
+          {
+            "native": "From a faraway land.",
+            "target": "遠い国から来ました。",
+            "pronunciation": "Tooi kuni kara kimashita."
+          }
         ]
       },
       {
         "text": "Point to the shipwreck",
         "style": "direct",
         "next_scenario": 103,
-        "keywords": ["船", "あの", "あそこ"],
+        "keywords": [
+          "船",
+          "あの",
+          "あそこ"
+        ],
         "examples": [
-          {"native": "That ship... was mine.", "target": "あの船...私のです。", "pronunciation": "Ano fune... watashi no desu."}
+          {
+            "native": "That ship... was mine.",
+            "target": "あの船...私のです。",
+            "pronunciation": "Ano fune... watashi no desu."
+          }
         ]
       }
     ]
@@ -269,17 +446,30 @@
     "lives": 3,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
       {
         "text": "Show respect",
         "style": "humble",
         "next_scenario": 103,
-        "keywords": ["すみません", "ごめんなさい", "申し訳"],
+        "keywords": [
+          "すみません",
+          "ごめんなさい",
+          "申し訳"
+        ],
         "examples": [
-          {"native": "I meant no disrespect.", "target": "失礼しました。", "pronunciation": "Shitsurei shimashita."}
+          {
+            "native": "I meant no disrespect.",
+            "target": "失礼しました。",
+            "pronunciation": "Shitsurei shimashita."
+          }
         ]
       }
     ]
@@ -297,26 +487,47 @@
     "lives": 3,
     "reward_points": 20,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
       {
         "text": "Follow obediently",
         "style": "humble",
         "next_scenario": 104,
-        "keywords": ["はい", "分かりました", "わかりました"],
+        "keywords": [
+          "はい",
+          "分かりました",
+          "わかりました"
+        ],
         "examples": [
-          {"native": "Yes, I understand.", "target": "はい、分かりました。", "pronunciation": "Hai, wakarimashita."}
+          {
+            "native": "Yes, I understand.",
+            "target": "はい、分かりました。",
+            "pronunciation": "Hai, wakarimashita."
+          }
         ]
       },
       {
         "text": "Ask where you're going",
         "style": "curious",
         "next_scenario": 104,
-        "keywords": ["どこ", "行く", "どちら"],
+        "keywords": [
+          "どこ",
+          "行く",
+          "どちら"
+        ],
         "examples": [
-          {"native": "Where are we going?", "target": "どこへ行くのですか？", "pronunciation": "Doko e iku no desu ka?"}
+          {
+            "native": "Where are we going?",
+            "target": "どこへ行くのですか？",
+            "pronunciation": "Doko e iku no desu ka?"
+          }
         ]
       }
     ]
@@ -334,26 +545,45 @@
     "lives": 3,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
       {
         "text": "Greet the villagers",
         "style": "friendly",
         "next_scenario": 105,
-        "keywords": ["こんにちは", "よろしく"],
+        "keywords": [
+          "こんにちは",
+          "よろしく"
+        ],
         "examples": [
-          {"native": "Hello.", "target": "こんにちは。", "pronunciation": "Konnichiwa."}
+          {
+            "native": "Hello.",
+            "target": "こんにちは。",
+            "pronunciation": "Konnichiwa."
+          }
         ]
       },
       {
         "text": "Keep your head down",
         "style": "cautious",
         "next_scenario": 105,
-        "keywords": ["すみません", "通ります"],
+        "keywords": [
+          "すみません",
+          "通ります"
+        ],
         "examples": [
-          {"native": "Excuse me.", "target": "すみません。", "pronunciation": "Sumimasen."}
+          {
+            "native": "Excuse me.",
+            "target": "すみません。",
+            "pronunciation": "Sumimasen."
+          }
         ]
       }
     ]
@@ -371,27 +601,52 @@
     "lives": 3,
     "reward_points": 15,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 15 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
     },
     "options": [
       {
         "text": "Thank her gratefully",
         "style": "polite",
         "next_scenario": 106,
-        "keywords": ["ありがとう", "ございます", "いただきます"],
+        "keywords": [
+          "ありがとう",
+          "ございます",
+          "いただきます"
+        ],
         "examples": [
-          {"native": "Thank you very much.", "target": "ありがとうございます。", "pronunciation": "Arigatou gozaimasu."},
-          {"native": "I gratefully receive.", "target": "いただきます。", "pronunciation": "Itadakimasu."}
+          {
+            "native": "Thank you very much.",
+            "target": "ありがとうございます。",
+            "pronunciation": "Arigatou gozaimasu."
+          },
+          {
+            "native": "I gratefully receive.",
+            "target": "いただきます。",
+            "pronunciation": "Itadakimasu."
+          }
         ]
       },
       {
         "text": "Ask her name",
         "style": "friendly",
         "next_scenario": 106,
-        "keywords": ["名前", "お名前", "何という"],
+        "keywords": [
+          "名前",
+          "お名前",
+          "何という"
+        ],
         "examples": [
-          {"native": "What is your name?", "target": "お名前は何ですか？", "pronunciation": "Onamae wa nan desu ka?"}
+          {
+            "native": "What is your name?",
+            "target": "お名前は何ですか？",
+            "pronunciation": "Onamae wa nan desu ka?"
+          }
         ]
       }
     ]
@@ -409,26 +664,47 @@
     "lives": 2,
     "reward_points": 20,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 20 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 20
+      }
     },
     "options": [
       {
         "text": "Express gratitude for the kindness",
         "style": "humble",
         "next_scenario": 107,
-        "keywords": ["ありがとう", "親切", "感謝"],
+        "keywords": [
+          "ありがとう",
+          "親切",
+          "感謝"
+        ],
         "examples": [
-          {"native": "Your kindness is appreciated.", "target": "ご親切にありがとうございます。", "pronunciation": "Goshinsetsu ni arigatou gozaimasu."}
+          {
+            "native": "Your kindness is appreciated.",
+            "target": "ご親切にありがとうございます。",
+            "pronunciation": "Goshinsetsu ni arigatou gozaimasu."
+          }
         ]
       },
       {
         "text": "Ask about the lord",
         "style": "curious",
         "next_scenario": 107,
-        "keywords": ["殿様", "どんな", "どういう"],
+        "keywords": [
+          "殿様",
+          "どんな",
+          "どういう"
+        ],
         "examples": [
-          {"native": "What is the lord like?", "target": "殿様はどんな方ですか？", "pronunciation": "Tonosama wa donna kata desu ka?"}
+          {
+            "native": "What is the lord like?",
+            "target": "殿様はどんな方ですか？",
+            "pronunciation": "Tonosama wa donna kata desu ka?"
+          }
         ]
       }
     ]
@@ -446,17 +722,30 @@
     "lives": 2,
     "reward_points": 20,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 20 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 20
+      }
     },
     "options": [
       {
         "text": "Thank her for the warning",
         "style": "polite",
         "next_scenario": 108,
-        "keywords": ["ありがとう", "気をつけ", "わかりました"],
+        "keywords": [
+          "ありがとう",
+          "気をつけ",
+          "わかりました"
+        ],
         "examples": [
-          {"native": "I understand. Thank you.", "target": "分かりました。ありがとうございます。", "pronunciation": "Wakarimashita. Arigatou gozaimasu."}
+          {
+            "native": "I understand. Thank you.",
+            "target": "分かりました。ありがとうございます。",
+            "pronunciation": "Wakarimashita. Arigatou gozaimasu."
+          }
         ]
       }
     ]
@@ -474,8 +763,13 @@
     "lives": 2,
     "reward_points": 25,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 25 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 25
+      }
     },
     "options": [
       {
@@ -484,16 +778,28 @@
         "next_scenario": 109,
         "keywords": [],
         "examples": [
-          {"native": "(Let the samurai speak)", "target": "（侍に任せる）", "pronunciation": "(Samurai ni makaseru)"}
+          {
+            "native": "(Let the samurai speak)",
+            "target": "（侍に任せる）",
+            "pronunciation": "(Samurai ni makaseru)"
+          }
         ]
       },
       {
         "text": "Bow respectfully",
         "style": "humble",
         "next_scenario": 109,
-        "keywords": ["失礼", "お邪魔", "参りました"],
+        "keywords": [
+          "失礼",
+          "お邪魔",
+          "参りました"
+        ],
         "examples": [
-          {"native": "I have come to see the lord.", "target": "殿様にお目にかかりに参りました。", "pronunciation": "Tonosama ni ome ni kakari ni mairimashita."}
+          {
+            "native": "I have come to see the lord.",
+            "target": "殿様にお目にかかりに参りました。",
+            "pronunciation": "Tonosama ni ome ni kakari ni mairimashita."
+          }
         ]
       }
     ]
@@ -511,17 +817,30 @@
     "lives": 2,
     "reward_points": 20,
     "penalties": {
-      "incorrect_answer": { "lives": 1 },
-      "language_mismatch": { "lives": 2, "points": 20 }
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 20
+      }
     },
     "options": [
       {
         "text": "Acknowledge the instruction",
         "style": "obedient",
         "next_scenario": 110,
-        "keywords": ["はい", "分かりました", "承知"],
+        "keywords": [
+          "はい",
+          "分かりました",
+          "承知"
+        ],
         "examples": [
-          {"native": "Understood.", "target": "承知しました。", "pronunciation": "Shouchi shimashita."}
+          {
+            "native": "Understood.",
+            "target": "承知しました。",
+            "pronunciation": "Shouchi shimashita."
+          }
         ]
       }
     ]
@@ -539,17 +858,30 @@
     "lives": 2,
     "reward_points": 30,
     "penalties": {
-      "incorrect_answer": { "lives": 2 },
-      "language_mismatch": { "lives": 2, "points": 30 }
+      "incorrect_answer": {
+        "lives": 2
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 30
+      }
     },
     "options": [
       {
         "text": "Give your name respectfully",
         "style": "humble",
         "next_scenario": 111,
-        "keywords": ["私は", "申します", "と言います"],
+        "keywords": [
+          "私は",
+          "申します",
+          "と言います"
+        ],
         "examples": [
-          {"native": "My name is...", "target": "私は...と申します。", "pronunciation": "Watashi wa... to moushimasu."}
+          {
+            "native": "My name is...",
+            "target": "私は...と申します。",
+            "pronunciation": "Watashi wa... to moushimasu."
+          }
         ]
       }
     ]
@@ -567,9 +899,626 @@
     "lives": 2,
     "reward_points": 35,
     "penalties": {
-      "incorrect_answer": { "lives": 2 },
-      "language_mismatch": { "lives": 2, "points": 35 }
+      "incorrect_answer": {
+        "lives": 2
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 35
+      }
     },
     "options": []
+  },
+  {
+    "id": 1000,
+    "story_id": "manuela",
+    "chapter_id": "ch4",
+    "language": "Spanish",
+    "setting": "Balcón que da a la plaza mayor de Quito al atardecer, antorchas abajo, 16 de junio de 1822",
+    "description": "Tu hermana María Josefa te saluda al llegar al balcón. El baile en honor al Libertador está por comenzar.",
+    "character_dialogue_es": "¡Manuela, por fin llegaste! ¿Dónde te metiste tanto rato?",
+    "character_dialogue_en": "Manuela, finally! Where did you disappear to all this time?",
+    "mode": "advanced",
+    "lives": 2,
+    "reward_points": 15,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
+    },
+    "options": [
+      {
+        "text": "Say you went looking for a worthy dress",
+        "style": "coy",
+        "next_scenario": 1001,
+        "keywords": [
+          "vestido",
+          "buscar",
+          "digno",
+          "noche"
+        ],
+        "examples": [
+          {
+            "native": "I went to find a dress worthy of tonight.",
+            "target": "Fui a buscar un vestido digno de esta noche.",
+            "pronunciation": "Fui a buscar un vestido digno de esta noche."
+          }
+        ]
+      },
+      {
+        "text": "Confess you were watching the soldiers arrive",
+        "style": "honest",
+        "next_scenario": 1001,
+        "keywords": [
+          "soldados",
+          "entrar",
+          "quedé",
+          "viendo"
+        ],
+        "examples": [
+          {
+            "native": "I stayed to watch the soldiers come in.",
+            "target": "Me quedé viendo entrar a los soldados.",
+            "pronunciation": "Me quedé viendo entrar a los soldados."
+          }
+        ]
+      },
+      {
+        "text": "Tease about the big occasion",
+        "style": "playful",
+        "next_scenario": 1001,
+        "keywords": [
+          "Libertador",
+          "días",
+          "recibe",
+          "todos"
+        ],
+        "examples": [
+          {
+            "native": "It's not every day we welcome the Liberator.",
+            "target": "No todos los días se recibe al Libertador.",
+            "pronunciation": "No todos los días se recibe al Libertador."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 1001,
+    "story_id": "manuela",
+    "chapter_id": "ch4",
+    "language": "Spanish",
+    "setting": "Salón iluminado por candelabros, damas en voz baja intercambiando chismes",
+    "description": "Doña Rosalía comenta con malicia sobre el Libertador. Te mira esperando tu reacción.",
+    "character_dialogue_es": "Dicen que el Libertador tiene una amante en cada ciudad que libera. ¿Será verdad, querida?",
+    "character_dialogue_en": "They say the Liberator has a lover in every city he frees. Could it be true, dear?",
+    "mode": "advanced",
+    "lives": 2,
+    "reward_points": 15,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
+    },
+    "options": [
+      {
+        "text": "Defend the Liberator",
+        "style": "firm",
+        "next_scenario": 1002,
+        "keywords": [
+          "calumnias",
+          "realistas",
+          "señora",
+          "mentiras"
+        ],
+        "examples": [
+          {
+            "native": "Those are slanders of the royalists, ma'am.",
+            "target": "Esas son calumnias de los realistas, señora.",
+            "pronunciation": "Esas son calumnias de los realistas, señora."
+          }
+        ]
+      },
+      {
+        "text": "Pretend indifference",
+        "style": "cool",
+        "next_scenario": 1002,
+        "keywords": [
+          "hombres",
+          "hablar",
+          "siempre",
+          "grandes"
+        ],
+        "examples": [
+          {
+            "native": "Great men always give people something to talk about.",
+            "target": "Los grandes hombres siempre dan de qué hablar.",
+            "pronunciation": "Los grandes hombres siempre dan de qué hablar."
+          }
+        ]
+      },
+      {
+        "text": "Change the subject gracefully",
+        "style": "diplomatic",
+        "next_scenario": 1002,
+        "keywords": [
+          "permite",
+          "músicos",
+          "voy",
+          "ver"
+        ],
+        "examples": [
+          {
+            "native": "Excuse me, I'll go see if the musicians have arrived.",
+            "target": "Me permite, voy a ver si llegan los músicos.",
+            "pronunciation": "Me permite, voy a ver si llegan los músicos."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 1002,
+    "story_id": "manuela",
+    "chapter_id": "ch4",
+    "language": "Spanish",
+    "setting": "Debajo del balcón, caballos trotando, la plaza entera ruge al paso de Bolívar",
+    "description": "Simón Bolívar entra a caballo a la plaza. La multitud estalla en vítores.",
+    "character_dialogue_es": "¡Viva el Libertador! ¡Viva Bolívar! ¡Viva Colombia libre!",
+    "character_dialogue_en": "Long live the Liberator! Long live Bolívar! Long live free Colombia!",
+    "mode": "advanced",
+    "lives": 2,
+    "reward_points": 15,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
+    },
+    "options": [
+      {
+        "text": "Join the cheers",
+        "style": "passionate",
+        "next_scenario": 1003,
+        "keywords": [
+          "viva",
+          "Libertador",
+          "Bolívar"
+        ],
+        "examples": [
+          {
+            "native": "Long live the Liberator!",
+            "target": "¡Viva el Libertador!",
+            "pronunciation": "¡Viva el Libertador!"
+          }
+        ]
+      },
+      {
+        "text": "Whisper to your sister about him",
+        "style": "intimate",
+        "next_scenario": 1003,
+        "keywords": [
+          "mira",
+          "hermana",
+          "porte",
+          "noble"
+        ],
+        "examples": [
+          {
+            "native": "Look, sister, what a noble bearing he has.",
+            "target": "Mira, hermana, qué porte tan noble tiene.",
+            "pronunciation": "Mira, hermana, qué porte tan noble tiene."
+          }
+        ]
+      },
+      {
+        "text": "Wave your handkerchief and call out",
+        "style": "bold",
+        "next_scenario": 1003,
+        "keywords": [
+          "bienvenido",
+          "General",
+          "Bolívar"
+        ],
+        "examples": [
+          {
+            "native": "Welcome, General Bolívar!",
+            "target": "¡Bienvenido, General Bolívar!",
+            "pronunciation": "¡Bienvenido, General Bolívar!"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 1003,
+    "story_id": "manuela",
+    "chapter_id": "ch4",
+    "language": "Spanish",
+    "setting": "Un joven oficial se acerca al balcón con dos copas de vino tinto",
+    "description": "El teniente Fausto, oficial del batallón, sonríe mientras te ofrece una copa.",
+    "character_dialogue_es": "Doña Manuela, qué belleza esta noche. ¿Me permite acompañarla con una copa?",
+    "character_dialogue_en": "Doña Manuela, what beauty tonight. May I join you with a glass?",
+    "mode": "advanced",
+    "lives": 2,
+    "reward_points": 15,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
+    },
+    "options": [
+      {
+        "text": "Accept, but set a flirtatious condition",
+        "style": "flirtatious",
+        "next_scenario": 1004,
+        "keywords": [
+          "condición",
+          "cuente",
+          "batalla"
+        ],
+        "examples": [
+          {
+            "native": "On one condition: that you tell me about the battle.",
+            "target": "Con una condición: que me cuente de la batalla.",
+            "pronunciation": "Con una condición: que me cuente de la batalla."
+          }
+        ]
+      },
+      {
+        "text": "Decline politely",
+        "style": "polite",
+        "next_scenario": 1004,
+        "keywords": [
+          "gracias",
+          "teniente",
+          "aire",
+          "fresco"
+        ],
+        "examples": [
+          {
+            "native": "Thank you, lieutenant, but I prefer the fresh air.",
+            "target": "Gracias, teniente, pero prefiero el aire fresco.",
+            "pronunciation": "Gracias, teniente, pero prefiero el aire fresco."
+          }
+        ]
+      },
+      {
+        "text": "Steer the conversation to Bolívar",
+        "style": "curious",
+        "next_scenario": 1004,
+        "keywords": [
+          "verdad",
+          "dicen",
+          "Libertador"
+        ],
+        "examples": [
+          {
+            "native": "Is it true what they say about the Liberator?",
+            "target": "¿Es verdad lo que dicen del Libertador?",
+            "pronunciation": "¿Es verdad lo que dicen del Libertador?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 1004,
+    "story_id": "manuela",
+    "chapter_id": "ch4",
+    "language": "Spanish",
+    "setting": "Mesa ceremonial dentro del salón, una corona de laurel preparada para el Libertador",
+    "description": "Miras la corona de laurel. María Josefa adivina tu intención y te advierte.",
+    "character_dialogue_es": "No se te ocurra, Manuela. Esa corona es para la ceremonia.",
+    "character_dialogue_en": "Don't even think about it, Manuela. That crown is for the ceremony.",
+    "mode": "advanced",
+    "lives": 2,
+    "reward_points": 15,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 15
+      }
+    },
+    "options": [
+      {
+        "text": "Decide to take it anyway",
+        "style": "defiant",
+        "next_scenario": 1005,
+        "keywords": [
+          "deja",
+          "preocuparte",
+          "nadie",
+          "cuenta"
+        ],
+        "examples": [
+          {
+            "native": "Stop worrying. No one will notice.",
+            "target": "Deja de preocuparte. Nadie se dará cuenta.",
+            "pronunciation": "Deja de preocuparte. Nadie se dará cuenta."
+          }
+        ]
+      },
+      {
+        "text": "Agree to leave it alone",
+        "style": "obedient",
+        "next_scenario": 1005,
+        "keywords": [
+          "razón",
+          "escándalo",
+          "vale",
+          "pena"
+        ],
+        "examples": [
+          {
+            "native": "You're right, it's not worth a scandal.",
+            "target": "Tienes razón, no vale la pena un escándalo.",
+            "pronunciation": "Tienes razón, no vale la pena un escándalo."
+          }
+        ]
+      },
+      {
+        "text": "Ask to see it up close",
+        "style": "evasive",
+        "next_scenario": 1005,
+        "keywords": [
+          "cerca",
+          "dejo",
+          "verla"
+        ],
+        "examples": [
+          {
+            "native": "I just want to see it up close, I'll put it back.",
+            "target": "Solo quiero verla de cerca, ya la dejo.",
+            "pronunciation": "Solo quiero verla de cerca, ya la dejo."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 1005,
+    "story_id": "manuela",
+    "chapter_id": "ch4",
+    "language": "Spanish",
+    "setting": "De vuelta en el balcón, corona en las manos. Bolívar se acerca a caballo justo debajo",
+    "description": "Tienes la corona. El Libertador está a punto de pasar bajo el balcón. Tu hermana suplica.",
+    "character_dialogue_es": "Manuela, por el amor de Dios, ¡no lo hagas!",
+    "character_dialogue_en": "Manuela, for the love of God, don't do it!",
+    "mode": "advanced",
+    "lives": 2,
+    "reward_points": 20,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 20
+      }
+    },
+    "options": [
+      {
+        "text": "Throw it hard, like a challenge",
+        "style": "bold",
+        "next_scenario": 1006,
+        "keywords": [
+          "reciba",
+          "parte",
+          "que"
+        ],
+        "examples": [
+          {
+            "native": "Let him receive it on my behalf!",
+            "target": "¡Que la reciba de mi parte!",
+            "pronunciation": "¡Que la reciba de mi parte!"
+          }
+        ]
+      },
+      {
+        "text": "Let it fall softly, like a flower",
+        "style": "poetic",
+        "next_scenario": 1006,
+        "keywords": [
+          "caiga",
+          "flor",
+          "sobre"
+        ],
+        "examples": [
+          {
+            "native": "May it fall upon him like a flower.",
+            "target": "Que caiga como una flor sobre él.",
+            "pronunciation": "Que caiga como una flor sobre él."
+          }
+        ]
+      },
+      {
+        "text": "Aim precisely at his head",
+        "style": "mischievous",
+        "next_scenario": 1006,
+        "keywords": [
+          "apuntaré",
+          "directo",
+          "cabeza"
+        ],
+        "examples": [
+          {
+            "native": "I'll aim straight for his head.",
+            "target": "Apuntaré directo a su cabeza.",
+            "pronunciation": "Apuntaré directo a su cabeza."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 1006,
+    "story_id": "manuela",
+    "chapter_id": "ch4",
+    "language": "Spanish",
+    "setting": "La plaza. Bolívar detiene su caballo, se quita el sombrero y mira hacia arriba",
+    "description": "La corona ha caído sobre él. Levanta la vista buscando a quien se la arrojó. Sus ojos encuentran los tuyos.",
+    "character_dialogue_es": "¿Y a quién debo tan dulce agresión, señora?",
+    "character_dialogue_en": "And to whom do I owe such a sweet assault, madam?",
+    "mode": "advanced",
+    "lives": 2,
+    "reward_points": 20,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 20
+      }
+    },
+    "options": [
+      {
+        "text": "Smile mysteriously",
+        "style": "coy",
+        "next_scenario": 1007,
+        "keywords": [
+          "adivine",
+          "usted",
+          "General"
+        ],
+        "examples": [
+          {
+            "native": "Let you guess that for yourself, General.",
+            "target": "Que lo adivine usted, General.",
+            "pronunciation": "Que lo adivine usted, General."
+          }
+        ]
+      },
+      {
+        "text": "Introduce yourself boldly",
+        "style": "bold",
+        "next_scenario": 1007,
+        "keywords": [
+          "Manuela",
+          "Sáenz",
+          "servirle"
+        ],
+        "examples": [
+          {
+            "native": "Manuela Sáenz, at your service, General.",
+            "target": "Manuela Sáenz, para servirle, General.",
+            "pronunciation": "Manuela Sáenz, para servirle, General."
+          }
+        ]
+      },
+      {
+        "text": "Feign innocence",
+        "style": "demure",
+        "next_scenario": 1007,
+        "keywords": [
+          "perdón",
+          "viento",
+          "traicionó"
+        ],
+        "examples": [
+          {
+            "native": "Forgive me, General, the wind betrayed me.",
+            "target": "Perdón, General, el viento me traicionó.",
+            "pronunciation": "Perdón, General, el viento me traicionó."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 1007,
+    "story_id": "manuela",
+    "chapter_id": "ch4",
+    "language": "Spanish",
+    "setting": "Dentro del gran salón, orquesta tocando un vals. Bolívar camina hacia ti",
+    "description": "Bolívar atraviesa el salón. Todas las miradas se posan en ustedes. Se detiene frente a ti.",
+    "character_dialogue_es": "Doña Manuela, me parece que me debe un baile. ¿O quizás soy yo quien se lo debe a usted?",
+    "character_dialogue_en": "Doña Manuela, it seems you owe me a dance. Or perhaps it is I who owes you one?",
+    "mode": "advanced",
+    "lives": 2,
+    "reward_points": 25,
+    "penalties": {
+      "incorrect_answer": {
+        "lives": 1
+      },
+      "language_mismatch": {
+        "lives": 2,
+        "points": 25
+      }
+    },
+    "options": [
+      {
+        "text": "Accept with grace",
+        "style": "elegant",
+        "next_scenario": null,
+        "keywords": [
+          "honor",
+          "bailar",
+          "Libertador"
+        ],
+        "examples": [
+          {
+            "native": "It would be an honor to dance with the Liberator.",
+            "target": "Será un honor bailar con el Libertador.",
+            "pronunciation": "Será un honor bailar con el Libertador."
+          }
+        ]
+      },
+      {
+        "text": "Tease him back",
+        "style": "playful",
+        "next_scenario": null,
+        "keywords": [
+          "baile",
+          "corona",
+          "cambio",
+          "poco"
+        ],
+        "examples": [
+          {
+            "native": "A dance in exchange for the crown? That seems too little.",
+            "target": "¿Un baile a cambio de la corona? Me parece poco.",
+            "pronunciation": "¿Un baile a cambio de la corona? Me parece poco."
+          }
+        ]
+      },
+      {
+        "text": "Mention your husband",
+        "style": "warning",
+        "next_scenario": null,
+        "keywords": [
+          "esposo",
+          "Lima",
+          "dirá",
+          "gente"
+        ],
+        "examples": [
+          {
+            "native": "My husband is in Lima, General. What will people say?",
+            "target": "Mi esposo está en Lima, General. ¿Qué dirá la gente?",
+            "pronunciation": "Mi esposo está en Lima, General. ¿Qué dirá la gente?"
+          }
+        ]
+      }
+    ]
   }
 ]
