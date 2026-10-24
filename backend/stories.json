@@ -181,6 +181,30 @@
           }
         ]
       }
+    },
+    {
+      "id": "manuela",
+      "title": "Manuela Sáenz: La Libertadora",
+      "language": "Spanish",
+      "description": "Quito, 1822. The ball of the Liberator. Flirt, dare, change history.",
+      "cover_image": "https://images.unsplash.com/photo-1509564378-3bbbd9fdd43b?w=800&q=80",
+      "tutorial": {
+        "scenarios": [1000, 1001, 1002, 1003, 1004],
+        "min_complete": 3,
+        "aesthetic": "cinematic"
+      },
+      "main": {
+        "first_scenario_id": 1000,
+        "aesthetic": "cinematic",
+        "chapters": [
+          {
+            "id": "ch4",
+            "title": "El baile de Quito",
+            "description": "La noche en que Manuela conoció al Libertador.",
+            "scenarios": [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007]
+          }
+        ]
+      }
     }
   ],
   "dialogues": {

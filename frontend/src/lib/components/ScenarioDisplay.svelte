@@ -716,7 +716,7 @@
 <div class="scenario-container">
   <ScenarioHeader
     imageUrl={$storyStore.image_url}
-    dialogueJp={$storyStore.character_dialogue_jp}
+    dialogueJp={$storyStore.character_dialogue_es || $storyStore.character_dialogue_zh || $storyStore.character_dialogue_jp}
     dialogueEn={$storyStore.character_dialogue_en}
     description={$storyStore.description}
   />

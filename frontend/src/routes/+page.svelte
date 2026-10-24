@@ -103,7 +103,11 @@
       label: 'Japanese',
       desc: 'Survive feudal Japan as a shipwrecked stranger',
     },
-    { id: 'spanish', label: 'Spanish', desc: 'Coming soon' },
+    {
+      id: 'spanish',
+      label: 'Spanish',
+      desc: 'Follow Manuela Sáenz through revolutionary Quito',
+    },
   ];
 
   onMount(async () => {
@@ -438,14 +442,11 @@
           {#each languages as lang}
             <button
               class="story-card"
-              class:disabled={lang.id === 'spanish'}
-              on:click={() => lang.id !== 'spanish' && startPractice(lang.id)}
+              on:click={() => startPractice(lang.id)}
             >
               <div class="card-lang">{lang.label}</div>
               <div class="card-desc">{lang.desc}</div>
-              {#if lang.id !== 'spanish'}
-                <div class="card-arrow">Practice →</div>
-              {/if}
+              <div class="card-arrow">Practice →</div>
             </button>
           {/each}
         </div>
