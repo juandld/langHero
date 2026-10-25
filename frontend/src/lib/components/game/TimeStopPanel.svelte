@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import { t } from '$lib/game/i18n';
 
   export let options = [];
   export const selectedOption = null;
@@ -9,6 +10,7 @@
   export let draftText = '';
   export let bimboHint = null;
   export let askingBimbo = false;
+  export let lang = '';
 
   const dispatch = createEventDispatcher();
 
@@ -50,7 +52,7 @@
   <div class="time-stop-panel">
     <div class="time-indicator">
       <span class="time-icon">⏸</span>
-      <span class="time-text">TIME STOPPED - How will you respond?</span>
+      <span class="time-text">{t('time_stopped', lang)}</span>
     </div>
 
     <!-- Draft input with Ask button -->
@@ -59,7 +61,7 @@
         <input
           type="text"
           class="draft-input"
-          placeholder="Tell Bimbo what you want to say..."
+          placeholder={t('draft_placeholder', lang)}
           value={draftText}
           on:input={handleDraftInput}
           on:keydown={handleKeydown}
@@ -73,7 +75,7 @@
           {#if askingBimbo}
             <span class="ask-spinner"></span>
           {:else}
-            Ask
+            {t('ask', lang)}
           {/if}
         </button>
       </div>
@@ -82,7 +84,7 @@
     <!-- Bimbo hint -->
     {#if bimboHint}
       <div class="bimbo-hint">
-        <span class="bimbo-hint-label">Bimbo:</span>
+        <span class="bimbo-hint-label">{t('bimbo_label', lang)}</span>
         <span class="bimbo-hint-text">{bimboHint.bimboSays}</span>
       </div>
 
@@ -106,7 +108,7 @@
     {/if}
 
     {#if options.length > 0}
-      <div class="suggestions-label">Suggestions — tap to hear</div>
+      <div class="suggestions-label">{t('suggestions_label', lang)}</div>
       <div class="choices-grid">
         {#each options as opt, i}
           {#if opt.examples && opt.examples.length > 0}
@@ -143,7 +145,7 @@
       </div>
     {:else}
       <div class="no-choices">
-        <span class="no-choices-text">Speak freely in the target language</span>
+        <span class="no-choices-text">{t('speak_freely', lang)}</span>
       </div>
     {/if}
   </div>
@@ -152,8 +154,18 @@
 <style>
   .time-stop-panel {
     width: 100%;
-    max-width: 520px;
+    max-width: 560px;
     margin: 0 auto;
+    /* Dark backdrop so the choice cards + TIME STOPPED indicator don't bleed
+       into character art behind. Previously the whole panel was transparent,
+       which made every child element appear overlapped with the hero image. */
+    background: rgba(10, 10, 20, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
   }
 
   .time-indicator {
@@ -163,12 +175,12 @@
     gap: 8px;
     padding: 8px 16px;
     margin-bottom: 12px;
-    background: rgba(99, 102, 241, 0.15);
-    border: 1px solid rgba(99, 102, 241, 0.3);
+    background: rgba(99, 102, 241, 0.35);
+    border: 1px solid rgba(165, 180, 252, 0.5);
     border-radius: 20px;
-    color: #a5b4fc;
+    color: #e0e7ff;
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.03em;
     animation: pulse-indicator 2s ease-in-out infinite;
   }
@@ -348,7 +360,8 @@
 
   .choices-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    /* 2 columns: 4 choices → clean 2×2 grid instead of 3+1 awkward wrap. */
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
 

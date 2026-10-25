@@ -1,0 +1,92 @@
+{
+  "Jev findings::jev_capability_drift": {
+    "status": "PASS",
+    "actual": "all baselines hold",
+    "target": "exit 0 from probe"
+  },
+  "Jev findings::jev_overconfirm_fixed": {
+    "status": "FAIL",
+    "actual": "overconfirm 50% · naturalness 0.63",
+    "target": "overconfirm ≤15% · naturalness ≥0.70"
+  },
+  "Jev findings::jev_level_signal_tight": {
+    "status": "FAIL",
+    "actual": "stdev 0.102",
+    "target": "≤0.08"
+  },
+  "Jev findings::jev_setphrase_calibrated": {
+    "status": "SKIP",
+    "actual": "no set-phrase probe",
+    "target": "probe includes set-phrases"
+  },
+  "Jev findings::jev_teaching_copy_skipped": {
+    "status": "FAIL",
+    "actual": "no teaching_copy tag found",
+    "target": "time_freeze_lesson:2 tagged + skipped"
+  },
+  "Observability::obs_timeline_recorder_present": {
+    "status": "FAIL",
+    "actual": "no recorder in frontend src",
+    "target": "window.__langheroTimeline attached on panel-story mount"
+  },
+  "Observability::obs_sync_numbers_emit": {
+    "status": "FAIL",
+    "actual": "endpoint missing",
+    "target": "GET /api/observability/timeline/{session_id} returns stream"
+  },
+  "Observability::obs_grades_ui_renders": {
+    "status": "FAIL",
+    "actual": "/observability 404",
+    "target": "page returns 200 + ≥1 grade row"
+  },
+  "Observability::obs_session_id_present": {
+    "status": "FAIL",
+    "actual": "session_id=None",
+    "target": "non-null session_id in state"
+  },
+  "Observability::obs_full_pass_cron": {
+    "status": "FAIL",
+    "actual": "timer missing",
+    "target": "langhero-full-pass.timer scheduled"
+  },
+  "Observability::obs_capability_cron": {
+    "status": "FAIL",
+    "actual": "timer missing",
+    "target": "langhero-capability.timer scheduled weekly"
+  },
+  "Observability::obs_jev_cache_hits": {
+    "status": "FAIL",
+    "actual": "second-call 53.9ms",
+    "target": "≤10ms (cached)"
+  },
+  "UX::ux_catalog_cover_art": {
+    "status": "FAIL",
+    "actual": "no img/cover_image in catalog page",
+    "target": "scenario-story cards render <img src={cover_image}>"
+  },
+  "UX::ux_profile_page_exists": {
+    "status": "FAIL",
+    "actual": "/profile 404",
+    "target": "200 with lives+score content"
+  },
+  "UX::ux_progress_sync_endpoint": {
+    "status": "FAIL",
+    "actual": "POST /api/progress/* 404",
+    "target": "POST then GET round-trip"
+  },
+  "UX::ux_practice_no_autoselect": {
+    "status": "FAIL",
+    "actual": "autoselect present",
+    "target": "no auto-pick of first scenario"
+  },
+  "UX::ux_settings_menu_entry": {
+    "status": "FAIL",
+    "actual": "no Settings entry",
+    "target": "menu contains a 'Settings' button linking to /settings"
+  },
+  "UX::ux_audio_sync_within_bounds": {
+    "status": "SKIP",
+    "actual": "no /api/observability/sync-stats",
+    "target": "max audio-start delay ≤500ms over 3 panel advances"
+  }
+}

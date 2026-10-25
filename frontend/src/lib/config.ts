@@ -3,7 +3,9 @@
 // - PUBLIC_BACKEND_URL (runtime env)
 // - Query param ?api=...
 // - localStorage BACKEND_URL
-// - Compute from window.location (same-origin for non-localhost; http://localhost:8000 for localhost)
+// - Compute from window.location (same-origin for non-localhost; same-port for localhost)
+// - discoverBackend() probes common langHero dev ports: 8100 (canonical), 8001-8005.
+//   NOT 8000 — that's orchestratorHero on this VPS and would silently misroute.
 
 function getEnvBackendUrl(): string {
   try {
@@ -65,10 +67,13 @@ export async function discoverBackend(candidates?: string[]): Promise<string> {
   const base = getBackendUrl();
   const uniq = new Set<string>();
   const list = candidates && candidates.length ? candidates.slice() : [];
-  // Build default candidate list (local-only; avoids self-probing public tunnels)
+  // Build default candidate list (local-only; avoids self-probing public tunnels).
+  // 8100 is langHero's canonical backend port (see systemd ExecStart);
+  // 8001-8005 are fallbacks for ad-hoc dev instances. Removed 8000 — that's
+  // orchestratorHero on this VPS and discovering it would silently misroute.
   if (!list.length) {
+    list.push('http://localhost:8100');
     for (let p = 8001; p <= 8005; p++) list.push(`http://localhost:${p}`);
-    list.push('http://localhost:8000');
   }
   // Ensure current base is first
   list.unshift(base);

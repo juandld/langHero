@@ -1,0 +1,325 @@
+{
+  "panels": [
+    {
+      "id": "ch1_01_wake",
+      "image": "/images/generated/panels/ch01/ch1_01_wake.png",
+      "aspect": "wide",
+      "narration": "Te despiertas con sal en los labios y arena en las heridas. El cielo es color morado y ámbar. Las olas tiran de tus piernas, perezosas, indiferentes a tu vida. Tu ropa está pesada, empapada—lana que no es de este siglo.",
+      "dialogue": null,
+      "speaker": null
+    },
+    {
+      "id": "ch1_01b_memory",
+      "image": "/images/generated/panels/ch01/ch1_01_wake.png",
+      "aspect": "wide",
+      "narration": "La memoria regresa en partes: el barco, la cámara de inmersión, la voz de Bimbo diciendo 'compromiso total significa desorientación total.' Ahora eres un náufrago. Un extranjero en costas que nunca aceptan extranjeros.",
+      "dialogue": null,
+      "speaker": null
+    },
+    {
+      "id": "ch1_02_farmers_approach",
+      "image": "/images/generated/panels/ch01/ch1_02_farmers_approach.png",
+      "aspect": "wide",
+      "narration": "Voces. Giras la cabeza—el dolor pasa por tu cuello, real y fuerte—y los ves venir por la playa. Cuatro figuras. Campesinos, tal vez, con ropa simple. Uno lleva una azada como arma. Gritan palabras que no entiendes.",
+      "dialogue": null,
+      "speaker": null
+    },
+    {
+      "id": "ch1_03_time_freeze",
+      "image": "/images/generated/panels/ch01/ch1_03_time_freeze.png",
+      "aspect": "tall",
+      "narration": "El mundo se detiene. Las olas quedan suspendidas, espuma blanca congelada. Los campesinos son estatuas, bocas abiertas, brazos levantados en alarma o amenaza—no sabes cuál. La voz de Bimbo, cerca y calmada:",
+      "dialogue": null,
+      "speaker": null
+    },
+    {
+      "id": "ch1_04_bimbo_teaches",
+      "image": "/images/generated/panels/ch01/ch1_04_bimbo_teaches.png",
+      "aspect": "square",
+      "narration": null,
+      "dialogue": "Congelé el tiempo. Puedo hacerlo cuando necesitas pensar. Preguntan quién eres. Necesitas responder—y cómo respondes importa.",
+      "speaker": "bimbo",
+      "effect": "time_freeze",
+      "branch_point": true,
+      "category_outcomes": {
+        "diplomatic": {
+          "next_panel": "ch1_05_diplomatic",
+          "life_delta": 0,
+          "reputation_delta": {
+            "diplomatic": 1
+          }
+        },
+        "pragmatic": {
+          "next_panel": "ch1_05_diplomatic",
+          "life_delta": 0,
+          "reputation_delta": {
+            "pragmatic": 1
+          }
+        },
+        "bold": {
+          "next_panel": "ch1_05_bold",
+          "life_delta": 0,
+          "reputation_delta": {
+            "bold": 1
+          }
+        },
+        "hostile": {
+          "next_panel": "ch1_05_hostile",
+          "life_delta": -1,
+          "reputation_delta": {
+            "hostile": 1
+          }
+        },
+        "history-breaking": {
+          "next_panel": "ch1_05_insightful",
+          "life_delta": 0,
+          "reputation_delta": {
+            "history-breaking": 2
+          }
+        }
+      },
+      "default_outcome": {
+        "next_panel": "ch1_05_diplomatic",
+        "life_delta": 0,
+        "reputation_delta": {
+          "pragmatic": 1
+        }
+      },
+      "options": [
+        {
+          "text": "Identificarse como náufrago",
+          "style": "humble",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Soy un náufrago",
+              "target": "私は漂流者です",
+              "pronunciation": "Watashi wa hyouryuusha desu"
+            }
+          ]
+        },
+        {
+          "text": "Pedir ayuda",
+          "style": "desperate",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Por favor ayúdame",
+              "target": "助けてください",
+              "pronunciation": "Tasukete kudasai"
+            }
+          ]
+        },
+        {
+          "text": "Preguntar quiénes son",
+          "style": "bold",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "¿Quiénes son ustedes?",
+              "target": "あなたは誰ですか",
+              "pronunciation": "Anata wa dare desu ka"
+            }
+          ]
+        },
+        {
+          "text": "Amenazarlos",
+          "style": "threatening",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "No se acerquen",
+              "target": "近づくな",
+              "pronunciation": "Chikazuku na"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch1_04b_explain",
+      "image": "/images/generated/panels/ch01/ch1_04_bimbo_teaches.png",
+      "aspect": "square",
+      "narration": null,
+      "dialogue": "Buena elección. 'Hyouryuusha'—náufrago. Te marca como víctima, no intruso. Dilo claro. Tu vida depende de ello.",
+      "speaker": "bimbo",
+      "choice_variants": {
+        "ch1_04_bimbo_teaches": {
+          "0": {
+            "dialogue": "Buena elección. '漂流者' (náufrago). Te marca como víctima, no intruso. Dilo claro. Tu vida depende de ello."
+          },
+          "1": {
+            "dialogue": "'助けてください' (por favor ayúdame). La desesperación es honesta. Verán que no eres una amenaza. Dilo con sinceridad."
+          },
+          "2": {
+            "dialogue": "Valiente. 'あなたは誰ですか' (¿quiénes son ustedes?) muestra coraje, pero ten cuidado. Mucha confianza de un extraño puede parecer arrogancia."
+          },
+          "3": {
+            "dialogue": "Peligroso. '近づくな' (no se acerquen). Palabras amenazantes de un extraño en su tierra. Esto te puede costar."
+          }
+        }
+      }
+    },
+    {
+      "id": "ch1_05_diplomatic",
+      "branch_of": "ch1_04_bimbo_teaches",
+      "image": "/images/generated/panels/ch01/ch1_05_time_resumes.png",
+      "aspect": "tall",
+      "narration": "El tiempo vuelve a moverse. Retrocedes, manos arriba en rendición. Las palabras salen—torpes, desesperadas, pero correctas. El campesino con la azada duda. Los otros se miran. Tu humildad te salvó.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch1_07_hana_steps"
+    },
+    {
+      "id": "ch1_05_bold",
+      "branch_of": "ch1_04_bimbo_teaches",
+      "image": "/images/generated/panels/ch01/ch1_05_time_resumes.png",
+      "aspect": "tall",
+      "narration": "El tiempo vuelve. Mantienes tu posición, mirándolos a los ojos. Las palabras salen firmes, casi desafiantes. El campesino con la azada se congela—no de miedo, sino de sorpresa. ¿Un extranjero que habla? Los otros murmuran entre ellos, inseguros.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch1_07_hana_steps"
+    },
+    {
+      "id": "ch1_05_hostile",
+      "branch_of": "ch1_04_bimbo_teaches",
+      "image": "/images/generated/panels/ch01/ch1_05_time_resumes.png",
+      "aspect": "tall",
+      "narration": "El tiempo vuelve. Dices las palabras, retrocediendo. El campesino mueve la azada. El dolor explota en tu hombro—real, cegador. Caes en la arena. A través de oídos zumbantes, escuchas la voz de Bimbo: 'Eso te costó. Las palabras tienen consecuencias aquí.'",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch1_07_hana_steps"
+    },
+    {
+      "id": "ch1_05_insightful",
+      "branch_of": "ch1_04_bimbo_teaches",
+      "image": "/images/generated/panels/ch01/ch1_05_time_resumes.png",
+      "aspect": "tall",
+      "narration": "El tiempo vuelve. Dices palabras que no deberían ser posibles para un extranjero—palabras que pesan más allá de su significado. Los campesinos se congelan. El hombre con la azada la baja lentamente. Algo ha cambiado. Te miran diferente ahora, como si fueras más que un náufrago.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch1_07_hana_steps"
+    },
+    {
+      "id": "ch1_07_hana_steps",
+      "image": "/images/generated/panels/ch01/ch1_07_hana_steps.png",
+      "aspect": "square",
+      "narration": "Una mujer—mayor, cara curtida como madera—da un paso adelante. Te estudia con ojos agudos. Luego habla despacio, como a un niño:",
+      "dialogue": "¿De dónde?",
+      "speaker": "hana",
+      "choice_variants": {
+        "ch1_04_bimbo_teaches": {
+          "diplomatic": {
+            "narration": "The old woman's expression softens as she steps forward. Your humility reached her. She studies you with sharp but not unkind eyes, then speaks slowly, as if to a child:"
+          },
+          "pragmatic": {
+            "narration": "The old woman steps forward cautiously. Your measured words bought you a chance. She studies you with careful eyes, then speaks slowly:"
+          },
+          "bold": {
+            "narration": "The old woman almost smiles as she steps forward. Your directness intrigues her. She studies you with sharp, appraising eyes, then speaks—not slowly, but clearly:"
+          },
+          "hostile": {
+            "narration": "The old woman pushes past the seething farmer, placing herself between you and the hoe. Blood seeps through your shirt. She studies you with cold eyes, then speaks curtly:"
+          },
+          "history-breaking": {
+            "narration": "The old woman steps forward with something like reverence. The others part for her. She studies you with wide eyes—not fear, but recognition of something she can't name. She speaks carefully:"
+          }
+        }
+      }
+    },
+    {
+      "id": "ch1_08_freeze_doko",
+      "image": "/images/generated/panels/ch01/ch1_08_freeze_doko.png",
+      "aspect": "square",
+      "narration": "El tiempo se congela de nuevo. Bimbo aparece a tu lado.",
+      "dialogue": "Ella pregunta de dónde vienes. Ten cuidado—mencionar Portugal, España o Inglaterra podría marcarte como misionero cristiano. Los están cazando.",
+      "speaker": "bimbo",
+      "effect": "time_freeze",
+      "options": [
+        {
+          "text": "Del mar",
+          "style": "safe",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Del mar",
+              "target": "海から",
+              "pronunciation": "Umi kara"
+            }
+          ]
+        },
+        {
+          "text": "De lejos",
+          "style": "vague",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "De lejos",
+              "target": "遠くから",
+              "pronunciation": "Tooku kara"
+            }
+          ]
+        },
+        {
+          "text": "De un barco",
+          "style": "honest",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "De un barco",
+              "target": "船から",
+              "pronunciation": "Fune kara"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch1_09_umi_kara",
+      "image": "/images/generated/panels/ch01/ch1_09_umi_kara.png",
+      "aspect": "square",
+      "narration": "El tiempo continúa. Señalas las olas detrás de ti.",
+      "dialogue": "Umi kara.",
+      "speaker": "player",
+      "choice_variants": {
+        "ch1_08_freeze_doko": {
+          "0": {
+            "dialogue": "Umi kara."
+          },
+          "1": {
+            "narration": "Time resumes. You sweep your hand toward the horizon.",
+            "dialogue": "Tooku kara."
+          },
+          "2": {
+            "narration": "Time resumes. You point out at the water, toward a shape that might be wreckage.",
+            "dialogue": "Fune kara."
+          }
+        }
+      }
+    },
+    {
+      "id": "ch1_09b_nod",
+      "image": "/images/generated/panels/ch01/ch1_09_umi_kara.png",
+      "aspect": "square",
+      "narration": "La mujer asiente despacio. Se vuelve hacia los otros y habla rápido—demasiado rápido para entender algo. Pero escuchas una palabra repetida: 'sama.' Un honorífico. Habla de alguien importante.",
+      "dialogue": null,
+      "speaker": null
+    },
+    {
+      "id": "ch1_10_kite",
+      "image": "/images/generated/panels/ch01/ch1_10_kite.png",
+      "aspect": "wide",
+      "narration": "Cuando se vuelve, su expresión ha cambiado. No más suave, exactamente. Pero resuelta. Te hace un gesto para que la sigas.",
+      "dialogue": "Sigue.",
+      "speaker": "hana"
+    },
+    {
+      "id": "ch1_10b_end",
+      "image": "/images/generated/panels/ch01/ch1_10_kite.png",
+      "aspect": "wide",
+      "narration": "No tienes opción. Sigues. Tu primera lección está completa: en este mundo, las palabras correctas pueden salvar tu vida. Las incorrectas pueden terminarla.",
+      "dialogue": null,
+      "speaker": null
+    }
+  ]
+}

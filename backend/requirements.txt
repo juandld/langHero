@@ -12,3 +12,4 @@ pydub
 openai
 websockets
 yt-dlp
+requests

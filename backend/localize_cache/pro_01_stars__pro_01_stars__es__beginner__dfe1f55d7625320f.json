@@ -1,0 +1,52 @@
+{
+  "panels": [
+    {
+      "id": "pro_01_stars",
+      "image": "/images/generated/panels/prologue/pro_01_stars.png",
+      "aspect": "wide",
+      "narration": "Estás en este barco tres meses. O tres años. El tiempo pasa raro cuando huyes de algo sin nombre. La cubierta de observación vibra con un sonido bajo. Fuera de la ventana curva, estrellas flotan como ceniza.",
+      "dialogue": null,
+      "speaker": null
+    },
+    {
+      "id": "pro_02_bimbo_appears",
+      "image": "/images/generated/panels/prologue/pro_02_bimbo_appears.png",
+      "aspect": "square",
+      "narration": "Bimbo flota al borde de tu visión—tu compañera IA, una figura holográfica con partículas como pensamientos a medio formar. Ella está contigo desde el inicio, enseñándote idiomas con simulaciones. Práctica segura. Consecuencias controladas.",
+      "dialogue": "No duermes otra vez.",
+      "speaker": "bimbo"
+    },
+    {
+      "id": "pro_02b_conversation",
+      "image": "/images/generated/panels/prologue/pro_02_bimbo_appears.png",
+      "aspect": "square",
+      "narration": null,
+      "dialogue": "La última simulación se sintió falsa. Sabía que no era real, así que no me importó. Solo estaba... actuando. Quiero riesgos reales.",
+      "speaker": "player"
+    },
+    {
+      "id": "pro_02c_warning",
+      "image": "/images/generated/panels/prologue/pro_03_decision.png",
+      "aspect": "square",
+      "narration": "La luz de Bimbo cambia, se profundiza. Una pausa larga.",
+      "dialogue": "Hay otro modo. Inmersión total. Sin marcas de seguridad. Tu cuerpo creerá que es real. El dolor será real. El miedo será real. La muerte será como muerte.",
+      "speaker": "bimbo"
+    },
+    {
+      "id": "pro_03_decision",
+      "image": "/images/generated/panels/prologue/pro_03_decision.png",
+      "aspect": "square",
+      "narration": "Ya estás de pie.",
+      "dialogue": "¿Dónde empezamos?",
+      "speaker": "player"
+    },
+    {
+      "id": "pro_04_japan",
+      "image": "/images/generated/panels/prologue/pro_03_decision.png",
+      "aspect": "square",
+      "narration": null,
+      "dialogue": "Japón. 1600. El año antes de Sekigahara. Un país que se devora. Señores de la guerra, samuráis, campesinos atrapados en medio. Una palabra mala puede costar tu cabeza. Porque pediste riesgos.",
+      "speaker": "bimbo"
+    }
+  ]
+}

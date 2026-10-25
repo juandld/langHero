@@ -168,7 +168,13 @@
 
 <style>
   .text-box {
-    background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.8));
+    /* .panel-image uses position:fixed with z-index:0 which took it OUT of
+       normal flow and painted it OVER this element's background, hiding the
+       narration behind the character art. Explicit position+z-index pins the
+       text-box above the fixed panel so its gradient is actually visible. */
+    position: relative;
+    z-index: 50;
+    background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.85));
     padding: 1rem 1.25rem;
     min-height: 80px;
     transition: min-height 0.3s ease, opacity 0.3s ease;
@@ -299,14 +305,22 @@
     30% { transform: translateY(-6px); opacity: 1; }
   }
 
-  /* Playing bar with sound wave */
+  /* Playing bar with sound wave — solid pill backdrop so Narrating + Stop
+     stay readable even when the parent TextBox is minimized during
+     time-freeze and the bar floats near the character art. */
   .playing-bar {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 0;
+    padding: 0.4rem 0.9rem;
     font-size: 0.85rem;
-    color: #a78bfa;
+    color: #e9d5ff;
+    background: rgba(15, 15, 25, 0.85);
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    border-radius: 999px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    width: fit-content;
   }
 
   .sound-wave {
@@ -336,13 +350,18 @@
 
   .stop-btn {
     margin-left: auto;
-    padding: 0.25rem 0.75rem;
-    background: rgba(239, 68, 68, 0.2);
-    border: 1px solid rgba(239, 68, 68, 0.4);
-    border-radius: 4px;
-    color: #fca5a5;
+    padding: 0.3rem 0.8rem;
+    background: rgba(239, 68, 68, 0.85);
+    border: 1px solid rgba(239, 68, 68, 1);
+    border-radius: 999px;
+    color: #fff;
     font-size: 0.8rem;
+    font-weight: 600;
     cursor: pointer;
+  }
+
+  .stop-btn:hover {
+    background: #dc2626;
   }
 
   @media (max-width: 640px) {

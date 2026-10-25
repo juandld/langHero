@@ -5,11 +5,18 @@ The skeleton is the single source of truth. The /stories/{id} endpoint
 builds its response by walking skeleton anchors and collecting panels.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from typing import Optional
 import os
 import time
+
+try:
+    from story.localize import localize_panels, needs_localization, LEVELS as LOCALIZE_LEVELS
+except ImportError:
+    localize_panels = None
+    needs_localization = None
+    LOCALIZE_LEVELS = ["beginner", "elementary", "intermediate", "advanced"]
 
 # Import voice config
 try:
@@ -115,23 +122,59 @@ async def list_stories():
 
 
 @router.get("/stories/{story_id}")
-async def get_story(story_id: str):
-    """Get full story with all chapters and panels (built from skeleton)."""
+async def get_story(
+    story_id: str,
+    language: Optional[str] = Query(None, description="Narration language, e.g. 'es'. Omit for original (English)."),
+    level: Optional[str] = Query("beginner", description=f"Vocabulary level: one of {LOCALIZE_LEVELS}"),
+):
+    """Get full story with all chapters and panels (built from skeleton).
+
+    With `language` set, every chapter's hand-written panels are localized
+    (narration/dialogue/option text only — same ids, images, branch logic).
+    """
     story = _get_story(story_id)
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
+
+    if localize_panels and needs_localization and needs_localization(language, level):
+        skeleton = STORY_SKELETONS.get(story_id)
+        setting = skeleton.setting if skeleton else ""
+        localized_chapters = []
+        for chapter in story["chapters"]:
+            if chapter["panels"]:
+                panels = await localize_panels(chapter["panels"], language, level, setting)
+            else:
+                panels = chapter["panels"]
+            localized_chapters.append({**chapter, "panels": panels})
+        return {**story, "chapters": localized_chapters, "language": language, "level": level}
+
     return story
 
 
 @router.get("/stories/{story_id}/chapters/{chapter_id}")
-async def get_chapter(story_id: str, chapter_id: str):
-    """Get a specific chapter."""
+async def get_chapter(
+    story_id: str,
+    chapter_id: str,
+    language: Optional[str] = Query(None, description="Narration language, e.g. 'es'. Omit for original (English)."),
+    level: Optional[str] = Query("beginner", description=f"Vocabulary level: one of {LOCALIZE_LEVELS}"),
+):
+    """Get a specific chapter.
+
+    Same story structure regardless of language/level — only narration,
+    dialogue, and option text are localized. Panel ids, images, and branch
+    logic are unchanged so progress/saves stay valid across languages.
+    """
     story = _get_story(story_id)
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
 
     for chapter in story["chapters"]:
         if chapter["id"] == chapter_id:
+            if localize_panels and needs_localization and needs_localization(language, level):
+                skeleton = STORY_SKELETONS.get(story_id)
+                setting = skeleton.setting if skeleton else ""
+                localized_panels = await localize_panels(chapter["panels"], language, level, setting)
+                return {**chapter, "panels": localized_panels, "language": language, "level": level}
             return chapter
 
     raise HTTPException(status_code=404, detail="Chapter not found")
@@ -220,6 +263,8 @@ class SegmentRequest(BaseModel):
     from_anchor_id: str
     to_anchor_id: str
     player_state: Optional[dict] = None
+    language: Optional[str] = None
+    level: Optional[str] = "beginner"
 
 
 @router.post("/stories/{story_id}/segment")
@@ -244,15 +289,22 @@ async def get_segment(story_id: str, req: SegmentRequest):
     if not to_anchor:
         raise HTTPException(status_code=404, detail=f"Anchor '{req.to_anchor_id}' not found")
 
+    want_localized = bool(localize_panels and needs_localization and needs_localization(req.language, req.level))
+
     # Hand-written panels: return directly
     if from_anchor.panels:
+        panels = from_anchor.panels
+        if want_localized:
+            panels = await localize_panels(panels, req.language, req.level, skeleton.setting)
         return {
             "story_id": story_id,
             "from_anchor": req.from_anchor_id,
             "to_anchor": req.to_anchor_id,
-            "panels": from_anchor.panels,
+            "panels": panels,
             "generated": False,
             "cached": False,
+            "language": req.language,
+            "level": req.level,
         }
 
     # No hand-written panels: try generation
@@ -265,10 +317,14 @@ async def get_segment(story_id: str, req: SegmentRequest):
             characters=CHARACTERS,
             locations=LOCATIONS,
         )
+        if want_localized and result.get("panels"):
+            result = {**result, "panels": await localize_panels(result["panels"], req.language, req.level, skeleton.setting)}
         return {
             "story_id": story_id,
             "from_anchor": req.from_anchor_id,
             "to_anchor": req.to_anchor_id,
+            "language": req.language,
+            "level": req.level,
             **result,
         }
 

@@ -8,6 +8,8 @@
   export let micDevices = [];
   export let micDeviceId = '';
   export let scenariosCompleted = 0;
+  export let narrationLanguage = '';
+  export let narrationLevel = 'beginner';
 
   const dispatch = createEventDispatcher();
 
@@ -38,6 +40,14 @@
     dispatch('updateMic', e.currentTarget.value);
   }
 
+  function updateNarrationLanguage(e) {
+    dispatch('updateNarrationLanguage', e.currentTarget.value);
+  }
+
+  function updateNarrationLevel(e) {
+    dispatch('updateNarrationLevel', e.currentTarget.value);
+  }
+
   function exitToMenu() {
     dispatch('exit');
   }
@@ -58,6 +68,18 @@
     { value: 'Japanese', label: 'Japanese' },
     { value: 'English', label: 'English' },
     { value: 'Spanish', label: 'Spanish' },
+  ];
+
+  const narrationLanguageOptions = [
+    { value: '', label: 'Original (English)' },
+    { value: 'es', label: 'Español' },
+  ];
+
+  const narrationLevelOptions = [
+    { value: 'beginner', label: 'Beginner' },
+    { value: 'elementary', label: 'Elementary' },
+    { value: 'intermediate', label: 'Intermediate' },
+    { value: 'advanced', label: 'Advanced' },
   ];
 </script>
 
@@ -131,6 +153,36 @@
             <span class="slider-end">Story</span>
           </div>
         </div>
+
+        <div class="setting-item">
+          <label class="setting-label" for="narration-language-select">Story narration</label>
+          <select
+            id="narration-language-select"
+            class="setting-select"
+            value={narrationLanguage}
+            on:change={updateNarrationLanguage}
+          >
+            {#each narrationLanguageOptions as opt}
+              <option value={opt.value}>{opt.label}</option>
+            {/each}
+          </select>
+        </div>
+
+        {#if narrationLanguage}
+          <div class="setting-item">
+            <label class="setting-label" for="narration-level-select">Vocabulary level</label>
+            <select
+              id="narration-level-select"
+              class="setting-select"
+              value={narrationLevel}
+              on:change={updateNarrationLevel}
+            >
+              {#each narrationLevelOptions as opt}
+                <option value={opt.value}>{opt.label}</option>
+              {/each}
+            </select>
+          </div>
+        {/if}
 
         <div class="setting-item">
           <label class="setting-label" for="mic-select">Microphone</label>

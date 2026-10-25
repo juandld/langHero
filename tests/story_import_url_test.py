@@ -1,5 +1,7 @@
 def test_story_import_supports_source_url(app_client, monkeypatch):
-    import main as main_module
+    # url_fetch is imported into routes.import_routes (which hosts the
+    # /api/stories/import handler at line 117); patch there, not on main.
+    import routes.import_routes as import_routes_mod
 
     def fake_fetch(url: str, **_kwargs):
         return {
@@ -10,7 +12,7 @@ def test_story_import_supports_source_url(app_client, monkeypatch):
             "text": "A stranger approaches.\nThey ask for help.",
         }
 
-    monkeypatch.setattr(main_module.url_fetch, "fetch_url_text", fake_fetch, raising=True)
+    monkeypatch.setattr(import_routes_mod.url_fetch, "fetch_url_text", fake_fetch, raising=True)
 
     res = app_client.post(
         "/api/stories/import",

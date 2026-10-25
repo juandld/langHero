@@ -9,10 +9,13 @@ import { getApiBase } from '$lib/api';
 
 function getBase() { return getApiBase(); }
 
-export function createStoryLoader(storyId) {
+export function createStoryLoader(storyId, narrationOpts) {
   let skeleton = null;
   let segmentCache = new Map(); // key: "fromAnchor->toAnchor" => panels[]
   let loading = false;
+  // Narration language/level — baked into cache keys so switching language
+  // mid-session can never serve a stale-language segment from local cache.
+  const narration = narrationOpts || {};
 
   /**
    * Load the story skeleton (lightweight anchor metadata).
@@ -36,7 +39,7 @@ export function createStoryLoader(storyId) {
    * Returns cached panels if available.
    */
   async function loadSegment(fromAnchorId, toAnchorId, playerState) {
-    const cacheKey = `${fromAnchorId}->${toAnchorId}`;
+    const cacheKey = `${fromAnchorId}->${toAnchorId}::${narration.language || ''}::${narration.level || ''}`;
 
     // Check local cache
     if (segmentCache.has(cacheKey)) {
@@ -52,6 +55,8 @@ export function createStoryLoader(storyId) {
           from_anchor_id: fromAnchorId,
           to_anchor_id: toAnchorId,
           player_state: playerState || {},
+          language: narration.language || null,
+          level: narration.level || 'beginner',
         }),
       });
 
@@ -85,7 +90,7 @@ export function createStoryLoader(storyId) {
 
     if (!afterNext) return;
 
-    const cacheKey = `${nextAnchor.id}->${afterNext.id}`;
+    const cacheKey = `${nextAnchor.id}->${afterNext.id}::${narration.language || ''}::${narration.level || ''}`;
     if (segmentCache.has(cacheKey)) return; // Already cached
 
     // Fire and forget
@@ -96,6 +101,8 @@ export function createStoryLoader(storyId) {
         from_anchor_id: nextAnchor.id,
         to_anchor_id: afterNext.id,
         player_state: playerState || {},
+        language: narration.language || null,
+        level: narration.level || 'beginner',
       }),
     }).catch(() => {}); // Silently ignore prefetch failures
   }

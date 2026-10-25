@@ -48,6 +48,8 @@
   });
 </script>
 
+<svelte:head><title>Sign In · LangHero</title></svelte:head>
+
 <section class="login">
   <div class="card">
     <h1>Login</h1>

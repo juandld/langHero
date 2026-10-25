@@ -9,9 +9,12 @@ def test_from_video_uses_cache(app_client, monkeypatch):
             {"id": 3, "description": "C"},
         ]
 
-    import main as main_module
+    # generate_scenarios_from_video lives in backend/services/video.py and is
+    # imported into routes.import_routes by the /api/scenarios/from_video
+    # handler. Patch the route module's local binding to intercept the call.
+    import routes.import_routes as import_routes_mod
 
-    monkeypatch.setattr(main_module, "generate_scenarios_from_video", fake_generate, raising=True)
+    monkeypatch.setattr(import_routes_mod, "generate_scenarios_from_video", fake_generate, raising=True)
 
     body = {
         "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",

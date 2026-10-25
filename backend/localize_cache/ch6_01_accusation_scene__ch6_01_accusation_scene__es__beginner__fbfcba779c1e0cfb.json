@@ -1,0 +1,217 @@
+{
+  "panels": [
+    {
+      "id": "ch6_01_accusation_scene",
+      "image": null,
+      "aspect": "wide",
+      "narration": "El gran salón. Te arrodillas sobre piedra fría ante la tarima elevada de Lord Mori. Un comerciante — Riku, el del mercado — está a tu izquierda, señalándote. Su voz resuena en las paredes. Samuráis alinean ambos lados, manos en las empuñaduras. La palabra 'kirishitan' resuena como una sentencia de muerte. Cristiano. Espía.",
+      "dialogue": null,
+      "speaker": null
+    },
+    {
+      "id": "ch6_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo se detiene. El dedo acusador de Riku se queda en el aire. La cara de Lord Mori está esculpida en juicio. Bimbo aparece, y por primera vez, parece asustada.",
+      "dialogue": "Esto es un juicio. Te acusa de ser un espía cristiano — eso es una sentencia de muerte en Japón en 1600. Necesitas defenderte, y tu japonés debe ser perfecto. Una palabra equivocada y todo termina.",
+      "speaker": "bimbo",
+      "effect": "time_freeze",
+      "branch_point": true,
+      "category_outcomes": {
+        "diplomatic": {
+          "next_panel": "ch6_04_diplomatic",
+          "life_delta": 0,
+          "reputation_delta": {
+            "diplomatic": 2
+          }
+        },
+        "pragmatic": {
+          "next_panel": "ch6_04_pragmatic",
+          "life_delta": 0,
+          "reputation_delta": {
+            "pragmatic": 2
+          }
+        },
+        "bold": {
+          "next_panel": "ch6_04_bold",
+          "life_delta": 0,
+          "reputation_delta": {
+            "bold": 2
+          }
+        },
+        "hostile": {
+          "next_panel": "ch6_04_hostile",
+          "life_delta": -2,
+          "reputation_delta": {
+            "hostile": 2
+          }
+        },
+        "history-breaking": {
+          "next_panel": "ch6_04_insightful",
+          "life_delta": 0,
+          "reputation_delta": {
+            "history-breaking": 3
+          }
+        }
+      },
+      "default_outcome": {
+        "next_panel": "ch6_04_pragmatic",
+        "life_delta": -1,
+        "reputation_delta": {
+          "pragmatic": 1
+        }
+      },
+      "options": [
+        {
+          "text": "Niega con calma y respeto",
+          "style": "humble",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Eso no es cierto",
+              "target": "それは違います",
+              "pronunciation": "Sore wa chigaimasu"
+            }
+          ]
+        },
+        {
+          "text": "Presenta evidencia de lealtad",
+          "style": "honest",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Por favor mira la prueba",
+              "target": "証拠を見てください",
+              "pronunciation": "Shouko wo mite kudasai"
+            }
+          ]
+        },
+        {
+          "text": "Reta al acusador",
+          "style": "bold",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Muéstrame la evidencia",
+              "target": "証拠を見せてください",
+              "pronunciation": "Shouko wo misete kudasai"
+            }
+          ]
+        },
+        {
+          "text": "Amenaza con consecuencias",
+          "style": "threatening",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Tú eres el mentiroso",
+              "target": "嘘つきはお前だ",
+              "pronunciation": "Usotsuki wa omae da"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch6_03_bimbo_coach",
+      "image": null,
+      "aspect": "square",
+      "narration": null,
+      "dialogue": "Habla claramente. Tu vida depende de la pronunciación.",
+      "speaker": "bimbo",
+      "choice_variants": {
+        "ch6_02_bimbo_freeze": {
+          "0": {
+            "dialogue": "'それは違います' — una negación tranquila. Digna. Pone la carga de la prueba en el acusador sin faltar al respeto al tribunal."
+          },
+          "1": {
+            "dialogue": "'証拠を見てください' — pidiendo que examinen la evidencia. Lógico, metódico. La defensa de un comerciante."
+          },
+          "2": {
+            "dialogue": "'証拠を見せてください' — exigiendo evidencia. Agresivo pero válido. Cambia el juicio hacia el acusador."
+          },
+          "3": {
+            "dialogue": "¿Llamar mentiroso al acusador frente al señor? Eso es declarar la guerra. Si te equivocas, mueres. Si tienes razón... aún podrías morir."
+          }
+        }
+      }
+    },
+    {
+      "id": "ch6_04_diplomatic",
+      "branch_of": "ch6_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo se reanuda. Tu voz corta el salón — calma, medida, respetuosa. Los samuráis intercambian miradas. La mano de Lord Mori se levanta, silenciando la respuesta entrecortada de Riku. En el silencio, tu dignidad habla más fuerte que cualquier acusación.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch6_05_aftermath"
+    },
+    {
+      "id": "ch6_04_pragmatic",
+      "branch_of": "ch6_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo se reanuda. Hablas metódicamente, señalando tus acciones — tu servicio, tus palabras, tu lealtad mostrada a través de hechos. Lord Mori escucha. La evidencia de tu carácter, hablada en su idioma, pesa contra una acusación de un comerciante con mucho que ganar.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch6_05_aftermath"
+    },
+    {
+      "id": "ch6_04_bold",
+      "branch_of": "ch6_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo se reanuda. Te giras para enfrentar a Riku directamente, exigiendo que presente evidencia. El comerciante titubea. El sudor perla su frente. Lord Mori observa el cambio dinámico con agudo interés. El acusador se está convirtiendo en el acusado.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch6_05_aftermath"
+    },
+    {
+      "id": "ch6_04_hostile",
+      "branch_of": "ch6_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo se reanuda. Gruñes las palabras a Riku, señalándolo de vuelta. El salón estalla. Los guardias te agarran, forzándote al suelo. Una espada se presiona contra tu cuello. Riku sonríe. Lord Mori levanta una mano, y el caos se detiene — pero el daño está hecho. Entre dientes apretados escuchas a Bimbo: 'La ira no es evidencia.'",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch6_05_aftermath"
+    },
+    {
+      "id": "ch6_04_insightful",
+      "branch_of": "ch6_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo se reanuda. Hablas — no sobre la acusación, sino sobre Japón mismo. Sobre Sekigahara, sobre las luchas de poder, sobre por qué un verdadero espía nunca sería tan obvio. Tu japonés fluye con un conocimiento que no debería ser posible. La sala se queda en silencio. Incluso Lord Mori se inclina hacia adelante. La cara de Riku se queda sin color.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch6_05_aftermath"
+    },
+    {
+      "id": "ch6_05_aftermath",
+      "image": null,
+      "aspect": "square",
+      "narration": "El salón se vacía. Los guardias escoltan a Riku fuera — para interrogarlo, te dicen. Te quedas solo en el corredor, con las piernas temblorosas, respirando con dificultad. Sobreviviste. Pero el mundo se volvió más peligroso.",
+      "dialogue": null,
+      "speaker": null,
+      "choice_variants": {
+        "ch6_02_bimbo_freeze": {
+          "diplomatic": {
+            "narration": "The hall empties. Lord Mori nods to you once before departing — the closest thing to approval you've seen. Your calm dignity saved you. Some of the samurai look at you with new respect."
+          },
+          "pragmatic": {
+            "narration": "The hall empties. Lord Mori regards you thoughtfully. Your methodical defense impressed him. You think you see the ghost of approval. The merchant Riku is escorted away for his own questioning."
+          },
+          "bold": {
+            "narration": "The hall empties. Lord Mori studies you with what might be amusement. Your boldness turned the trial on its head. Riku is taken away sputtering. You've made an enemy — and perhaps earned a protector."
+          },
+          "hostile": {
+            "narration": "The hall empties. Your neck still stings where the blade pressed. Lord Mori spared you — barely. Your outburst will not be forgotten. Some doors just closed permanently."
+          },
+          "history-breaking": {
+            "narration": "The hall empties, but the silence lingers. Lord Mori stood after your speech and left without a word. The samurai followed. You're alone, and Bimbo is whispering: 'What you said... some of that I didn't teach you. How did you know?'"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -86,19 +86,24 @@
   }
 
   .continue-btn {
-    padding: 0.5rem 2rem;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.85rem;
+    /* Was rgba(255,255,255,0.1) + 0.7 text — nearly invisible on dark gradients.
+       Now a solid high-contrast pill that reads against any backdrop. */
+    padding: 0.75rem 2.5rem;
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35);
   }
 
   .continue-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
+    background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(139, 92, 246, 0.5);
   }
 
   @media (max-width: 640px) {

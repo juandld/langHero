@@ -1,0 +1,230 @@
+{
+  "panels": [
+    {
+      "id": "ch14_01_throne_scene",
+      "image": null,
+      "aspect": "wide",
+      "narration": "El salón del nuevo Shogun. Oro sobre madera oscura. Samuráis como estatuas en las paredes. Lord Mori en el estrado. Poder absoluto como calor de un fuego. Te llevan adelante. Tu prueba final. Cada palabra que aprendiste te lleva aquí.",
+      "dialogue": null,
+      "speaker": null
+    },
+    {
+      "id": "ch14_02_bimbo_last",
+      "image": null,
+      "aspect": "square",
+      "narration": "Un susurro al borde del oído. Bimbo — apenas visible, un fantasma de luz. Ella no congela el tiempo. Ya no puede. Solo susurra:",
+      "dialogue": "Ya no me necesitas. Habla desde el corazón. En japonés. Con verdad. Eso es todo.",
+      "speaker": "bimbo"
+    },
+    {
+      "id": "ch14_03_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "Y luego, una última vez, el mundo contiene el aliento. No congelado — solo... esperando. Los ojos del Shogun en los tuyos. Todo el país pendiente de las palabras de un extranjero.",
+      "dialogue": "Esto es todo. Tu discurso final. Hazlo valer.",
+      "speaker": "bimbo",
+      "effect": "time_freeze",
+      "branch_point": true,
+      "category_outcomes": {
+        "diplomatic": {
+          "next_panel": "ch14_05_diplomatic",
+          "life_delta": 0,
+          "reputation_delta": {
+            "diplomatic": 3
+          }
+        },
+        "pragmatic": {
+          "next_panel": "ch14_05_pragmatic",
+          "life_delta": 0,
+          "reputation_delta": {
+            "pragmatic": 3
+          }
+        },
+        "bold": {
+          "next_panel": "ch14_05_bold",
+          "life_delta": 0,
+          "reputation_delta": {
+            "bold": 3
+          }
+        },
+        "hostile": {
+          "next_panel": "ch14_05_hostile",
+          "life_delta": -1,
+          "reputation_delta": {
+            "hostile": 3
+          }
+        },
+        "history-breaking": {
+          "next_panel": "ch14_05_insightful",
+          "life_delta": 0,
+          "reputation_delta": {
+            "history-breaking": 5
+          }
+        }
+      },
+      "default_outcome": {
+        "next_panel": "ch14_05_pragmatic",
+        "life_delta": 0,
+        "reputation_delta": {
+          "pragmatic": 1
+        }
+      },
+      "options": [
+        {
+          "text": "Habla de paz entre mundos",
+          "style": "humble",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Vine aquí por paz",
+              "target": "平和のために参りました",
+              "pronunciation": "Heiwa no tame ni mairimashita"
+            }
+          ]
+        },
+        {
+          "text": "Ofrece tu valor práctico",
+          "style": "honest",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Puedo ser útil para ti",
+              "target": "お役に立てることがあります",
+              "pronunciation": "O-yaku ni tateru koto ga arimasu"
+            }
+          ]
+        },
+        {
+          "text": "Habla con valentía de tu visión",
+          "style": "bold",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "El futuro es de quienes hablan",
+              "target": "未来は言葉を持つ者のものです",
+              "pronunciation": "Mirai wa kotoba wo motsu mono no mono desu"
+            }
+          ]
+        },
+        {
+          "text": "Exige respeto como igual",
+          "style": "defiant",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "No estoy debajo de ti",
+              "target": "私はあなたの下ではない",
+              "pronunciation": "Watashi wa anata no shita de wa nai"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch14_04_bimbo_coach",
+      "image": null,
+      "aspect": "square",
+      "narration": null,
+      "dialogue": "Lo que digas, dilo en el japonés que ganaste. Cada palabra es tuya.",
+      "speaker": "bimbo",
+      "choice_variants": {
+        "ch14_03_bimbo_freeze": {
+          "0": {
+            "dialogue": "'平和のために参りました' — el argumento final del diplomático. Si él te cree, serás el puente entre culturas. Bellamente dicho."
+          },
+          "1": {
+            "dialogue": "'お役に立てることがあります' — práctico, valioso, indispensable. Le has mostrado lo que un extranjero con palabras puede hacer. Ahora lo vendes."
+          },
+          "2": {
+            "dialogue": "'未来は言葉を持つ者のものです' — una visión poética. Valiente y hermosa. O respeta la audacia o la castiga."
+          },
+          "3": {
+            "dialogue": "¿Exigir igualdad al Shogun? ¿En su propio salón? Tienes valor. Espero que tengas el japonés para respaldarlo."
+          }
+        }
+      }
+    },
+    {
+      "id": "ch14_05_diplomatic",
+      "branch_of": "ch14_03_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "Tus palabras llenan el salón como incienso — suaves, persistentes, imposibles de ignorar. Hablas de puentes entre mundos, de palabras como el primer paso hacia la comprensión. El Shogun escucha sin expresión. Cuando terminas, el silencio se alarga. Luego asiente. Un solo, medido asentimiento que lo cambia todo.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch14_06_verdict"
+    },
+    {
+      "id": "ch14_05_pragmatic",
+      "branch_of": "ch14_03_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "Hablas con la precisión de un comerciante y el conocimiento de un erudito. Rutas comerciales, traducciones, el valor de una voz que habla entre mundos. Los asesores del Shogun intercambian miradas. Has hablado su idioma — no solo japonés, sino el idioma del poder y la utilidad.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch14_06_verdict"
+    },
+    {
+      "id": "ch14_05_bold",
+      "branch_of": "ch14_03_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "Tu voz resuena en las paredes doradas. Hablas no como un suplicante sino como un visionario — de un futuro donde las palabras son más poderosas que las espadas, donde la comprensión vence al miedo. Los samuráis se erizan. Pero los ojos del Shogun se agudizan con algo parecido al reconocimiento.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch14_06_verdict"
+    },
+    {
+      "id": "ch14_05_hostile",
+      "branch_of": "ch14_03_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "Te mantienes firme y hablas palabras que nunca se han dicho a un Shogun. El aire chisporrotea. Los guardias avanzan. Una espada sale de su funda. El Shogun levanta una mano — no para protegerte, sino para estudiarte. Como un hombre estudiando una llama que podría quemar su casa. O iluminar su camino.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch14_06_verdict"
+    },
+    {
+      "id": "ch14_05_insightful",
+      "branch_of": "ch14_03_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "Hablas — y las palabras trascienden la sala. Hablas del peso de las palabras, de cómo el lenguaje crea la realidad, de cómo un extranjero aprendió a pensar en japonés y encontró un mundo diferente dentro de la gramática. La sala queda en silencio. El Shogun se inclina hacia adelante. Detrás de ti, la simulación brilla, y por un momento la cubierta de observación es visible a través de las grietas en el techo. Las estrellas flotan como ceniza.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch14_06_verdict"
+    },
+    {
+      "id": "ch14_06_verdict",
+      "image": null,
+      "aspect": "square",
+      "narration": "El Shogun habla. Su voz es baja pero llega a cada rincón del salón. Emite su veredicto sobre el extranjero que aprendió a hablar, que sobrevivió la playa y la sala de té y la acusación y la batalla. Tu lugar en este mundo está decidido.",
+      "dialogue": "お前の言葉には重みがある。",
+      "speaker": "lord_mori",
+      "choice_variants": {
+        "ch14_03_bimbo_freeze": {
+          "diplomatic": {
+            "dialogue": "お前の言葉には重みがある。橋を架ける者として、ここにいるがいい。",
+            "narration": "The Shogun speaks with rare warmth. 'Your words carry weight. As a bridge-builder, you may stay.'"
+          },
+          "pragmatic": {
+            "dialogue": "お前の言葉には重みがある。役に立つ者は残る。",
+            "narration": "The Shogun nods curtly. 'Your words carry weight. Those who are useful may remain.'"
+          },
+          "bold": {
+            "dialogue": "お前の言葉には重みがある。勇気ある声は希少だ。",
+            "narration": "The Shogun's lips curl — not quite a smile. 'Your words carry weight. A brave voice is rare.'"
+          },
+          "hostile": {
+            "dialogue": "お前の言葉には重みがある。ただし、次はない。",
+            "narration": "The Shogun's voice carries an edge of steel. 'Your words carry weight. But there will not be a next time.'"
+          },
+          "history-breaking": {
+            "dialogue": "お前の言葉は…この世界を超えている。",
+            "narration": "The Shogun pauses for a long time. When he speaks, his voice is barely a whisper. 'Your words... transcend this world.'"
+          }
+        }
+      }
+    }
+  ]
+}

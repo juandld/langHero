@@ -1,0 +1,12 @@
+{
+  "id": "taxi-tell-driver-destination",
+  "title": "Tell a taxi driver where to go",
+  "description": "Transactional exchange, you've just gotten into a taxi and the driver asks your destination.",
+  "target_language": "Mandarin Chinese",
+  "register": "transactional",
+  "starter_turns": [
+    {"role": "tutor", "text": "师傅,去哪儿?", "translation": "Sir, where to?"}
+  ],
+  "learner_goal": "Tell the driver your destination",
+  "success_criteria": "Learner produces a clear destination statement understandable by the driver"
+}

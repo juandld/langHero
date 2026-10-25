@@ -3,10 +3,20 @@ import { expect, test } from '@playwright/test';
 // E2E for /practice v1c (live conversation with Jev feedback bar).
 // Skipped until the route lands (queue item langhero-practice/frontend).
 
+// /practice no longer auto-picks the first scenario — user must choose
+// explicitly from the scenario-menu first. Both tests now pick a scenario
+// via the first available menu card before asserting the chat UI.
+async function pickFirstScenario(page: import('@playwright/test').Page) {
+  await page.getByTestId('practice-scenario-menu').waitFor();
+  // scenario-menu renders one card per scenario; click the first available.
+  await page.locator('[data-testid^="practice-scenario-"]').first().click();
+}
+
 test.describe('/practice', () => {
   test('page loads with chat input + feedback bar', async ({ page }) => {
     const resp = await page.goto('/practice');
     test.skip(resp?.status() === 404, '/practice not implemented yet');
+    await pickFirstScenario(page);
 
     await expect(page.getByTestId('practice-chat-input')).toBeVisible();
     await expect(page.getByTestId('practice-feedback-bar')).toBeVisible();
@@ -20,6 +30,7 @@ test.describe('/practice', () => {
   test('sending a message renders learner turn + eventual scores', async ({ page }) => {
     const resp = await page.goto('/practice');
     test.skip(resp?.status() === 404, '/practice not implemented yet');
+    await pickFirstScenario(page);
 
     const input = page.getByTestId('practice-chat-input');
     await input.click();

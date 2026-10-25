@@ -1,0 +1,12 @@
+{
+  "id": "beijing-bar-order-a-beer",
+  "title": "Order a beer in Beijing",
+  "description": "Casual bar, evening, bartender asks what you'd like.",
+  "target_language": "Mandarin Chinese",
+  "register": "casual",
+  "starter_turns": [
+    {"role": "tutor", "text": "你想喝什么?", "translation": "What do you want to drink?"}
+  ],
+  "learner_goal": "Order a beer",
+  "success_criteria": "Learner produces a natural request understandable by a Beijinger"
+}

@@ -5,10 +5,12 @@
   import TopNav from '$lib/components/TopNav.svelte';
   import { hydrateAuth } from '$lib/auth';
   import { profileStore } from '$lib/profileStore';
+  import { attachTimeline } from '$lib/observability/timeline';
 
   onMount(() => {
     hydrateAuth();
     profileStore.hydrate();
+    attachTimeline();
   });
 
   // Hide nav on immersive routes (main menu, story mode, gameplay)

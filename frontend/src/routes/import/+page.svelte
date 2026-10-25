@@ -153,6 +153,8 @@
   }
 </script>
 
+<svelte:head><title>Import Story · LangHero</title></svelte:head>
+
 <main class="import-page">
   <h1>Import</h1>
   <DemoModeBanner compact />

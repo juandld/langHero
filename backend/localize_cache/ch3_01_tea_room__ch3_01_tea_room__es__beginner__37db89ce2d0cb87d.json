@@ -1,0 +1,233 @@
+{
+  "panels": [
+    {
+      "id": "ch3_01_tea_room",
+      "image": null,
+      "aspect": "wide",
+      "narration": "La sala de té es un estudio de vacío controlado. Tatamis, un solo pergamino en la pared, un arreglo floral tan preciso que parece matemáticas. Lord Mori se arrodilla en la mesa baja, manos juntas, mirándote con ojos que han medido hombres y los han encontrado insuficientes. Vapor se eleva de un cuenco negro de té. Él señala el cojín frente a él.",
+      "dialogue": null,
+      "speaker": null
+    },
+    {
+      "id": "ch3_02_tea_pour",
+      "image": null,
+      "aspect": "square",
+      "narration": "Él levanta el cuenco de té con ambas manos — deliberado, ceremonial. Lo gira dos veces. Lo coloca frente a ti. El silencio es una prueba. Todo es una prueba.",
+      "dialogue": "どうぞ。",
+      "speaker": "lord_mori"
+    },
+    {
+      "id": "ch3_03_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo se detiene. El vapor se congela sobre el cuenco de té. Lord Mori es una estatua, sus ojos fijos en los tuyos incluso en la quietud. Bimbo aparece a tu lado, voz baja y urgente.",
+      "dialogue": "Esta es una ceremonia de té — uno de los rituales más importantes en Japón. Cómo recibes este té le dice todo sobre ti. Dos manos, inclínate un poco, gira el cuenco dos veces antes de beber. Pero lo que DICES importa más.",
+      "speaker": "bimbo",
+      "effect": "time_freeze",
+      "branch_point": true,
+      "category_outcomes": {
+        "diplomatic": {
+          "next_panel": "ch3_05_diplomatic",
+          "life_delta": 0,
+          "reputation_delta": {
+            "diplomatic": 2
+          }
+        },
+        "pragmatic": {
+          "next_panel": "ch3_05_pragmatic",
+          "life_delta": 0,
+          "reputation_delta": {
+            "pragmatic": 1
+          }
+        },
+        "bold": {
+          "next_panel": "ch3_05_bold",
+          "life_delta": 0,
+          "reputation_delta": {
+            "bold": 2
+          }
+        },
+        "hostile": {
+          "next_panel": "ch3_05_hostile",
+          "life_delta": -1,
+          "reputation_delta": {
+            "hostile": 1
+          }
+        },
+        "history-breaking": {
+          "next_panel": "ch3_05_insightful",
+          "life_delta": 0,
+          "reputation_delta": {
+            "history-breaking": 2
+          }
+        }
+      },
+      "default_outcome": {
+        "next_panel": "ch3_05_pragmatic",
+        "life_delta": 0,
+        "reputation_delta": {
+          "pragmatic": 1
+        }
+      },
+      "options": [
+        {
+          "text": "Expresa profunda gratitud",
+          "style": "humble",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Me honra conocerlo",
+              "target": "お会いできて光栄です",
+              "pronunciation": "O-ai dekite kouei desu"
+            }
+          ]
+        },
+        {
+          "text": "Acepta el té en silencio",
+          "style": "obedient",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Recibo humildemente",
+              "target": "いただきます",
+              "pronunciation": "Itadakimasu"
+            }
+          ]
+        },
+        {
+          "text": "Preséntate directamente",
+          "style": "bold",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Me llamo viajero",
+              "target": "旅人と申します",
+              "pronunciation": "Tabibito to moushimasu"
+            }
+          ]
+        },
+        {
+          "text": "Exige saber por qué estás aquí",
+          "style": "hostile",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "¿Por qué me trajeron aquí?",
+              "target": "なぜここに連れて来られたのですか",
+              "pronunciation": "Naze koko ni tsuretekorareta no desu ka"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch3_04_bimbo_coach",
+      "image": null,
+      "aspect": "square",
+      "narration": null,
+      "dialogue": "Bien. Recuerda: en Japón, ceremonia ES comunicación. Cada gesto habla.",
+      "speaker": "bimbo",
+      "choice_variants": {
+        "ch3_03_bimbo_freeze": {
+          "0": {
+            "dialogue": "'お会いできて光栄です' — perfecta humildad. Verá a un extranjero que entiende el respeto. Eso es raro y valioso aquí."
+          },
+          "1": {
+            "dialogue": "'いただきます' — simple, correcto, seguro. Dejas que la ceremonia hable por sí misma. Inteligente."
+          },
+          "2": {
+            "dialogue": "'旅人と申します' — audaz, presentándote como igual. Él respetará eso o lo castigará. Elección valiente."
+          },
+          "3": {
+            "dialogue": "¿Exigir respuestas a un señor en su propia sala de té? Eso es increíblemente valiente o increíblemente tonto. Te costará."
+          }
+        }
+      }
+    },
+    {
+      "id": "ch3_05_diplomatic",
+      "branch_of": "ch3_03_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo se reanuda. Te inclinas, tomas el cuenco con ambas manos y hablas con reverencia cuidadosa. La ceja de Lord Mori se levanta — el más leve movimiento, pero significa todo. Un extranjero que conoce la cortesía. Él asiente una vez, casi imperceptiblemente.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch3_06_judgment"
+    },
+    {
+      "id": "ch3_05_pragmatic",
+      "branch_of": "ch3_03_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo se reanuda. Recibes el té con ambas manos, te inclinas y bebes. Sin adornos, sin errores. Lord Mori observa todo el ritual en silencio. Cuando colocas el cuenco, él asiente. Pasaste — no brillantemente, pero correctamente.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch3_06_judgment"
+    },
+    {
+      "id": "ch3_05_bold",
+      "branch_of": "ch3_03_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo se reanuda. Tomas el té pero lo miras a los ojos primero — igual a igual. Te presentas con voz firme. La expresión de Lord Mori no cambia, pero algo cambia en la sala. Los guardias se tensan. Luego el señor ríe — un solo sonido agudo.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch3_06_judgment"
+    },
+    {
+      "id": "ch3_05_hostile",
+      "branch_of": "ch3_03_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo se reanuda. Ignoras el té y hablas con dureza. La sala se queda mortalmente quieta. La mano de un guardia encuentra su espada. Los ojos de Lord Mori se endurecen en algo que te hace sentir frío. Él dice una palabra al guardia, quien te golpea en la cara. A través del dolor, escuchas a Bimbo: 'Eso fue un error.'",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch3_06_judgment"
+    },
+    {
+      "id": "ch3_05_insightful",
+      "branch_of": "ch3_03_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo se reanuda. Tomas el cuenco y lo estudias — realmente lo estudias. Algo sobre el esmalte, la forma, activa un conocimiento que no deberías tener. Hablas sobre la artesanía del cuenco con palabras que incluso te sorprenden. Lord Mori se queda muy quieto. Te mira como si te viera por primera vez.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch3_06_judgment"
+    },
+    {
+      "id": "ch3_06_judgment",
+      "image": null,
+      "aspect": "square",
+      "narration": "Lord Mori deja su cuenco de té. El silencio se extiende como una espada siendo desenvainada. Luego habla — despacio, cada palabra una piedra colocada con cuidado deliberado.",
+      "dialogue": "お前はここにいる。",
+      "speaker": "lord_mori",
+      "choice_variants": {
+        "ch3_03_bimbo_freeze": {
+          "diplomatic": {
+            "narration": "Lord Mori sets down his tea bowl. Something like approval crosses his face — the faintest warmth. He speaks with measured authority, but without hostility."
+          },
+          "pragmatic": {
+            "narration": "Lord Mori sets down his tea bowl. He regards you the way a craftsman regards a tool — useful, worth keeping sharp."
+          },
+          "bold": {
+            "narration": "Lord Mori sets down his tea bowl. He studies you with an expression you haven't seen before — not anger, not approval. Interest."
+          },
+          "hostile": {
+            "narration": "Lord Mori sets down his tea bowl. His eyes are cold as river stones. Blood still seeps from where the guard struck you. He speaks with the finality of a man used to deciding who lives."
+          },
+          "history-breaking": {
+            "narration": "Lord Mori sets down his tea bowl with unusual care, as if you've changed its value by looking at it. He speaks quietly, but every guard in the room leans forward to listen."
+          }
+        }
+      }
+    },
+    {
+      "id": "ch3_07_fate",
+      "image": null,
+      "aspect": "square",
+      "narration": "Te quedarás en el castillo. No como prisionero, no como invitado — algo intermedio. Una curiosidad con potencial. El señor ve utilidad en un extranjero que puede aprender palabras. Bimbo susurra desde algún lugar que no puedes ver: 'Sobreviviste. Ahora comienza el verdadero juego.'",
+      "dialogue": null,
+      "speaker": null
+    }
+  ]
+}

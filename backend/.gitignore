@@ -13,3 +13,9 @@ venv/
 usage/*
 !usage/.gitkeep
 
+# E2E mock toggle (see practice_scoring.py / tests/global-setup.ts)
+.mock_jev_flag
+
+# Local-only grade log (see lib/grade_log.py)
+storage/
+

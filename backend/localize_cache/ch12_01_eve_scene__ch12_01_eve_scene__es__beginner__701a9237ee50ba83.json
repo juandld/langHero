@@ -1,0 +1,217 @@
+{
+  "panels": [
+    {
+      "id": "ch12_01_eve_scene",
+      "image": null,
+      "aspect": "wide",
+      "narration": "Miles de fogatas llenan el valle como estrellas caídas. Mañana, sesenta mil hombres morirán aquí. Tú sabes esto. Sabes quién gana, qué señores traicionan, qué generales caen. El peso del futuro presiona tu cabeza como un dolor. Bimbo aparece a tu lado, tenue y parpadeante.",
+      "dialogue": null,
+      "speaker": null
+    },
+    {
+      "id": "ch12_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo se detiene. Las fogatas se congelan. El humo queda inmóvil. En el silencio entre segundos, Bimbo habla, no como maestro, sino como confesor.",
+      "dialogue": "He guardado algo de ti. Sabes cómo termina esta batalla. Siempre lo has sabido, está en tu memoria antes de la simulación. Podrías cambiarlo. Avisarles sobre la traición al amanecer. Salvar miles. O dejar que la historia siga su curso. Las palabras que digas resonarán por siglos.",
+      "speaker": "bimbo",
+      "effect": "time_freeze",
+      "branch_point": true,
+      "category_outcomes": {
+        "diplomatic": {
+          "next_panel": "ch12_04_diplomatic",
+          "life_delta": 0,
+          "reputation_delta": {
+            "diplomatic": 2
+          }
+        },
+        "pragmatic": {
+          "next_panel": "ch12_04_pragmatic",
+          "life_delta": 0,
+          "reputation_delta": {
+            "pragmatic": 2
+          }
+        },
+        "bold": {
+          "next_panel": "ch12_04_bold",
+          "life_delta": 0,
+          "reputation_delta": {
+            "bold": 2
+          }
+        },
+        "hostile": {
+          "next_panel": "ch12_04_hostile",
+          "life_delta": 0,
+          "reputation_delta": {
+            "hostile": 2
+          }
+        },
+        "history-breaking": {
+          "next_panel": "ch12_04_insightful",
+          "life_delta": 0,
+          "reputation_delta": {
+            "history-breaking": 5
+          }
+        }
+      },
+      "default_outcome": {
+        "next_panel": "ch12_04_pragmatic",
+        "life_delta": 0,
+        "reputation_delta": {
+          "pragmatic": 1
+        }
+      },
+      "options": [
+        {
+          "text": "Intenta negociar la paz",
+          "style": "charming",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Debe haber un camino a la paz",
+              "target": "平和への道があるはずです",
+              "pronunciation": "Heiwa e no michi ga aru hazu desu"
+            }
+          ]
+        },
+        {
+          "text": "Quedarse en silencio — el destino no cambia",
+          "style": "cautious",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "El destino no cambia",
+              "target": "運命は変えられません",
+              "pronunciation": "Unmei wa kaeraremasen"
+            }
+          ]
+        },
+        {
+          "text": "Luchar junto a los guerreros",
+          "style": "bold",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Lucharé contigo",
+              "target": "一緒に戦います",
+              "pronunciation": "Issho ni tatakaimasu"
+            }
+          ]
+        },
+        {
+          "text": "Advertir sobre la traición",
+          "style": "insightful",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Mañana habrá una traición",
+              "target": "明日、裏切りがあります",
+              "pronunciation": "Ashita, uragiri ga arimasu"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch12_03_bimbo_coach",
+      "image": null,
+      "aspect": "square",
+      "narration": null,
+      "dialogue": "Lo que elijas, haz que cuente. Este es el momento que la historia recuerda.",
+      "speaker": "bimbo",
+      "choice_variants": {
+        "ch12_02_bimbo_freeze": {
+          "0": {
+            "dialogue": "¿Paz? ¿Entre ejércitos listos para la batalla? Haría falta más que palabras... pero tu japonés es mejor de lo que esperan. Quizás, solo quizás."
+          },
+          "1": {
+            "dialogue": "'運命は変えられません' — sabiduría fatalista. A veces lo más valiente es dejar que el río corra. La historia sigue como debe."
+          },
+          "2": {
+            "dialogue": "'一緒に戦います' — un extranjero tomando una espada en Sekigahara. Eso es heroico o suicida. Probablemente ambos."
+          },
+          "3": {
+            "dialogue": "Advertirles sobre la traición... eso rompe la historia. Si te creen, todo cambia. La simulación podría no sobrevivir al paradoja. ¿Estás seguro?"
+          }
+        }
+      }
+    },
+    {
+      "id": "ch12_04_diplomatic",
+      "branch_of": "ch12_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo sigue. Caminas entre las fogatas, hablando con capitanes de ambos lados. Tu japonés es fluido ahora, persuasivo, alcanzando los registros más altos del idioma. Algunos escuchan. La mayoría no. Pero las semillas están plantadas. El amanecer dirá si alguna crece.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch12_05_preparations"
+    },
+    {
+      "id": "ch12_04_pragmatic",
+      "branch_of": "ch12_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo sigue. Te sientas junto al fuego, mirando las llamas. El futuro se despliega en tu mente como un pergamino. No dices nada. Algunos destinos son demasiado pesados para llevar, demasiado vastos para cambiar. El fuego chisporrotea. Mañana llega de todas formas.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch12_05_preparations"
+    },
+    {
+      "id": "ch12_04_bold",
+      "branch_of": "ch12_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo sigue. Encuentras a Takeshi en la tienda de armas y tomas una espada. El acero frío se siente extraño en tus manos, pero tus palabras no. Prometes luchar, y los guerreros a tu alrededor responden con un rugido. Un traductor con espada. Contarán historias sobre esto.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch12_05_preparations"
+    },
+    {
+      "id": "ch12_04_hostile",
+      "branch_of": "ch12_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo sigue. Te paras en el centro del campamento y gritas — un sonido crudo y furioso. Palabras sobre la futilidad de todo, sobre hombres muriendo por señores que los ven como números. El campamento queda en silencio. Algunos miran hacia otro lado. Algunos agarran sus espadas. Has dicho la verdad, y la verdad aquí es peligrosa.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch12_05_preparations"
+    },
+    {
+      "id": "ch12_04_insightful",
+      "branch_of": "ch12_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo sigue. Dices las palabras — mañana, la traición. Nombras al señor que traiciona, la hora, la consecuencia. El aire chisporrotea. La fogata se apaga. En algún lugar, la simulación tiembla. Bimbo parpadea y grita en silencio. Has roto algo. Pero también has salvado vidas que la historia ya había matado.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch12_05_preparations"
+    },
+    {
+      "id": "ch12_05_preparations",
+      "image": null,
+      "aspect": "wide",
+      "narration": "El amanecer está a una hora. El campamento se mueve en caos organizado — armaduras ajustadas, espadas afiladas, oraciones susurradas. Tú también te preparas, no con armas sino con palabras. Cada frase que has aprendido se convierte en munición. Eres el soldado más extraño de este ejército: un extranjero que lucha con vocabulario.",
+      "dialogue": null,
+      "speaker": null,
+      "choice_variants": {
+        "ch12_02_bimbo_freeze": {
+          "diplomatic": {
+            "narration": "Dawn is an hour away. Messengers move between camps — your words carried on their lips. Whether they change anything, you'll know by sunrise."
+          },
+          "pragmatic": {
+            "narration": "Dawn is an hour away. You sit in your tent, watching the candle burn down. History will take its course. All you can do is survive it."
+          },
+          "bold": {
+            "narration": "Dawn is an hour away. You grip the unfamiliar sword and run through commands in your head. The warriors around you check your armor, adjust your grip. They've accepted you."
+          },
+          "hostile": {
+            "narration": "Dawn is an hour away. The camp gives you a wide berth. Your words struck nerves. Some hate you for it. Some are quietly grateful. Truth has a cost."
+          },
+          "history-breaking": {
+            "narration": "Dawn is an hour away, and everything has changed. Scouts confirm movement — the lord you named is repositioning forces. Panic and hope war across the camp. You've rewritten the opening move of the most important battle in Japanese history."
+          }
+        }
+      }
+    }
+  ]
+}

@@ -62,6 +62,8 @@
   }
 </script>
 
+<svelte:head><title>Shared story · LangHero</title></svelte:head>
+
 <main class="share">
   <section class="panel">
     <div class="title">Shared story</div>

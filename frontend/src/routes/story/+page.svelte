@@ -12,7 +12,10 @@
 
   $: storyId = $page.url.searchParams.get('id') || 'shogun';
   $: language = $page.url.searchParams.get('lang') || 'Japanese';
+  $: pageTitle = `${storyId} · LangHero`;
 </script>
+
+<svelte:head><title>{pageTitle}</title></svelte:head>
 
 <StoryOrchestrator {storyId} {language} />
 

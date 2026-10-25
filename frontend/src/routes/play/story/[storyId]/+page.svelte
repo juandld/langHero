@@ -13,6 +13,7 @@
   import { fetchTtsUrl } from '$lib/utils/ttsCache';
   import { createStoryLoader } from '$lib/game/storyLoader';
   import { checkBimboHint, resetBimboHints } from '$lib/game/bimboHints';
+  import { t } from '$lib/game/i18n';
 
   // Game components
   import GameHUD from '$lib/components/game/GameHUD.svelte';
@@ -31,6 +32,50 @@
 
   const API_BASE = getApiBase();
   const AUTO_NARRATE_KEY = 'LANGHERO_AUTO_NARRATE_V1';
+
+  // Narration language/level — which language the story is told/spoken in,
+  // and the vocabulary complexity. Persisted across sessions; a change
+  // reloads the current story so every fetch uses the new setting
+  // consistently (no stale-language panels mixed into the same run).
+  let narrationLanguage = loadNarrationLanguage();
+  let narrationLevel = loadNarrationLevel();
+
+  function loadNarrationLanguage() {
+    if (!browser) return '';
+    try { return localStorage.getItem(STORAGE_KEYS.NARRATION_LANGUAGE) || ''; } catch (_) { return ''; }
+  }
+
+  function loadNarrationLevel() {
+    if (!browser) return 'beginner';
+    try { return localStorage.getItem(STORAGE_KEYS.NARRATION_LEVEL) || 'beginner'; } catch (_) { return 'beginner'; }
+  }
+
+  function storyFetchQuery() {
+    if (!narrationLanguage) return '';
+    return `?language=${encodeURIComponent(narrationLanguage)}&level=${encodeURIComponent(narrationLevel)}`;
+  }
+
+  function handleUpdateNarrationLanguage(e) {
+    const value = e.detail || '';
+    if (value === narrationLanguage) return;
+    narrationLanguage = value;
+    if (browser) {
+      try { localStorage.setItem(STORAGE_KEYS.NARRATION_LANGUAGE, value); } catch (_) {}
+    }
+    // Re-fetch rather than patch in place: every loaded chapter/segment needs
+    // the new language, and stale segmentCache entries must not leak through.
+    window.location.reload();
+  }
+
+  function handleUpdateNarrationLevel(e) {
+    const value = e.detail || 'beginner';
+    if (value === narrationLevel) return;
+    narrationLevel = value;
+    if (browser) {
+      try { localStorage.setItem(STORAGE_KEYS.NARRATION_LEVEL, value); } catch (_) {}
+    }
+    window.location.reload();
+  }
 
   // Mood-based gradient backgrounds for panel images
   const MOOD_GRADIENTS = {
@@ -159,11 +204,29 @@
     ? skeleton.anchors.length * 5  // ~5 panels per anchor as rough estimate
     : totalPanels;
 
+  // Many anchors (esp. Bimbo's time-freeze/teaching panels) have no
+  // generated panel art yet — `image` is null. Rather than show a bare
+  // gradient while she's narrating, fall back to her illustrated character
+  // reference (same portraits used elsewhere), like every other character
+  // already gets via their panel art. A 404 (character with no reference,
+  // e.g. lord_mori) just degrades to the gradient — background-image
+  // failures paint nothing, no broken-image icon.
+  $: fallbackCharacterImage = (() => {
+    if (currentPanel?.image) return null;
+    const speaker = currentPanel?.speaker;
+    if (!speaker || speaker === 'player') return null;
+    return `/images/generated/characters/${speaker}.png`;
+  })();
+
   // Panel background: image + gradient overlay
   $: panelBg = (() => {
-    const img = currentPanel?.image;
+    const img = currentPanel?.image || fallbackCharacterImage;
     const grad = panelGradient;
-    if (img) return `url(${img}) center 20%/cover no-repeat, ${grad}`;
+    // Panel image now fills its aspect-matching frame container, so `cover`
+    // is lossless (image aspect matches frame aspect per the backend's
+    // panel_type → aspect map). The ambient blurred fullscreen layer is a
+    // separate .panel-backdrop sibling; this is just the sharp hero image.
+    if (img) return `url(${img}) center/cover no-repeat, ${grad}`;
     return grad;
   })();
 
@@ -581,10 +644,10 @@
 
     try {
       // Load story data and skeleton in parallel
-      storyLoader = createStoryLoader(storyId);
+      storyLoader = createStoryLoader(storyId, { language: narrationLanguage, level: narrationLevel });
 
       const [storyRes, voiceRes, skeletonResult] = await Promise.all([
-        fetch(`${API_BASE}/api/story-panels/stories/${storyId}`),
+        fetch(`${API_BASE}/api/story-panels/stories/${storyId}${storyFetchQuery()}`),
         fetch(`${API_BASE}/api/story-panels/stories/${storyId}/voice-config`),
         storyLoader.loadSkeleton().catch(() => null),
       ]);
@@ -865,10 +928,23 @@
         isRecording = true;
 
       } catch (err) {
-        console.error('Error accessing microphone:', err);
+        // Rate-limited: ArrowRight-while-time-frozen fires toggleRecording per
+        // keypress; on a mic-less device each log spammed a full stack. Keep
+        // one-per-minute-per-error-class so real failures still surface.
+        logMicError(err);
         speakResult = { success: false, message: 'Microphone access denied' };
       }
     }
+  }
+
+  const _micErrorLastLogged = new Map();
+  function logMicError(err) {
+    const key = String(err?.name || err?.message || 'unknown');
+    const now = Date.now();
+    const last = _micErrorLastLogged.get(key) || 0;
+    if (now - last < 60000) return;  // 1 per minute per error class
+    _micErrorLastLogged.set(key, now);
+    console.error('Error accessing microphone:', err);
   }
 
   async function injectAudio() {
@@ -1050,6 +1126,12 @@
   function nextPanel() {
     if (!canAdvance || isTimeFrozen) return;
 
+    // Any Next click counts as user interaction — needed to unlock the
+    // browser's autoplay policy for TTS narration. Previously only
+    // handleKeydown / handlePanelClick set this, so clicking the Next
+    // button alone left auto-narrate permanently gated.
+    userHasInteracted = true;
+
     stopAudio();
 
     if (pendingBranch?.next_panel) {
@@ -1083,6 +1165,7 @@
   }
 
   function prevPanel() {
+    userHasInteracted = true;
     stopAudio();
     isTimeFrozen = false;
     canAdvance = true;
@@ -1260,7 +1343,16 @@
   function handleDevInfiniteLives(e) {
     infiniteLives = e.detail;
   }
+  $: pageTitle = story?.title && currentChapter?.title
+    ? `${story.title} — ${currentChapter.title} · LangHero`
+    : story?.title
+      ? `${story.title} · LangHero`
+      : 'Playing · LangHero';
 </script>
+
+<svelte:head>
+  <title>{pageTitle}</title>
+</svelte:head>
 
 <svelte:window on:keydown={handleKeydown} />
 
@@ -1271,15 +1363,19 @@
   micDevices={[]}
   micDeviceId=""
   scenariosCompleted={0}
+  {narrationLanguage}
+  {narrationLevel}
   on:close={closeMenu}
   on:exit={handleMenuExit}
+  on:updateNarrationLanguage={handleUpdateNarrationLanguage}
+  on:updateNarrationLevel={handleUpdateNarrationLevel}
 />
 
 <div class="player" class:time-frozen={isTimeFrozen}>
   {#if loading}
     <div class="loading">
       <div class="loading-spinner"></div>
-      <p>Loading story...</p>
+      <p>{t('loading_story', narrationLanguage)}</p>
     </div>
   {:else if error}
     <div class="error">{error}</div>
@@ -1385,6 +1481,20 @@
       </div>
     {/key}
 
+    <!-- Blurred fullscreen backdrop — ambient atmosphere; the sharp hero
+         image lives inside the aspect-correct .panel frame below. Decoupling
+         them lets wide / square / tall panels keep their intended composition
+         on any viewport without stretching. -->
+    {#key currentPanel?.id}
+      {#if currentPanel?.image || fallbackCharacterImage}
+        <div
+          class="panel-backdrop"
+          style="background-image: url({currentPanel?.image || fallbackCharacterImage})"
+          in:fade={{ duration: 400 }}
+        ></div>
+      {/if}
+    {/key}
+
     <!-- Panel display -->
     <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
     <div class="panel-container" on:click={handlePanelClick}>
@@ -1429,6 +1539,7 @@
           {draftText}
           {bimboHint}
           {askingBimbo}
+          lang={narrationLanguage}
           isPreviewPlaying={isPlaying && !!previewedOption}
           on:previewOption={handleOptionPreview}
           on:playAudio={handlePlayAudio}
@@ -1451,6 +1562,7 @@
             {bimboReaction}
             {bimboReactionLoading}
             {isPlaying}
+            lang={narrationLanguage}
             on:continue={handleSpeakResultContinue}
             on:playBimboReaction={() => { if (audioEngine) audioEngine.playBimboReaction(bimboReaction); }}
           />
@@ -1469,45 +1581,46 @@
       </div>
     {/if}
 
-    <!-- Text box -->
-    <TextBox
-      {currentPanel}
-      {isPlaying}
-      minimized={isTimeFrozen && hasOptions}
-      on:playNarration={() => { userHasInteracted = true; if (audioEngine) audioEngine.playNarration(); }}
-      on:playDialogue={() => { userHasInteracted = true; if (audioEngine) audioEngine.playDialogue(); }}
-      on:stopAudio={stopAudio}
-    />
+    <!-- Text box — hidden entirely during time-freeze w/ options; the overlay
+         already provides all the context the learner needs, keeping the Bimbo
+         narration visible underneath caused text to peek around the Speak
+         button and compete for attention. -->
+    {#if !(isTimeFrozen && hasOptions)}
+      <TextBox
+        {currentPanel}
+        {isPlaying}
+        minimized={false}
+        on:playNarration={() => { userHasInteracted = true; if (audioEngine) audioEngine.playNarration(); }}
+        on:playDialogue={() => { userHasInteracted = true; if (audioEngine) audioEngine.playDialogue(); }}
+        on:stopAudio={stopAudio}
+      />
+    {/if}
 
     <!-- Navigation -->
     <div class="nav-bar">
       <button class="nav-btn" on:click={prevPanel} disabled={currentPanelNumber <= 1}>
-        ← Back
+        {t('back', narrationLanguage)}
       </button>
       <span class="panel-counter">
         {currentPanelNumber} / {totalPanels}
       </span>
-      <button
-        class="nav-btn nav-btn--primary"
-        on:click={() => {
-          if (isTimeFrozen && hasOptions) {
-            toggleRecording();
-          } else if (isLastPanel) {
-            handleFinishStory();
-          } else if (!isTimeFrozen) {
-            nextPanel();
-          }
-        }}
-        disabled={isPlaying}
-      >
-        {#if isTimeFrozen}
-          {isRecording ? 'Stop' : 'Speak'}
-        {:else if isLastPanel}
-          Finish
-        {:else}
-          Next →
-        {/if}
-      </button>
+      <!-- Nav primary action: hidden during time-freeze because the overlay
+           already shows the Release Time & Speak action; two buttons for the
+           same action was confusing. -->
+      {#if !isTimeFrozen}
+        <button
+          class="nav-btn nav-btn--primary"
+          on:click={() => {
+            if (isLastPanel) handleFinishStory();
+            else nextPanel();
+          }}
+          disabled={isPlaying}
+        >
+          {isLastPanel ? t('finish', narrationLanguage) : t('next', narrationLanguage)}
+        </button>
+      {:else}
+        <span class="nav-btn-placeholder"></span>
+      {/if}
     </div>
   {/if}
 </div>
@@ -1597,18 +1710,23 @@
   }
 
   .control-btn {
-    width: 36px;
-    height: 36px;
+    /* Was rgba(255,255,255,0.1) bg + 0.15 border + 0.7 text — low discoverability
+       on varied panel backgrounds. Solid dark pill + brighter purple border keeps
+       the audio controls visible against both bright/dark hero art. */
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(15, 15, 25, 0.75);
+    border: 1px solid rgba(168, 85, 247, 0.4);
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.2s ease;
     padding: 0;
-    color: rgba(255, 255, 255, 0.7);
+    color: #e9d5ff;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
   .control-btn:hover {
@@ -1644,33 +1762,69 @@
     overflow: hidden;
   }
 
-  .panel {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    transition: box-shadow 0.5s ease;
+  /* Fullscreen blurred ambient backdrop — the panel's hero image enlarged,
+     blurred, and dimmed to fill behind the aspect-correct frame. Takes the
+     place of the old `position:fixed inset:0 cover` panel-image. */
+  .panel-backdrop {
+    position: fixed;
+    inset: -8%;
+    z-index: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(32px) brightness(0.42) saturate(1.1);
+    pointer-events: none;
+    transform: translateZ(0);
   }
 
-  .panel--wide { max-width: min(900px, 95vw); }
-  .panel--square { max-width: min(500px, 90vw); }
-  .panel--tall { max-width: min(400px, 80vw); }
+  .panel {
+    /* Aspect-honoring frame. Width + aspect-ratio sized per panel_type;
+       max-height prevents overflow when a tall panel meets a short viewport. */
+    position: relative;
+    margin: 0 auto;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
+    transition: box-shadow 0.5s ease;
+    max-height: calc(100dvh - 220px);
+    max-height: calc(100vh - 220px);
+  }
+
+  .panel--wide {
+    aspect-ratio: 16 / 9;
+    width: min(900px, 92vw);
+  }
+  .panel--square {
+    aspect-ratio: 1 / 1;
+    width: min(560px, 90vw);
+  }
+  .panel--tall {
+    aspect-ratio: 9 / 16;
+    width: min(380px, 72vw);
+  }
 
   .panel--time-freeze {
-    box-shadow: 0 0 60px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 0 60px rgba(99, 102, 241, 0.4), 0 0 0 1px rgba(168, 85, 247, 0.4);
   }
 
   .panel-image {
-    position: fixed;
+    /* Fills the aspect-correct .panel frame cleanly (image aspect matches
+       frame aspect per backend's panel_type → aspect map). Was position:fixed
+       inset:0 which ignored the frame entirely and stretched the image to
+       the whole viewport. */
+    position: absolute;
     inset: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 0;
     background-size: cover;
-    background-position: center 20%;
+    background-position: center;
+    background-repeat: no-repeat;
     pointer-events: none;
+  }
+
+  /* Narrow viewports: let tall panels take more width, trim container padding. */
+  @media (max-width: 640px) {
+    .panel--wide { width: 94vw; }
+    .panel--square { width: 90vw; }
+    .panel--tall { width: 82vw; max-height: 65dvh; }
   }
 
   .freeze-overlay {
@@ -1732,9 +1886,30 @@
   }
 
   .choices-section {
+    /* Was in-flow (appended after panel-container → pushed layout past 100vh,
+       Release Time button at rect.top:999 on 768px laptops). Now an overlay
+       anchored above the nav-bar, with its own internal scroll. The sticky
+       speak-section inside it keeps the Release button at the bottom edge
+       even when choice cards exceed overlay height. */
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 72px;  /* above nav-bar */
+    z-index: 150;
     padding: 0 1rem;
-    margin-bottom: 0.5rem;
-    flex-shrink: 0;
+    max-height: calc(100vh - 160px);
+    max-height: calc(100dvh - 160px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;  /* let clicks pass through gaps */
+  }
+  .choices-section > :global(*) {
+    pointer-events: auto;  /* re-enable on actual children */
+    width: 100%;
+    max-width: 640px;
   }
 
   .live-transcript {
@@ -1753,9 +1928,27 @@
   }
 
   .speak-section {
-    margin-top: 1rem;
+    /* Visually extend the TimeStopPanel's dark container — same backdrop,
+       no gap, so the Release button reads as the panel's bottom-row CTA
+       instead of a floating alien over the Bimbo dialogue. */
     display: flex;
     justify-content: center;
+    margin: -8px auto 0;
+    width: 100%;
+    max-width: 560px;
+    background: rgba(10, 10, 20, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+    padding: 12px 16px 14px;
+  }
+
+  .nav-btn-placeholder {
+    /* Preserves nav-bar flex spacing when the primary button is hidden
+       during time-freeze (so Back stays left, counter stays centered). */
+    width: 100px;
   }
 
   .nav-bar {
@@ -1764,40 +1957,56 @@
     align-items: center;
     padding: 0.75rem 1rem;
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem));
-    background: #0a0a0a;
-    border-top: 1px solid #1f1f1f;
+    /* Was #0a0a0a but it kept getting visually buried under TextBox / Bimbo
+       dialogue overlay during time-freeze. Pull above with explicit z-index
+       so clickable controls are never obscured, and give it a stronger
+       bottom-rooted gradient so the bar always reads as the fixed anchor
+       for navigation. */
+    background: linear-gradient(to top, #0a0a0a 70%, rgba(10, 10, 10, 0.85));
+    border-top: 1px solid rgba(168, 85, 247, 0.25);
+    position: relative;
+    z-index: 200;
   }
 
   .nav-btn {
-    padding: 0.5rem 1rem;
+    padding: 0.6rem 1.1rem;
     background: #27272a;
-    border: 1px solid #3f3f46;
+    border: 1px solid #52525b;
     border-radius: 8px;
-    color: #a1a1aa;
+    color: #e4e4e7;
     font-size: 0.9rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
   }
 
   .nav-btn:hover:not(:disabled) {
     background: #3f3f46;
+    border-color: #71717a;
     color: #fff;
   }
 
   .nav-btn:disabled {
-    opacity: 0.4;
+    opacity: 0.35;
     cursor: not-allowed;
   }
 
   .nav-btn--primary {
-    background: #6366f1;
-    border-color: #6366f1;
+    /* Was flat #6366f1 which was hard to distinguish from the nav-bar
+       background when the bar itself got partially covered. Bright gradient
+       pill with box-shadow is unmistakable regardless of overlay z-order. */
+    background: linear-gradient(135deg, #a78bfa, #6366f1);
+    border: 1px solid rgba(168, 85, 247, 0.6);
     color: white;
+    font-weight: 700;
+    padding: 0.65rem 1.6rem;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.5);
   }
 
   .nav-btn--primary:hover:not(:disabled) {
-    background: #4f46e5;
+    background: linear-gradient(135deg, #c4b5fd, #818cf8);
+    box-shadow: 0 6px 24px rgba(139, 92, 246, 0.7);
+    transform: translateY(-1px);
   }
 
   .panel-counter {

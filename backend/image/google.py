@@ -24,8 +24,11 @@ PANEL_DIR = os.path.join(IMAGE_CACHE_DIR, "panels")
 NANO_BANANA_FAST = "gemini-2.5-flash-image"  # Fast, good quality
 NANO_BANANA_PRO = "gemini-3-pro-image-preview"  # Best quality
 
-# Default to Pro for best results
-NANO_BANANA = NANO_BANANA_PRO
+# Default to Flash — Pro-preview has a very tight free-tier quota that
+# trips 429 after a handful of calls. Flash's quota is much higher and the
+# quality gap for panel-sized art is small. Override at call site if a
+# specific generation needs Pro quality.
+NANO_BANANA = NANO_BANANA_FAST
 
 
 def _get_api_key() -> str:
@@ -64,6 +67,7 @@ async def generate_image(
     reference_images: list[str] = None,
     output_path: str = None,
     force: bool = False,
+    aspect_ratio: str = None,
 ) -> dict:
     """Generate an image with optional reference images.
 
@@ -72,6 +76,8 @@ async def generate_image(
         reference_images: List of paths to reference images
         output_path: Where to save (if None, uses cache with hash)
         force: Regenerate even if cached
+        aspect_ratio: One of "1:1", "16:9", "9:16", "4:3", "3:4". Enforced by
+            the API via imageConfig.aspectRatio — not just a prompt hint.
 
     Returns:
         {"path": "/path/to/image.png", "cached": bool}
@@ -105,11 +111,16 @@ async def generate_image(
     # Add text prompt
     parts.append({"text": prompt})
 
+    generation_config = {"responseModalities": ["TEXT", "IMAGE"]}
+    if aspect_ratio:
+        # Enforce aspect at the API layer, not just in prose. The nano-banana
+        # image models accept imageConfig.aspectRatio with values
+        # "1:1", "16:9", "9:16", "4:3", "3:4".
+        generation_config["imageConfig"] = {"aspectRatio": aspect_ratio}
+
     payload = {
         "contents": [{"parts": parts}],
-        "generationConfig": {
-            "responseModalities": ["TEXT", "IMAGE"],
-        }
+        "generationConfig": generation_config,
     }
 
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{NANO_BANANA}:generateContent"
@@ -238,6 +249,7 @@ async def generate_panel(
     reference_images: list[str] = None,
     chapter: str = None,
     force: bool = False,
+    aspect_ratio: str = None,
 ) -> dict:
     """Generate a story panel with character and location references.
 
@@ -282,7 +294,13 @@ async def generate_panel(
 
     output_path = os.path.join(panel_dir, f"{panel_id}.png")
 
-    result = await generate_image(prompt, refs if refs else None, output_path, force)
+    result = await generate_image(
+        prompt,
+        refs if refs else None,
+        output_path,
+        force,
+        aspect_ratio=aspect_ratio,
+    )
     return {
         "panel_id": panel_id,
         "path": result["path"],

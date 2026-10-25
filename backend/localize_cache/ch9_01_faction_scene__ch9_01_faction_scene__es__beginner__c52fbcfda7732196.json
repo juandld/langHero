@@ -1,0 +1,217 @@
+{
+  "panels": [
+    {
+      "id": "ch9_01_faction_scene",
+      "image": null,
+      "aspect": "wide",
+      "narration": "El patio del castillo al atardecer. Dos grupos se enfrentan en la piedra. Lord Mori está entre ellos — Takeshi y los guerreros a un lado, Mariko y los sabios al otro. Ambos han hablado. Ambos quieren tu lealtad. Tus palabras decidirán.",
+      "dialogue": null,
+      "speaker": null
+    },
+    {
+      "id": "ch9_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo se detiene. La luz de las antorchas se congela. Dos futuros esperan tu próximo aliento. Aparece Bimbo, su forma más tenue de lo normal, una línea estática la atraviesa.",
+      "dialogue": "Esta es la decisión más grande. Promete a Lord Mori con los guerreros de Takeshi — eso es poder. Con los sabios de Mariko — eso es influencia. Juega con ambos lados, rechaza a ambos, o habla algo inesperado. Elige tus palabras con cuidado. Esto no se puede deshacer.",
+      "speaker": "bimbo",
+      "effect": "time_freeze",
+      "branch_point": true,
+      "category_outcomes": {
+        "diplomatic": {
+          "next_panel": "ch9_04_diplomatic",
+          "life_delta": 0,
+          "reputation_delta": {
+            "diplomatic": 3
+          }
+        },
+        "pragmatic": {
+          "next_panel": "ch9_04_pragmatic",
+          "life_delta": 0,
+          "reputation_delta": {
+            "pragmatic": 2
+          }
+        },
+        "bold": {
+          "next_panel": "ch9_04_bold",
+          "life_delta": 0,
+          "reputation_delta": {
+            "bold": 3
+          }
+        },
+        "hostile": {
+          "next_panel": "ch9_04_hostile",
+          "life_delta": -1,
+          "reputation_delta": {
+            "hostile": 2
+          }
+        },
+        "history-breaking": {
+          "next_panel": "ch9_04_insightful",
+          "life_delta": 0,
+          "reputation_delta": {
+            "history-breaking": 3
+          }
+        }
+      },
+      "default_outcome": {
+        "next_panel": "ch9_04_pragmatic",
+        "life_delta": 0,
+        "reputation_delta": {
+          "pragmatic": 1
+        }
+      },
+      "options": [
+        {
+          "text": "Une ambos lados con diplomacia",
+          "style": "charming",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Ambos caminos llevan a la paz",
+              "target": "両方の道は平和に続きます",
+              "pronunciation": "Ryouhou no michi wa heiwa ni tsuzukimasu"
+            }
+          ]
+        },
+        {
+          "text": "Promete servicio a Lord Mori",
+          "style": "obedient",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Te serviré",
+              "target": "お仕えいたします",
+              "pronunciation": "O-tsukae itashimasu"
+            }
+          ]
+        },
+        {
+          "text": "Promete tu espada con valentía",
+          "style": "bold",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "Mi espada es tuya",
+              "target": "私の剣はあなたのものです",
+              "pronunciation": "Watashi no ken wa anata no mono desu"
+            }
+          ]
+        },
+        {
+          "text": "Rechaza ambas facciones",
+          "style": "defiant",
+          "next_scenario": null,
+          "examples": [
+            {
+              "native": "No sirvo a nadie",
+              "target": "誰にも仕えない",
+              "pronunciation": "Dare ni mo tsukaenai"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch9_03_bimbo_coach",
+      "image": null,
+      "aspect": "square",
+      "narration": null,
+      "dialogue": "Tu lealtad cambia todo lo que sigue. No hay vuelta atrás.",
+      "speaker": "bimbo",
+      "choice_variants": {
+        "ch9_02_bimbo_freeze": {
+          "0": {
+            "dialogue": "¿Construir un puente entre facciones? Eso es ambicioso. Si funciona, te vuelves indispensable para ambos lados. Si falla..."
+          },
+          "1": {
+            "dialogue": "'お仕えいたします' — servicio humilde. Lord Mori valora la lealtad sobre todo. Esto podría asegurar tu lugar."
+          },
+          "2": {
+            "dialogue": "'私の剣はあなたのものです' — la promesa del guerrero. Takeshi respetará esto. Pero te compromete al campo de batalla."
+          },
+          "3": {
+            "dialogue": "¿Rechazar a ambos? En el Japón feudal, eso te hace enemigo de todos. Valiente, pero peligroso. Muy peligroso."
+          }
+        }
+      }
+    },
+    {
+      "id": "ch9_04_diplomatic",
+      "branch_of": "ch9_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo continúa. Hablas a ambos lados, tejiendo palabras que honran a cada uno sin disminuir al otro. Los ojos de Mariko se abren. Takeshi asiente con desgana. Lord Mori observa como un hombre viendo una nueva pieza en el tablero.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch9_05_consequences"
+    },
+    {
+      "id": "ch9_04_pragmatic",
+      "branch_of": "ch9_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo continúa. Te arrodillas ante Lord Mori y prometes servicio de la manera tradicional. Tus palabras son cuidadosas, precisas, exactamente lo que el protocolo exige. Lord Mori acepta con un gesto. Has elegido el camino seguro — una herramienta en manos del poder.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch9_05_consequences"
+    },
+    {
+      "id": "ch9_04_bold",
+      "branch_of": "ch9_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo continúa. Caminas al lado de Takeshi y hablas con fuerte convicción. Tu promesa de espada resuena en el patio. Takeshi aprieta tu hombro — sientes el peso del vínculo de un guerrero. Mariko se da la vuelta. Los ojos de Lord Mori se estrechan, pero hay algo parecido al respeto en ellos.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch9_05_consequences"
+    },
+    {
+      "id": "ch9_04_hostile",
+      "branch_of": "ch9_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo continúa. Los rechazas a todos. El patio queda en silencio. La mano de Takeshi se mueve hacia su espada. La compostura de Mariko se quiebra. Los ojos de Lord Mori se vuelven planos y vacíos — la mirada de un hombre que tacha un nombre de una lista. Bimbo susurra: 'Te acabas de convertir en un extraño en un mundo que mata a los extraños.'",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch9_05_consequences"
+    },
+    {
+      "id": "ch9_04_insightful",
+      "branch_of": "ch9_02_bimbo_freeze",
+      "image": null,
+      "aspect": "square",
+      "narration": "El tiempo continúa. Hablas — no de facciones o lealtad, sino del futuro. Las palabras fluyen de ti sobre lo que Japón podría ser, sobre el costo de la división. El patio queda en silencio. Ambos lados miran. Has hablado algo que pertenece a otro siglo, y todos lo sienten.",
+      "dialogue": null,
+      "speaker": null,
+      "next_panel": "ch9_05_consequences"
+    },
+    {
+      "id": "ch9_05_consequences",
+      "image": null,
+      "aspect": "square",
+      "narration": "Cae la noche. El patio está vacío ahora, pero tus palabras aún resuenan en las piedras. Has pasado de ser un náufrago a un jugador político. El peso de eso se asienta sobre tus hombros como una armadura que nunca pediste.",
+      "dialogue": null,
+      "speaker": null,
+      "choice_variants": {
+        "ch9_02_bimbo_freeze": {
+          "diplomatic": {
+            "narration": "Night falls. Both Takeshi and Mariko sent messengers to your quarters. Both want private audiences. You've become the bridge between two powers — essential and exposed."
+          },
+          "pragmatic": {
+            "narration": "Night falls. Your quarters have been upgraded — better tatami, a window facing the garden. The privileges of loyalty. But you catch servants whispering as you pass. Trust is harder to earn than titles."
+          },
+          "bold": {
+            "narration": "Night falls. Takeshi's warriors have accepted you. You feel their camaraderie, the bond of shared danger. But Mariko's faction watches you with cold eyes. You've chosen your side."
+          },
+          "hostile": {
+            "narration": "Night falls. Your quarters have been moved to a smaller, darker room. No window. A guard outside the door — for your 'protection,' they say. You've isolated yourself completely."
+          },
+          "history-breaking": {
+            "narration": "Night falls. The castle is buzzing with your speech. Stories are already being told about the foreigner who spoke of things that haven't happened yet. Lord Mori has summoned you for a private audience at dawn."
+          }
+        }
+      }
+    }
+  ]
+}

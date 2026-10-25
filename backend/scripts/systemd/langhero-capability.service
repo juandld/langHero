@@ -1,0 +1,15 @@
+[Unit]
+Description=LangHero — Jev capability-drift probe (baselines snapshot)
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=claude-user
+WorkingDirectory=/home/claude-user/projects/langHero/backend
+ExecStart=/home/claude-user/projects/langHero/backend/venv/bin/python scripts/jev_capability_probe.py
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=5min
+
+[Install]
+WantedBy=multi-user.target

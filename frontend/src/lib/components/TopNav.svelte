@@ -3,10 +3,14 @@
   import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
   import ProfileBadge from '$lib/components/ProfileBadge.svelte';
 
+  // Primary nav: core user destinations (not dev tools). "Browse" is the
+  // canonical content index for the project — stories, scenarios, practice,
+  // dialogue scripts — not a side-door "all content" page.
   const links = [
     { href: '/', label: 'Menu' },
-    { href: '/import', label: 'Import' },
-    { href: '/demo', label: 'Demo' },
+    { href: '/catalog', label: 'Browse' },
+    { href: '/profile', label: 'Profile' },
+    { href: '/settings', label: 'Settings' },
     { href: '/login', label: 'Login' },
   ];
 
@@ -97,5 +101,24 @@
     background: #0f172a;
     color: #fff;
     border-color: #0f172a;
+  }
+
+  /* Mobile: let items shrink + nowrap so the nav stays as a single row
+     instead of each link falling onto its own line. Tight padding/font so
+     all 5 primary items visibly fit on a 375px viewport. */
+  @media (max-width: 640px) {
+    .inner { padding: 6px 8px; gap: 4px; }
+    .brand { padding: 4px 6px; font-size: 0.9rem; }
+    .profile-section { flex: 0 1 auto; justify-content: flex-start; }
+    .nav { flex-wrap: nowrap; gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .link { padding: 4px 6px; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; letter-spacing: -0.01em; }
+    /* Hide the profile pill on very narrow screens — it duplicates the Profile
+       link below and eats horizontal space nav items need. */
+    .profile-section :global(.profile-badge-compact) { display: none; }
+  }
+
+  @media (max-width: 400px) {
+    .profile-section { display: none; }
+    .brand { font-size: 0.85rem; }
   }
 </style>

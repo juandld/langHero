@@ -31,19 +31,28 @@ import os
 PANEL_DIR = os.path.join(os.path.dirname(__file__), "..", "image_cache", "panels")
 
 
+# Single source of truth for panel_type → aspect. Used both by the prose in
+# build_manifest_prompt (as a hint to the model) AND by the generator to set
+# imageConfig.aspectRatio at the API layer (actual enforcement).
+PANEL_ASPECT_MAP = {
+    "establishing": ("wide",   "16:9"),
+    "pov":          ("wide",   "16:9"),
+    "dialogue":     ("square", "1:1"),
+    "emotional":    ("square", "1:1"),
+    "action":       ("tall",   "9:16"),
+    "time_freeze":  ("tall",   "9:16"),
+}
+
+
+def aspect_for_panel(panel: PanelSpec) -> str:
+    """Return the API aspect ratio ("16:9"/"1:1"/"9:16") for a panel."""
+    return PANEL_ASPECT_MAP.get(panel.panel_type, ("square", "1:1"))[1]
+
+
 def build_manifest_prompt(panel: PanelSpec) -> str:
     """Build a constraint-based prompt from panel spec."""
 
-    # Determine aspect ratio based on panel type
-    aspect_map = {
-        "establishing": ("wide", "16:9"),
-        "pov": ("wide", "16:9"),
-        "dialogue": ("square", "1:1"),
-        "emotional": ("square", "1:1"),
-        "action": ("tall", "9:16"),
-        "time_freeze": ("tall", "9:16"),
-    }
-    aspect_name, aspect_ratio = aspect_map.get(panel.panel_type, ("square", "1:1"))
+    aspect_name, aspect_ratio = PANEL_ASPECT_MAP.get(panel.panel_type, ("square", "1:1"))
 
     # WORK SURFACE
     work_surface = f"Create a single manhwa panel. {aspect_ratio} aspect ratio, {aspect_name} composition."
@@ -148,12 +157,13 @@ async def generate_panel_from_manifest(panel: PanelSpec, force: bool = False) ->
     if not force and os.path.exists(output_path):
         return {"panel_id": panel.id, "path": output_path, "cached": True}
 
-    # Generate
+    # Generate — pass aspect_ratio so the API enforces it, not just the prompt.
     result = await generate_image(
         prompt=prompt,
         reference_images=references if references else None,
         output_path=output_path,
         force=force,
+        aspect_ratio=aspect_for_panel(panel),
     )
 
     return {

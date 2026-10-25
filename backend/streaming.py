@@ -392,6 +392,37 @@ class StreamingSession:
             self.final_event_sent = True
             return result
 
+        # Scenario mode: process_interaction returns {scoreDelta, livesDelta, …}
+        # without a tier field. Apply scoreDelta here before the tier-branch
+        # (which is designed for vocab-mode's {tier, score} schema and would
+        # otherwise fall through to "fail" and drop the scoreDelta silently).
+        # Per decisions #2135 and #2136 (shipped on David's calls 2026-10-15/16).
+        is_scenario_result = isinstance(result, dict) and "scoreDelta" in result
+        if is_scenario_result:
+            if result.get("scoreDelta"):
+                self.score += int(result["scoreDelta"])
+            # Scenario mode owns its own livesDelta — apply only negative deltas
+            # (penalties); DO NOT fall through to the tier branch's else-fail
+            # path which would double-penalise on a correct answer.
+            lives_delta = int(result.get("livesDelta") or 0)
+            if lives_delta < 0:
+                await self.apply_incorrect_answer_penalty(
+                    websocket,
+                    message=str(result.get("message") or ""),
+                    delta=-lives_delta,
+                )
+            await websocket.send_json({
+                "event": "final",
+                "result": result,
+                "target_language": self.target_language,
+                "mode": self.mode,
+                "score": self.score,
+                "lives_remaining": self.lives_remaining,
+                "lives_total": self.lives_total,
+            })
+            self.final_event_sent = True
+            return result
+
         tier = result.get("tier", "fail") if isinstance(result, dict) else "fail"
         if tier in ("perfect", "good", "passable"):
             score_delta = 0

@@ -79,27 +79,36 @@
   }
 
   .score {
-    background: rgba(0, 0, 0, 0.5);
+    /* Was 0.95rem score "0" in a small pill — read as decoration. Larger
+       readable number against a stronger backdrop so a score change is
+       immediately visible. */
+    background: rgba(15, 15, 25, 0.78);
     backdrop-filter: blur(8px);
-    padding: 6px 12px;
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    padding: 7px 14px;
     border-radius: 20px;
     color: #fbbf24;
-    font-weight: 700;
-    font-size: 0.95rem;
+    font-weight: 800;
+    font-size: 1.1rem;
     letter-spacing: 0.02em;
+    min-width: 44px;
+    text-align: center;
   }
 
   .hearts {
     display: flex;
     gap: 4px;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(15, 15, 25, 0.78);
     backdrop-filter: blur(8px);
-    padding: 6px 10px;
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    padding: 6px 11px;
     border-radius: 20px;
   }
 
   .heart {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     line-height: 1;
     transition: transform 0.2s ease, opacity 0.2s ease;
   }

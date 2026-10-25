@@ -1,0 +1,12 @@
+{
+  "id": "cafe-order-a-coffee",
+  "title": "Order a coffee in a cafe",
+  "description": "Semi-formal cafe counter, staff is polite and attentive, mid-morning.",
+  "target_language": "Mandarin Chinese",
+  "register": "semi-formal",
+  "starter_turns": [
+    {"role": "tutor", "text": "您好,请问需要点什么?", "translation": "Hello, what would you like to order?"}
+  ],
+  "learner_goal": "Order a cup of coffee",
+  "success_criteria": "Learner produces a natural, polite request understandable by cafe staff"
+}

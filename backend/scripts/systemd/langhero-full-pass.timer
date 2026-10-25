@@ -1,0 +1,14 @@
+[Unit]
+Description=Nightly: run full observability pass over all gradable content
+Requires=langhero-full-pass.service
+
+[Timer]
+# 03:17 local time — off-peak, randomised 5min to avoid thundering herd if
+# other langhero timers are added later.
+OnCalendar=*-*-* 03:17:00
+RandomizedDelaySec=5min
+Persistent=true
+Unit=langhero-full-pass.service
+
+[Install]
+WantedBy=timers.target

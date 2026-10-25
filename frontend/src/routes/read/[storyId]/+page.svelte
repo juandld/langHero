@@ -2,8 +2,13 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { fade, fly } from 'svelte/transition';
+  import { getApiBase } from '$lib/api';
 
-  const API_BASE = 'http://localhost:8000';
+  // Was hardcoded to http://localhost:8000 which is orchestratorHero's
+  // backend; langHero actually runs on 8100 (systemd ExecStart uses --port 8100).
+  // CORS blocked every call and the page silently rendered empty. getApiBase()
+  // reads the project's configured backend URL, same helper every working page uses.
+  const API_BASE = getApiBase();
 
   let story = null;
   let currentChapterIndex = 0;
@@ -100,7 +105,11 @@
     };
     return colors[speaker] || '#fff';
   }
+
+  $: pageTitle = story?.title ? `Read: ${story.title} · LangHero` : `Read · LangHero`;
 </script>
+
+<svelte:head><title>{pageTitle}</title></svelte:head>
 
 <svelte:window on:keydown={handleKeydown} />
 

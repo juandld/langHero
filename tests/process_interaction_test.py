@@ -3,23 +3,27 @@ import io
 import pytest
 
 from backend import services
+from backend.services import interaction as services_interaction
 from tests.fixtures import scenarios as scenario_fixtures
 
 
 @pytest.fixture
 def interaction_env(tmp_path, monkeypatch):
+    # Patch targets are now on backend.services.interaction (the actual module
+    # consuming these names), not on the backend.services package. The old
+    # tests expected a flat services.py with VOICE_NOTES_DIR + usage +
+    # providers all re-exported from the package; the refactor into a package
+    # means each submodule owns its own imports. TRANSCRIPTS_DIR isn't used
+    # by interaction.py at all, so the patch is dropped.
     voice = tmp_path / "voice"
-    trans = tmp_path / "trans"
     voice.mkdir()
-    trans.mkdir()
 
-    monkeypatch.setattr(services, "VOICE_NOTES_DIR", str(voice))
-    monkeypatch.setattr(services, "TRANSCRIPTS_DIR", str(trans))
+    monkeypatch.setattr(services_interaction, "VOICE_NOTES_DIR", str(voice))
 
     # Avoid network/provider calls
-    monkeypatch.setattr(services.usage, "log_usage", lambda *args, **kwargs: None)
-    monkeypatch.setattr(services.providers, "translate_text", lambda text, **_: "はい、お願いします。")
-    monkeypatch.setattr(services.providers, "romanize", lambda text, *_: "hai, onegaishimasu")
+    monkeypatch.setattr(services_interaction.usage, "log_usage", lambda *args, **kwargs: None)
+    monkeypatch.setattr(services_interaction.providers, "translate_text", lambda text, **_: "はい、お願いします。")
+    monkeypatch.setattr(services_interaction.providers, "romanize", lambda text, *_: "hai, onegaishimasu")
 
     class Stub:
         transcript = "はい、お願いします。"
@@ -27,23 +31,23 @@ def interaction_env(tmp_path, monkeypatch):
     stub = Stub()
 
     monkeypatch.setattr(
-        services.providers,
+        services_interaction.providers,
         "transcribe_audio",
-        lambda *args, **kwargs: services.providers.TranscriptionResult(
+        lambda *args, **kwargs: services_interaction.providers.TranscriptionResult(
             text=stub.transcript,
             provider="openai",
             model="stub-model",
         ),
         raising=False,
     )
-    monkeypatch.setattr(services.providers, "openai_chat", lambda *args, **kwargs: "0")
+    monkeypatch.setattr(services_interaction.providers, "openai_chat", lambda *args, **kwargs: "0")
 
     scenarios = {}
 
     def fake_get_scenario_by_id(scenario_id):
         return scenarios.get(int(scenario_id)) if scenario_id is not None else None
 
-    monkeypatch.setattr(services, "get_scenario_by_id", fake_get_scenario_by_id)
+    monkeypatch.setattr(services_interaction, "get_scenario_by_id", fake_get_scenario_by_id)
 
     return stub, scenarios
 

@@ -137,7 +137,13 @@ export function createAudioEngine({ getPanel, onPlayingChange }) {
         }
         await playAudioWithSettings(response.url, sessionId);
       } catch (e) {
-        console.error('[TTS] Error:', e);
+        // `e` is typically a MediaError Event thrown when the <audio> element
+        // errors during preload — benign because the next queue item plays
+        // normally. console.error on an Event prints the uninformative word
+        // "Event" and gives the appearance of broken audio to anyone reading
+        // the console. Demoted to warn with the event target src for context.
+        const src = e?.target?.src || e?.target?.currentSrc || 'unknown-src';
+        console.warn('[TTS] queue item playback interrupted (preload race, non-fatal):', src.slice(0, 80));
       }
     }
 

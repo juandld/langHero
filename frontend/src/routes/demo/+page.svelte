@@ -17,6 +17,8 @@
   const toggleDevPanel = () => { devPanelVisible = !devPanelVisible; };
 </script>
 
+<svelte:head><title>Demo · LangHero</title></svelte:head>
+
 <div class="demo-container">
   <GameView />
 

@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
+  import { t } from '$lib/game/i18n';
 
   const dispatch = createEventDispatcher();
 
@@ -8,11 +9,14 @@
   export let bimboReaction = null;
   export let bimboReactionLoading = false;
   export let isPlaying = false;
+  export let lang = '';
 </script>
 
 {#if speakResult}
   <div
     class="speak-result"
+    data-testid="speak-result"
+    data-tier={speakResult.tier || (speakResult.success ? 'success' : 'fail')}
     class:success={speakResult.success}
     class:tier-passable={speakResult.tier === 'passable'}
     class:tier-fumble={speakResult.tier === 'fumble'}
@@ -25,7 +29,7 @@
 
     {#if speakResult.heard}
       <div class="result-heard">
-        <span class="result-label">You said:</span> "{speakResult.heard}"
+        <span class="result-label">{t('you_said', lang)}</span> "{speakResult.heard}"
         {#if speakResult.heardPronunciation}
           <span class="result-pronunciation">[{speakResult.heardPronunciation}]</span>
         {/if}
@@ -44,13 +48,13 @@
     <!-- Bimbo reaction (shared between success and fail) -->
     {#if bimboReactionLoading}
       <div class="bimbo-reaction" transition:fade={{ duration: 200 }}>
-        <span class="bimbo-reaction-label">Bimbo:</span>
+        <span class="bimbo-reaction-label">{t('bimbo_label', lang)}</span>
         <span class="bimbo-reaction-shimmer"></span>
       </div>
     {:else if bimboReaction?.bimboDialogue}
       <div class="bimbo-reaction" transition:fade={{ duration: 200 }}>
         <button class="bimbo-reaction-label speaker-btn" on:click|stopPropagation={() => dispatch('playBimboReaction')}>
-          Bimbo: <span class="audio-hint">{isPlaying ? '⏸' : '🔊'}</span>
+          {t('bimbo_label', lang)} <span class="audio-hint">{isPlaying ? '⏸' : '🔊'}</span>
         </button>
         <span>{bimboReaction.bimboDialogue}</span>
         {#if bimboReaction.teachingNote}
@@ -61,11 +65,11 @@
 
     {#if speakResult.success}
       <button class="continue-btn" on:click|stopPropagation={() => dispatch('continue')}>
-        Continue →
+        {t('continue', lang)}
       </button>
     {:else if speakResult.canSkip}
       <button class="skip-btn" on:click|stopPropagation={() => dispatch('continue')}>
-        Skip →
+        {t('skip', lang)}
       </button>
     {/if}
   </div>

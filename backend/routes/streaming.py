@@ -6,6 +6,7 @@ import json
 import logging
 from typing import Optional
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocketState
 import config
 import auth
 from security import is_admin, rate_limit, client_ip_from_headers
@@ -80,8 +81,9 @@ async def mock_stream_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         reason = "disconnect"
 
-    await websocket.send_json(session.final_event(reason=reason))
-    await websocket.close()
+    if websocket.client_state != WebSocketState.DISCONNECTED:
+        await websocket.send_json(session.final_event(reason=reason))
+        await websocket.close()
 
 
 @router.websocket("/stream/interaction")
@@ -241,4 +243,8 @@ async def interaction_stream_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         pass
     finally:
-        await websocket.close()
+        if websocket.client_state != WebSocketState.DISCONNECTED:
+            try:
+                await websocket.close()
+            except RuntimeError:
+                pass

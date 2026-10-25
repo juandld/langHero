@@ -24,6 +24,12 @@ export const STORAGE_KEYS = {
   JUDGE_FOCUS: 'JUDGE_FOCUS',
   LANGUAGE_OVERRIDE: 'LANGUAGE_OVERRIDE',
 
+  // Narration language/level — which language the story itself is told in,
+  // and the vocabulary complexity at that language. Independent of
+  // LANGUAGE_OVERRIDE (which picks the *target* language being learned).
+  NARRATION_LANGUAGE: 'LANGHERO_NARRATION_LANGUAGE_V1',
+  NARRATION_LEVEL: 'LANGHERO_NARRATION_LEVEL_V1',
+
   // Profile & progress
   PROFILE: 'LANGHERO_PROFILE_V1',
   RUNS: 'langhero_runs_v2',

@@ -9,7 +9,7 @@ test.describe('Panel-Narrative Synchronization', () => {
 
   test('API returns line-indexed panels for awakening dialogue', async ({ request }) => {
     // Test the backend API directly
-    const response = await request.get('http://localhost:8000/api/panels/sequence/awakening?story_id=shogun');
+    const response = await request.get('http://localhost:8100/api/panels/sequence/awakening?story_id=shogun');
     expect(response.ok()).toBeTruthy();
 
     const data = await response.json();
@@ -46,7 +46,7 @@ test.describe('Panel-Narrative Synchronization', () => {
     ];
 
     for (const { key, expectedLines } of dialogues) {
-      const response = await request.get(`http://localhost:8000/api/panels/sequence/${key}?story_id=shogun`);
+      const response = await request.get(`http://localhost:8100/api/panels/sequence/${key}?story_id=shogun`);
       expect(response.ok(), `Failed to get panels for ${key}`).toBeTruthy();
 
       const data = await response.json();
@@ -57,7 +57,7 @@ test.describe('Panel-Narrative Synchronization', () => {
   });
 
   test('tutorial_intro panels match speaker-based rules', async ({ request }) => {
-    const response = await request.get('http://localhost:8000/api/panels/sequence/tutorial_intro?story_id=shogun');
+    const response = await request.get('http://localhost:8100/api/panels/sequence/tutorial_intro?story_id=shogun');
     const data = await response.json();
 
     // All 7 lines are Bimbo speaking - should show mix of orb and environment panels
@@ -72,7 +72,7 @@ test.describe('Panel-Narrative Synchronization', () => {
   });
 
   test('panels have valid image URLs', async ({ request }) => {
-    const response = await request.get('http://localhost:8000/api/panels/sequence/awakening?story_id=shogun');
+    const response = await request.get('http://localhost:8100/api/panels/sequence/awakening?story_id=shogun');
     const data = await response.json();
 
     for (const [lineIdx, panel] of Object.entries(data.panels) as [string, any][]) {

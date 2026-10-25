@@ -27,9 +27,9 @@ export function clamp(value: number, min: number, max: number): number {
  * @returns Full URL with backend base
  *
  * @example
- * toBackendUrl('/api/tts')           // 'http://localhost:8000/api/tts'
+ * toBackendUrl('/api/tts')           // 'http://localhost:8100/api/tts'
  * toBackendUrl('https://example.com') // 'https://example.com' (unchanged)
- * toBackendUrl('api/tts')            // 'http://localhost:8000/api/tts'
+ * toBackendUrl('api/tts')            // 'http://localhost:8100/api/tts'
  */
 export function toBackendUrl(pathOrUrl: string | null | undefined): string {
   const raw = String(pathOrUrl ?? '').trim();

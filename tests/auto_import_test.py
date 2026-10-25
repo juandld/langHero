@@ -10,7 +10,9 @@ def test_auto_import_text_only(app_client):
 
 
 def test_auto_import_web_url_prefers_url_fetch(app_client, monkeypatch):
-    import main as main_module
+    # url_fetch is imported directly by backend/routes/import_routes.py (not
+    # by main.py). Patch the route module's local binding to intercept the call.
+    import routes.import_routes as import_routes_mod
 
     def fake_fetch(url: str, **_kwargs):
         return {
@@ -21,7 +23,7 @@ def test_auto_import_web_url_prefers_url_fetch(app_client, monkeypatch):
             "text": "Line one.\nLine two.",
         }
 
-    monkeypatch.setattr(main_module.url_fetch, "fetch_url_text", fake_fetch, raising=True)
+    monkeypatch.setattr(import_routes_mod.url_fetch, "fetch_url_text", fake_fetch, raising=True)
 
     res = app_client.post(
         "/api/import/auto",
@@ -35,7 +37,9 @@ def test_auto_import_web_url_prefers_url_fetch(app_client, monkeypatch):
 
 
 def test_auto_import_video_url_uses_video_pipeline(app_client, monkeypatch):
-    import main as main_module
+    # generate_scenarios_from_video now lives in backend/services/video.py.
+    # The route handler imports it directly into import_routes' namespace.
+    import routes.import_routes as import_routes_mod
 
     calls = {"count": 0}
 
@@ -43,7 +47,7 @@ def test_auto_import_video_url_uses_video_pipeline(app_client, monkeypatch):
         calls["count"] += 1
         return [{"id": 1, "description": "A"}, {"id": 2, "description": "B"}]
 
-    monkeypatch.setattr(main_module, "generate_scenarios_from_video", fake_generate, raising=True)
+    monkeypatch.setattr(import_routes_mod, "generate_scenarios_from_video", fake_generate, raising=True)
 
     res = app_client.post(
         "/api/import/auto",

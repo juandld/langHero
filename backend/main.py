@@ -42,6 +42,9 @@ from routes.published import router as published_router
 from routes.import_routes import router as import_router
 from routes.stories import router as stories_router
 from routes.story_panels import router as story_panels_router
+from routes.practice import router as practice_router
+from routes.progress import router as progress_router
+from routes.observability import router as observability_router
 
 
 @asynccontextmanager
@@ -101,6 +104,9 @@ app.include_router(published_router)
 app.include_router(import_router)
 app.include_router(stories_router)
 app.include_router(story_panels_router)
+app.include_router(practice_router)
+app.include_router(progress_router)
+app.include_router(observability_router)
 
 # ----------------- Entry Point -----------------
 

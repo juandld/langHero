@@ -21,7 +21,11 @@ def test_demo_mode_story_import_skips_llm(monkeypatch):
 
 def test_demo_mode_from_video_requires_cache(app_client, monkeypatch):
     cfg = importlib.import_module("config")
-    main_module = importlib.import_module("main")
+    # generate_scenarios_from_video was moved from main.py into
+    # backend/services/video.py; the route handler at
+    # backend/routes/import_routes.py:17 imports it directly, so the patch
+    # must land on the route module's local binding to intercept the call.
+    import_routes_mod = importlib.import_module("routes.import_routes")
 
     monkeypatch.setattr(cfg, "DEMO_MODE", True, raising=False)
     monkeypatch.setattr(cfg, "DEMO_VIDEO_CACHE_ONLY", True, raising=False)
@@ -29,7 +33,7 @@ def test_demo_mode_from_video_requires_cache(app_client, monkeypatch):
     def boom(*args, **kwargs):
         raise AssertionError("from_video generator should not be called on cache-only rejection")
 
-    monkeypatch.setattr(main_module, "generate_scenarios_from_video", boom, raising=True)
+    monkeypatch.setattr(import_routes_mod, "generate_scenarios_from_video", boom, raising=True)
 
     res = app_client.post(
         "/api/scenarios/from_video",

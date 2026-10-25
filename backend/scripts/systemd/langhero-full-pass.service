@@ -1,0 +1,17 @@
+[Unit]
+Description=LangHero — full observability pass (practice + dialogue + legacy content grading)
+After=network-online.target langhero-backend.service
+Wants=langhero-backend.service
+
+[Service]
+Type=oneshot
+User=claude-user
+WorkingDirectory=/home/claude-user/projects/langHero/backend
+ExecStart=/home/claude-user/projects/langHero/backend/venv/bin/python scripts/full_content_pass.py
+# Nice down — grading is batch work and must not steal from live traffic.
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=10min
+
+[Install]
+WantedBy=multi-user.target
