@@ -54,8 +54,14 @@
         type: 'scenarios',
       }));
 
-      // Panel stories first, then scenario stories (avoid duplicates by language)
-      stories = [...panelStories, ...scenarioStories];
+      // Panel stories first; dedupe scenario-based stories that already exist as panels.
+      // This lets Manuela be registered in both backends during migration without
+      // doubling up on the menu — the new panels entry wins.
+      const panelIds = new Set(panelStories.map((s) => s.id));
+      stories = [
+        ...panelStories,
+        ...scenarioStories.filter((s) => !panelIds.has(s.id)),
+      ];
     } catch (e) {
       console.warn('Failed to fetch stories:', e);
       stories = [];

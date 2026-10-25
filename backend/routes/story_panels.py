@@ -44,6 +44,15 @@ except Exception as e:
     import logging
     logging.getLogger(__name__).warning(f"Failed to import journey story: {e}")
 
+try:
+    from story.manuela import STORY_SKELETONS as _MANUELA_SKELETONS, CHARACTERS as _MN_CHARS, LOCATIONS as _MN_LOCS
+    STORY_SKELETONS.update(_MANUELA_SKELETONS)
+    CHARACTERS.update(_MN_CHARS)
+    LOCATIONS.update(_MN_LOCS)
+except Exception as e:
+    import logging
+    logging.getLogger(__name__).warning(f"Failed to import manuela story: {e}")
+
 # Import generator
 try:
     from story.generator import generate_segment
