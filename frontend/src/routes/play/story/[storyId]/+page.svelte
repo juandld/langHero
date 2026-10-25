@@ -972,7 +972,10 @@
         }
         recordingStream = stream;
         mediaRecorder = new MediaRecorder(stream);
-        audioAnalyser = setupAudioAnalyser(stream);
+        audioAnalyser = await setupAudioAnalyser(stream);
+        if (!audioAnalyser) {
+          console.warn('[Mic] setupAudioAnalyser returned null — level bar will not update');
+        }
         startMicLevelLoop();
 
         mediaRecorder.ondataavailable = async (event) => {

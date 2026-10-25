@@ -23,29 +23,37 @@ export function ensureAudioContext() {
 /**
  * Create an audio analyser for visualizing audio input
  */
-export function setupAudioAnalyser(stream) {
+export async function setupAudioAnalyser(stream) {
   const ctx = ensureAudioContext();
-  if (!ctx) return null;
+  if (!ctx) {
+    console.warn('[Mic] setupAudioAnalyser: no AudioContext');
+    return null;
+  }
 
   try {
     if (analyserSource) {
       try { analyserSource.disconnect(); } catch (_) {}
+      analyserSource = null;
     }
 
-    // iOS/Safari (and sometimes Chrome on mobile) keep the AudioContext in
+    // Diagnostic: what did getUserMedia actually hand us?
+    try {
+      const tracks = stream?.getAudioTracks?.() || [];
+      const t = tracks[0];
+      console.log('[Mic] stream tracks:', tracks.length,
+        t && { enabled: t.enabled, muted: t.muted, readyState: t.readyState, label: (t.label || '').slice(0, 60) });
+    } catch (_) {}
+
+    // iOS/Safari (and sometimes Chrome mobile) keep the AudioContext in
     // 'suspended' state until a user gesture resumes it. If we build the
-    // MediaStreamSource while it's still suspended, getByteFrequencyData
-    // reads all zeros even though the mic is actively capturing. Fire the
-    // resume here — it's safe to call unconditionally, and this function is
-    // invoked from inside the user-gesture tap handler so iOS will honor it.
+    // MediaStreamSource while suspended, the analyser reads all zeros even
+    // though the mic is actively capturing. AWAIT the resume so the graph is
+    // alive before source → analyser → data flows.
     if (ctx.state === 'suspended') {
-      try { ctx.resume(); } catch (_) {}
+      try { await ctx.resume(); } catch (e) { console.warn('[Mic] ctx.resume failed:', e); }
     }
+    console.log('[Mic] AudioContext state after resume:', ctx.state, 'sampleRate:', ctx.sampleRate);
 
-    // Larger fftSize gives us a proper 1024-sample time-domain window too,
-    // which we use for the RMS level visualization. Frequency-domain data is
-    // more sensitive to the context resume state than time-domain, so the
-    // caller may compute level from either.
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 1024;
     analyser.smoothingTimeConstant = 0.6;
@@ -53,6 +61,19 @@ export function setupAudioAnalyser(stream) {
     const source = ctx.createMediaStreamSource(stream);
     source.connect(analyser);
     analyserSource = source;
+
+    // Smoke-test: read one time-domain frame and log its deviation. If this is
+    // non-zero, the pipeline is live even if later frames look quiet.
+    try {
+      const buf = new Uint8Array(analyser.fftSize);
+      analyser.getByteTimeDomainData(buf);
+      let maxDev = 0;
+      for (let i = 0; i < buf.length; i++) {
+        const d = Math.abs(buf[i] - 128);
+        if (d > maxDev) maxDev = d;
+      }
+      console.log('[Mic] first-frame max deviation from 128:', maxDev, '(0 = silence or dead pipeline)');
+    } catch (_) {}
 
     return analyser;
   } catch (err) {
