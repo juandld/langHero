@@ -868,25 +868,39 @@
   }
 
   // Live mic-level driven by the AudioAnalyser. Updated by rAF, read by the UI.
-  let micLevel = 0;
+  // Uses the TIME-DOMAIN waveform (getByteTimeDomainData) rather than the
+  // frequency-domain data because time-domain reads reliably as soon as the
+  // mediaStreamSource is connected, while frequency-domain tends to stay zero
+  // on mobile browsers if the AudioContext hasn't fully resumed yet.
+  let micLevel = 0;              // 0..1 perceptual
+  let micLevelRaw = 0;           // raw RMS for debugging
   let micLevelRAF = null;
   function startMicLevelLoop() {
     stopMicLevelLoop();
-    if (!audioAnalyser) return;
-    const buf = new Uint8Array(audioAnalyser.frequencyBinCount);
+    if (!audioAnalyser) {
+      console.warn('[Mic] startMicLevelLoop: no audioAnalyser');
+      return;
+    }
+    const buf = new Uint8Array(audioAnalyser.fftSize);
     const tick = () => {
       if (!isRecording || !audioAnalyser) {
         micLevel = 0;
+        micLevelRaw = 0;
         micLevelRAF = null;
         return;
       }
-      audioAnalyser.getByteFrequencyData(buf);
-      // Simple RMS → 0..1
-      let sum = 0;
-      for (let i = 0; i < buf.length; i++) { const v = buf[i] / 255; sum += v * v; }
-      const rms = Math.sqrt(sum / buf.length);
-      // Perceptual boost — speech energy is usually < 0.3, map to 0..1 with a curve
-      micLevel = Math.min(1, Math.pow(Math.min(1, rms * 2.5), 0.65));
+      audioAnalyser.getByteTimeDomainData(buf);
+      // Time-domain samples sit around 128 (silence = DC center). RMS of the
+      // deviation gives us a true volume estimate independent of pitch.
+      let sumSq = 0;
+      for (let i = 0; i < buf.length; i++) {
+        const v = (buf[i] - 128) / 128;      // -1..1
+        sumSq += v * v;
+      }
+      const rms = Math.sqrt(sumSq / buf.length);  // 0..~0.3 for normal speech
+      micLevelRaw = rms;
+      // Perceptual curve so a normal-volume voice reads around 0.5-0.8
+      micLevel = Math.min(1, Math.pow(Math.min(1, rms * 4.5), 0.6));
       micLevelRAF = requestAnimationFrame(tick);
     };
     micLevelRAF = requestAnimationFrame(tick);
@@ -894,6 +908,7 @@
   function stopMicLevelLoop() {
     if (micLevelRAF) { cancelAnimationFrame(micLevelRAF); micLevelRAF = null; }
     micLevel = 0;
+    micLevelRaw = 0;
   }
 
   // Watchdog: if the backend never emits a final/penalty/error event within
@@ -1658,6 +1673,7 @@
           <div class="mic-live-transcript">"{liveTranscript}"</div>
         {:else if isRecording}
           <div class="mic-live-hint">Habla ahora — pulsa el botón otra vez para enviar</div>
+          <div class="mic-live-debug">nivel: {(micLevelRaw * 100).toFixed(0)}</div>
         {:else if evaluating}
           <div class="mic-live-hint">Enviando audio al servidor…</div>
         {/if}
@@ -2088,6 +2104,15 @@
     font-size: 0.85rem;
     color: #fecaca;
     opacity: 0.85;
+  }
+  /* Numeric debug readout of raw RMS * 100 so you can confirm the mic is
+     actually reaching the analyser (0 = silence, 20+ = speaking). */
+  .mic-live-debug {
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: #fff;
+    opacity: 0.65;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
   @keyframes pulse-dot {
     0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }

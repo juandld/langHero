@@ -32,9 +32,23 @@ export function setupAudioAnalyser(stream) {
       try { analyserSource.disconnect(); } catch (_) {}
     }
 
+    // iOS/Safari (and sometimes Chrome on mobile) keep the AudioContext in
+    // 'suspended' state until a user gesture resumes it. If we build the
+    // MediaStreamSource while it's still suspended, getByteFrequencyData
+    // reads all zeros even though the mic is actively capturing. Fire the
+    // resume here — it's safe to call unconditionally, and this function is
+    // invoked from inside the user-gesture tap handler so iOS will honor it.
+    if (ctx.state === 'suspended') {
+      try { ctx.resume(); } catch (_) {}
+    }
+
+    // Larger fftSize gives us a proper 1024-sample time-domain window too,
+    // which we use for the RMS level visualization. Frequency-domain data is
+    // more sensitive to the context resume state than time-domain, so the
+    // caller may compute level from either.
     const analyser = ctx.createAnalyser();
-    analyser.fftSize = 64;
-    analyser.smoothingTimeConstant = 0.8;
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.6;
 
     const source = ctx.createMediaStreamSource(stream);
     source.connect(analyser);
