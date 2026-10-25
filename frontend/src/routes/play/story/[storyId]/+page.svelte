@@ -743,7 +743,7 @@
         }
         return null;
       },
-      getLanguage: () => 'Japanese',
+      getLanguage: () => skeleton?.target_language || 'Japanese',
       getGameState: () => ({ score, lives, livesTotal, judgeFocus: 0 }),
       onStateUpdate: () => {},
       onTranscript: (text, partial) => {

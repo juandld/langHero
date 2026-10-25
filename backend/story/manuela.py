@@ -194,6 +194,32 @@ MANUELA_SKELETON = StorySkeleton(
                         "text": "¡Manuela, por fin llegaste!",
                         "translation": "Manuela, you're finally here!",
                     },
+                    "options": [
+                        {
+                            "text": "Say you went looking for a worthy dress",
+                            "style": "coy",
+                            "examples": [{
+                                "native": "I went to find a dress worthy of tonight.",
+                                "target": "Fui a buscar un vestido digno de esta noche.",
+                            }],
+                        },
+                        {
+                            "text": "Admit you were watching the soldiers",
+                            "style": "honest",
+                            "examples": [{
+                                "native": "I stayed to watch the soldiers come in.",
+                                "target": "Me quedé viendo entrar a los soldados.",
+                            }],
+                        },
+                        {
+                            "text": "Tease about the occasion",
+                            "style": "playful",
+                            "examples": [{
+                                "native": "It's not every day we welcome the Liberator.",
+                                "target": "No todos los días se recibe al Libertador.",
+                            }],
+                        },
+                    ],
                 },
             ],
             next_anchor="manuela_ch4_corona",
