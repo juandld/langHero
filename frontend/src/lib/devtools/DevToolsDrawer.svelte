@@ -40,6 +40,10 @@
   export function getDevLastResult() { return resultInspectorRef?.getDevLastResult?.(); }
   export function setDevLastResult(r) { resultInspectorRef?.setDevLastResult(r); }
   export function setDevLastLang(l) { resultInspectorRef?.setDevLastLang(l); }
+  export function setDevMicLevel(level) { resultInspectorRef?.setDevMicLevel?.(level); }
+  export function setDevMicCtxState(state) { resultInspectorRef?.setDevMicCtxState?.(state); }
+  export function setDevMicFirstFrame(dev) { resultInspectorRef?.setDevMicFirstFrame?.(dev); }
+  export function resetDevMic() { resultInspectorRef?.resetDevMic?.(); }
   export function checkAutoInject(devAudioFileRef) { audioInjectorRef?.checkAutoInject(devAudioFileRef); }
 
   export function cleanup() {

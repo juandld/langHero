@@ -901,6 +901,8 @@
       micLevelRaw = rms;
       // Perceptual curve so a normal-volume voice reads around 0.5-0.8
       micLevel = Math.min(1, Math.pow(Math.min(1, rms * 4.5), 0.6));
+      // Push raw level to the DevTools panel for debugging (hidden from the game UI).
+      if (devToolsRef?.setDevMicLevel) devToolsRef.setDevMicLevel(rms);
       micLevelRAF = requestAnimationFrame(tick);
     };
     micLevelRAF = requestAnimationFrame(tick);
@@ -1713,7 +1715,6 @@
           <div class="mic-live-transcript">"{liveTranscript}"</div>
         {:else if isRecording}
           <div class="mic-live-hint">Habla ahora — pulsa el botón otra vez para enviar</div>
-          <div class="mic-live-debug">nivel: {(micLevelRaw * 100).toFixed(0)}</div>
         {:else if evaluating}
           <div class="mic-live-hint">Enviando audio al servidor…</div>
         {/if}

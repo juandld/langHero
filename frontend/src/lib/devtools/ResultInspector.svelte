@@ -6,10 +6,41 @@
   let devLastResult = null;
   let devLastLang = '';
   let devMatchThreshold = 0.7;
+  let devMicLevel = 0;        // raw RMS of time-domain samples (0..~0.3 for speech)
+  let devMicPeak = 0;         // highest level seen this session
+  let devMicCtxState = '';    // 'running' | 'suspended' | 'closed'
+  let devMicFirstFrame = null; // first-frame max deviation; null until measured
 
   export function setDevLastResult(r) { devLastResult = r; }
   export function setDevLastLang(l) { devLastLang = l; }
+  export function setDevMicLevel(level) {
+    devMicLevel = level;
+    if (level > devMicPeak) devMicPeak = level;
+  }
+  export function setDevMicCtxState(state) { devMicCtxState = state; }
+  export function setDevMicFirstFrame(dev) { devMicFirstFrame = dev; }
+  export function resetDevMic() { devMicLevel = 0; devMicPeak = 0; devMicFirstFrame = null; }
 </script>
+
+<div class="dev-separator"></div>
+<div class="dev-title">Mic Diagnostics</div>
+<div class="dev-result-grid">
+  <span class="dev-result-key">level</span>
+  <span class="dev-result-val" style="color: {devMicLevel > 0.02 ? '#86efac' : devMicLevel > 0 ? '#fde047' : '#fca5a5'}">
+    {(devMicLevel * 100).toFixed(0)}
+  </span>
+  <span class="dev-result-key">peak</span>
+  <span class="dev-result-val">{(devMicPeak * 100).toFixed(0)}</span>
+  <span class="dev-result-key">ctx</span>
+  <span class="dev-result-val" style="color: {devMicCtxState === 'running' ? '#86efac' : devMicCtxState ? '#fca5a5' : '#64748b'}">
+    {devMicCtxState || '—'}
+  </span>
+  <span class="dev-result-key">1st frame</span>
+  <span class="dev-result-val">{devMicFirstFrame !== null ? devMicFirstFrame : '—'}</span>
+</div>
+<div class="dev-note">
+  level/peak = RMS × 100 (0 = silence, 20+ = speaking). ctx = AudioContext state after resume. 1st frame = max deviation from 128 right after wiring (0 = dead pipeline).
+</div>
 
 <div class="dev-separator"></div>
 <div class="dev-title">Match Threshold</div>
