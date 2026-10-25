@@ -867,6 +867,35 @@
     });
   }
 
+  // Live mic-level driven by the AudioAnalyser. Updated by rAF, read by the UI.
+  let micLevel = 0;
+  let micLevelRAF = null;
+  function startMicLevelLoop() {
+    stopMicLevelLoop();
+    if (!audioAnalyser) return;
+    const buf = new Uint8Array(audioAnalyser.frequencyBinCount);
+    const tick = () => {
+      if (!isRecording || !audioAnalyser) {
+        micLevel = 0;
+        micLevelRAF = null;
+        return;
+      }
+      audioAnalyser.getByteFrequencyData(buf);
+      // Simple RMS → 0..1
+      let sum = 0;
+      for (let i = 0; i < buf.length; i++) { const v = buf[i] / 255; sum += v * v; }
+      const rms = Math.sqrt(sum / buf.length);
+      // Perceptual boost — speech energy is usually < 0.3, map to 0..1 with a curve
+      micLevel = Math.min(1, Math.pow(Math.min(1, rms * 2.5), 0.65));
+      micLevelRAF = requestAnimationFrame(tick);
+    };
+    micLevelRAF = requestAnimationFrame(tick);
+  }
+  function stopMicLevelLoop() {
+    if (micLevelRAF) { cancelAnimationFrame(micLevelRAF); micLevelRAF = null; }
+    micLevel = 0;
+  }
+
   // Watchdog: if the backend never emits a final/penalty/error event within
   // 20 s of a stop signal, surface it to the user instead of spinning forever.
   let speechWatchdog = null;
@@ -898,6 +927,7 @@
       isRecording = false;
       evaluating = true;
       startSpeechWatchdog();
+      stopMicLevelLoop();
       audioAnalyser = null;
       disconnectAnalyser();
     } else {
@@ -928,6 +958,7 @@
         recordingStream = stream;
         mediaRecorder = new MediaRecorder(stream);
         audioAnalyser = setupAudioAnalyser(stream);
+        startMicLevelLoop();
 
         mediaRecorder.ondataavailable = async (event) => {
           if (!event?.data) return;
@@ -1007,6 +1038,7 @@
   }
 
   function cleanupRecording() {
+    stopMicLevelLoop();
     if (recordingStream) {
       try {
         recordingStream.getTracks().forEach(t => t.stop());
@@ -1573,10 +1605,29 @@
         />
 
         {#if hasOptions}
-          <!-- Live transcript -->
-          {#if isRecording && liveTranscript}
-            <div class="live-transcript" transition:fade={{ duration: 150 }}>
-              "{liveTranscript}"
+          <!-- Live recording indicator — always visible while isRecording so the
+               user has unambiguous feedback the mic is active and audio is being
+               captured. Shows a pulsing red dot, a 'Grabando…' label, and a
+               real-time mic-level bar driven by the AnalyserNode (RMS of the
+               frequency-domain data). Switches to 'Procesando…' once stopped. -->
+          {#if isRecording || evaluating}
+            <div class="mic-live" transition:fade={{ duration: 120 }}>
+              <div class="mic-live-row">
+                <span class="mic-live-dot" class:recording={isRecording} class:processing={!isRecording && evaluating}></span>
+                <span class="mic-live-label">
+                  {#if isRecording}🎙️ Grabando…{:else}⏳ Procesando audio…{/if}
+                </span>
+                {#if isRecording}
+                  <span class="mic-live-level">
+                    <span class="mic-live-level-fill" style="transform: scaleX({micLevel.toFixed(3)})"></span>
+                  </span>
+                {/if}
+              </div>
+              {#if liveTranscript}
+                <div class="mic-live-transcript">"{liveTranscript}"</div>
+              {:else if isRecording}
+                <div class="mic-live-hint">Habla ahora — pulsa el botón otra vez para enviar</div>
+              {/if}
             </div>
           {/if}
 
@@ -1949,6 +2000,83 @@
     max-width: 520px;
     margin-left: auto;
     margin-right: auto;
+  }
+
+  /* Live mic indicator — unmissable feedback while recording or processing */
+  .mic-live {
+    margin: 0.75rem auto;
+    padding: 0.75rem 1rem;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    border-radius: 14px;
+    max-width: 520px;
+    color: #fecaca;
+  }
+  .mic-live-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .mic-live-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #94a3b8;
+    flex-shrink: 0;
+  }
+  .mic-live-dot.recording {
+    background: #ef4444;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+    animation: pulse-dot 1.3s ease-out infinite;
+  }
+  .mic-live-dot.processing {
+    background: #a78bfa;
+    animation: spin-pulse 1.1s linear infinite;
+  }
+  .mic-live-label {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-size: 0.95rem;
+    color: #fef2f2;
+  }
+  .mic-live-level {
+    flex: 1;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.09);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-left: 6px;
+  }
+  .mic-live-level-fill {
+    display: block;
+    height: 100%;
+    width: 100%;
+    transform-origin: left center;
+    background: linear-gradient(90deg, #fca5a5, #ef4444, #fbbf24);
+    transition: transform 90ms linear;
+    will-change: transform;
+  }
+  .mic-live-transcript {
+    margin-top: 8px;
+    font-style: italic;
+    font-size: 1.05rem;
+    color: #fff1f2;
+  }
+  .mic-live-hint {
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: #fecaca;
+    opacity: 0.85;
+  }
+  @keyframes pulse-dot {
+    0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+    80%  { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);  }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);     }
+  }
+  @keyframes spin-pulse {
+    0%   { opacity: 0.6; transform: scale(1); }
+    50%  { opacity: 1;   transform: scale(1.12); }
+    100% { opacity: 0.6; transform: scale(1); }
   }
 
   .speak-section {
