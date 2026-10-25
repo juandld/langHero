@@ -11,6 +11,7 @@
   export let bimboHint = null;
   export let askingBimbo = false;
   export let lang = '';
+  export let assistantName = 'Bimbo';
 
   const dispatch = createEventDispatcher();
 
@@ -84,7 +85,7 @@
     <!-- Bimbo hint -->
     {#if bimboHint}
       <div class="bimbo-hint">
-        <span class="bimbo-hint-label">{t('bimbo_label', lang)}</span>
+        <span class="bimbo-hint-label">{assistantName}:</span>
         <span class="bimbo-hint-text">{bimboHint.bimboSays}</span>
       </div>
 

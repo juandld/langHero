@@ -1,4 +1,5 @@
 <script>
+  import { t } from '$lib/game/i18n';
   /**
    * FirstChallenge - First interactive speaking moment in the story.
    *
@@ -21,6 +22,7 @@
   export let scenario = null;
   /** @type {{ id?: string, image_url?: string, mood?: string } | null} */
   export let panel = null;
+  $: fcLang = /^spanish$/i.test(String((/** @type {any} */ (scenario) || {}).language || (/** @type {any} */ (panel) || {}).language || '')) ? 'es' : '';
 
   const dispatch = createEventDispatcher();
   const aesthetic = getContext('aesthetic');
@@ -273,7 +275,7 @@
         </button>
 
         <div class="mic-hint">
-          {isListening ? 'Escuchando... ¡Habla ahora!' : 'Toca para hablar'}
+          {isListening ? t('listening_now', fcLang) : t('tap_to_speak', fcLang)}
         </div>
       </div>
     {/if}
@@ -287,7 +289,7 @@
           </svg>
         </div>
         <div class="success-text">
-          {matchResult === 'pass' ? '¡Buen intento!' : '¡Perfecto!'}
+          {matchResult === 'pass' ? t('good_try', fcLang) : t('perfect', fcLang)}
         </div>
       </div>
     {/if}

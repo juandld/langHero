@@ -1,10 +1,12 @@
 <script>
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
+  import { t } from '$lib/game/i18n';
 
   export let isRecording = false;
   export let isEvaluating = false;
   export let isTimeStopped = true;
   export let analyser = null;
+  export let lang = '';
 
   const dispatch = createEventDispatcher();
 
@@ -99,8 +101,8 @@
   });
 
   $: buttonLabel = isTimeStopped
-    ? (isRecording ? 'Detener y enviar' : 'Soltar el tiempo y hablar')
-    : (isRecording ? 'Stop Speaking' : 'Speak');
+    ? (isRecording ? t('stop_send', lang) : t('release_speak', lang))
+    : (isRecording ? t('stop_speaking', lang) : t('speak', lang));
 
   $: buttonIcon = isRecording ? 'stop' : 'mic';
 </script>

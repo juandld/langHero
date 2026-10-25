@@ -13,7 +13,7 @@
   import { fetchTtsUrl } from '$lib/utils/ttsCache';
   import { createStoryLoader } from '$lib/game/storyLoader';
   import { checkBimboHint, resetBimboHints } from '$lib/game/bimboHints';
-  import { t } from '$lib/game/i18n';
+  import { t, uiLangFor } from '$lib/game/i18n';
 
   // Game components
   import GameHUD from '$lib/components/game/GameHUD.svelte';
@@ -38,6 +38,8 @@
   // reloads the current story so every fetch uses the new setting
   // consistently (no stale-language panels mixed into the same run).
   let narrationLanguage = loadNarrationLanguage();
+  $: uiLang = uiLangFor(narrationLanguage, story);
+  $: assistantName = (story && story.assistant && story.assistant.name) || 'Bimbo';
   let narrationLevel = loadNarrationLevel();
 
   function loadNarrationLanguage() {
@@ -109,7 +111,7 @@
   };
 
   // Story state
-  let story = null;
+  let story = /** @type {any} */ (null);
   let voiceConfig = null;
   let loading = true;
   let error = null;
@@ -858,7 +860,7 @@
       },
       onError: (err) => {
         console.error('[Speech] Error:', err);
-        speakResult = { success: false, message: 'Error de conexión — intenta otra vez' };
+        speakResult = { success: false, message: t('connection_error', uiLang) };
         isRecording = false;
         evaluating = false;
         clearSpeechWatchdog();
@@ -921,7 +923,7 @@
     speechWatchdog = setTimeout(() => {
       if (evaluating) {
         console.warn('[Speech] watchdog fired — no response from backend');
-        speakResult = { success: false, message: 'Sin respuesta del servidor — intenta otra vez', canSkip: true };
+        speakResult = { success: false, message: t('no_server_response', uiLang), canSkip: true };
         isRecording = false;
         evaluating = false;
         cleanupRecording();
@@ -999,7 +1001,7 @@
     streamingManager.connect();
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      speakResult = { success: false, message: 'Grabación de voz no disponible en este navegador' };
+      speakResult = { success: false, message: t('voice_unsupported', uiLang) };
       return;
     }
 
@@ -1047,7 +1049,7 @@
       mediaRecorder.onerror = (e) => {
         console.error('[Mic] MediaRecorder error:', e);
         try { stream.getTracks().forEach(t => t.stop()); } catch (_) {}
-        speakResult = { success: false, message: 'Error al grabar — intenta otra vez' };
+        speakResult = { success: false, message: t('recording_error', uiLang) };
         isRecording = false;
         evaluating = false;
         clearSpeechWatchdog();
@@ -1064,7 +1066,7 @@
 
         if (blob.size < 1000) {
           console.warn('[Mic] blob too small, discarding');
-          speakResult = { success: false, message: 'Grabación muy corta — intenta otra vez', silence: true };
+          speakResult = { success: false, message: t('recording_too_short', uiLang), silence: true };
           isRecording = false;
           evaluating = false;
           clearSpeechWatchdog();
@@ -1082,7 +1084,7 @@
             }
           } catch (err) {
             console.error('[Mic] send failed:', err);
-            speakResult = { success: false, message: 'Error al enviar — intenta otra vez' };
+            speakResult = { success: false, message: t('send_error', uiLang) };
             isRecording = false;
             evaluating = false;
             clearSpeechWatchdog();
@@ -1096,9 +1098,9 @@
     }).catch((err) => {
       logMicError(err);
       if (err && err.name === 'NotAllowedError') {
-        speakResult = { success: false, message: 'Acceso al micrófono denegado. Permítelo en los ajustes del navegador.' };
+        speakResult = { success: false, message: t('mic_denied', uiLang) };
       } else {
-        speakResult = { success: false, message: 'No se pudo acceder al micrófono' };
+        speakResult = { success: false, message: t('mic_unavailable', uiLang) };
       }
     });
   }
@@ -1705,7 +1707,8 @@
           {draftText}
           {bimboHint}
           {askingBimbo}
-          lang={narrationLanguage}
+          lang={uiLang}
+          {assistantName}
           isPreviewPlaying={isPlaying && !!previewedOption}
           on:previewOption={handleOptionPreview}
           on:playAudio={handlePlayAudio}
@@ -1727,7 +1730,7 @@
             {bimboReaction}
             {bimboReactionLoading}
             {isPlaying}
-            lang={narrationLanguage}
+            lang={uiLang}
             on:continue={handleSpeakResultContinue}
             on:playBimboReaction={() => { if (audioEngine) audioEngine.playBimboReaction(bimboReaction); }}
           />
@@ -1739,6 +1742,7 @@
               isEvaluating={evaluating}
               isTimeStopped={true}
               analyser={audioAnalyser}
+              lang={uiLang}
               on:toggle={toggleRecording}
             />
           </div>
@@ -1756,7 +1760,7 @@
         <div class="mic-live-row">
           <span class="mic-live-dot" class:recording={isRecording} class:processing={!isRecording && evaluating}></span>
           <span class="mic-live-label">
-            {#if isRecording}🎙️ Grabando…{:else}⏳ Procesando audio…{/if}
+            {#if isRecording}{t('recording', uiLang)}{:else}{t('processing_audio', uiLang)}{/if}
           </span>
           {#if isRecording}
             <span class="mic-live-level">
@@ -1767,9 +1771,9 @@
         {#if liveTranscript}
           <div class="mic-live-transcript">"{liveTranscript}"</div>
         {:else if isRecording}
-          <div class="mic-live-hint">Habla ahora — pulsa el botón otra vez para enviar</div>
+          <div class="mic-live-hint">{t('speak_now_hint', uiLang)}</div>
         {:else if evaluating}
-          <div class="mic-live-hint">Enviando audio al servidor…</div>
+          <div class="mic-live-hint">{t('sending_audio', uiLang)}</div>
         {/if}
       </div>
     {/if}

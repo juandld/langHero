@@ -221,6 +221,12 @@
         "awakening_dialogue": "manuela_awakening",
         "time_freeze_lesson": "manuela_time_freeze_lesson",
         "first_success": "manuela_first_success"
+      },
+      "ui_lang": "es",
+      "assistant": {
+        "name": "Roberto",
+        "title": "Guía del tiempo",
+        "avatar": "/images/generated/characters/roberto.png"
       }
     }
   ],

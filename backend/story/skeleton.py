@@ -116,6 +116,11 @@ class StorySkeleton:
     # Meta-narrative notes (for generation context)
     meta_narrative: str = ""
 
+    # UI chrome: '' = follow the learner's narration-language setting (English default); 'es' = Spanish-immersion
+    ui_lang: str = ""
+    # The in-game guide shown in the assistant bubble / hint label (Bimbo by default)
+    assistant: dict = field(default_factory=lambda: {"name": "Bimbo", "title": "", "avatar": ""})
+
     def get_anchor(self, anchor_id: str) -> Optional[Anchor]:
         """Find an anchor by ID."""
         for a in self.anchors:

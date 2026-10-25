@@ -21,6 +21,8 @@
   import VolumeControl from './VolumeControl.svelte';
   import { masterVolume, playbackSpeed } from '$lib/audioStore.js';
   import { normalizeLanguage } from '$lib/utils/language';
+  import { t, uiLangFor } from '$lib/game/i18n';
+  import { getString } from '$lib/utils/storage';
   import { toBackendUrl, STORAGE_KEYS } from '$lib/utils';
   import { fetchTtsUrl } from '$lib/utils/ttsCache';
   import {
@@ -98,6 +100,8 @@
     : ($storyStore?.character_dialogue_jp ? 'Japanese' : 'English');
 
   $: effectiveTargetLang = languageOverride || targetLang;
+  $: uiLang = uiLangFor(getString(STORAGE_KEYS.NARRATION_LANGUAGE, ''), /** @type {any} */ ($storyStore)) || (/^spanish$/i.test(String(effectiveTargetLang || '')) ? 'es' : '');
+  $: assistant = (/** @type {any} */ ($storyStore) || {}).assistant || {};
   const nativeLang = 'English';
 
   let requireRepeat = false;
@@ -129,7 +133,7 @@
     onResult: (result, opts) => applyInteractionResult(result, opts),
     onPenalty: (data) => {
       if (lives === 0) {
-        alert('Se te acabaron las vidas. Prueba otra opción.');
+        alert(t('out_of_lives', uiLang));
         requireRepeat = false;
       }
     },
@@ -778,6 +782,10 @@
 />
 
 <GameAssistant
+  name={assistant.name || 'Bimbo'}
+  title={assistant.title || ''}
+  avatarImageUrl={assistant.avatar || ''}
+  lang={uiLang}
   visible={!menuVisible}
   message={assistantMessage}
   {isTimeStopped}
@@ -841,7 +849,7 @@
 
     {#if lastHeard && !requireRepeat}
       <div class="heard-text">
-        Oí: <em>{lastHeard}</em>
+        {t('heard', uiLang)} <em>{lastHeard}</em>
       </div>
     {/if}
 
@@ -851,6 +859,7 @@
         isEvaluating={evaluating}
         {isTimeStopped}
         analyser={audioAnalyser}
+        lang={uiLang}
         on:toggle={toggleRecording}
       />
     </div>

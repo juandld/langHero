@@ -1,4 +1,5 @@
 <script>
+  import { t } from '$lib/game/i18n';
   import { createEventDispatcher } from 'svelte';
   import { fly, fade } from 'svelte/transition';
 
@@ -14,7 +15,10 @@
 
   // Prefer a generated portrait if one has been produced via the manifest
   // pipeline (see scripts/gen_roberto.py). Falls back to the hat emoji until then.
-  export let avatarImageUrl = '/images/generated/characters/roberto.png';
+  export let avatarImageUrl = '';
+  export let name = 'Bimbo';
+  export let title = '';
+  export let lang = '';
   let avatarImageLoaded = false;
   let avatarImageFailed = false;
 
@@ -91,7 +95,7 @@
             class="avatar-portrait"
             class:loaded={avatarImageLoaded}
             src={avatarImageUrl}
-            alt="Roberto"
+            alt={name}
             on:load={() => (avatarImageLoaded = true)}
             on:error={() => (avatarImageFailed = true)}
           />
@@ -110,8 +114,8 @@
     {#if expanded}
       <div class="assistant-panel" transition:fade={{ duration: 150 }}>
         <div class="assistant-header">
-          <span class="assistant-name">Roberto</span>
-          <span class="assistant-title">Guía del tiempo</span>
+          <span class="assistant-name">{name}</span>
+          <span class="assistant-title">{title || t('assistant_title', lang)}</span>
         </div>
 
         <div class="assistant-message">

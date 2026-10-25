@@ -88,6 +88,9 @@ def get_all_panels_from_skeleton(skeleton):
         "id": skeleton.id,
         "title": skeleton.title,
         "subtitle": skeleton.subtitle,
+        "target_language": skeleton.target_language,
+        "ui_lang": getattr(skeleton, "ui_lang", ""),
+        "assistant": getattr(skeleton, "assistant", None) or {"name": "Bimbo"},
         "chapters": chapters,
     }
 
