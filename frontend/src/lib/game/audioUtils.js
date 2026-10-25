@@ -208,7 +208,7 @@ export async function createRecordingSession(deviceId = '') {
     },
 
     getBlob() {
-      return new Blob(chunks, { type: 'audio/webm' });
+      return new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/mp4' });
     }
   };
 }

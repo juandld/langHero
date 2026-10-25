@@ -38,7 +38,7 @@
       devClipRecorder = recorder;
       recorder.ondataavailable = (e) => { if (e.data) devClipChunks = [...devClipChunks, e.data]; };
       recorder.onstop = () => {
-        const blob = new Blob(devClipChunks, { type: 'audio/webm' });
+        const blob = new Blob(devClipChunks, { type: recorder.mimeType || 'audio/mp4' });
         const optTarget = selectedOption?.example?.target || previewedOption?.example?.target || 'clip';
         const safePanelId = (currentPanel?.id || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
         const safeTarget = optTarget.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 30);

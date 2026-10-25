@@ -339,7 +339,7 @@
         };
 
         mediaRecorder.onstop = async () => {
-          audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          audioBlob = new Blob(audioChunks, { type: mediaRecorder?.mimeType || 'audio/mp4' });
           audioChunks = [];
           try {
             recordingStream?.getTracks?.().forEach((t) => t.stop());

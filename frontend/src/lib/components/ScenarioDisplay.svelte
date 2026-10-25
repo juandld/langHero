@@ -313,7 +313,7 @@
         };
 
         mediaRecorder.onstop = async () => {
-          audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          audioBlob = new Blob(audioChunks, { type: mediaRecorder?.mimeType || 'audio/mp4' });
           audioChunks = [];
           try {
             recordingStream?.getTracks?.().forEach((t) => t.stop());
@@ -666,7 +666,7 @@
         nativeRecorder = new MediaRecorder(stream);
         nativeRecorder.ondataavailable = (e) => { nativeChunks.push(e.data); };
         nativeRecorder.onstop = async () => {
-          const blob = new Blob(nativeChunks, { type: 'audio/webm' });
+          const blob = new Blob(nativeChunks, { type: nativeRecorder?.mimeType || 'audio/mp4' });
           nativeChunks = [];
           try {
             nativeStream?.getTracks?.().forEach((t) => t.stop());
