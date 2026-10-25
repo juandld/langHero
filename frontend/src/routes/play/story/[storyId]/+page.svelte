@@ -932,92 +932,152 @@
     if (speechWatchdog) { clearTimeout(speechWatchdog); speechWatchdog = null; }
   }
 
-  async function toggleRecording() {
+  // iOS-safe mic flow — ported from llmTerminal/web/public/app-voice.js, which
+  // runs successfully on iPhone Safari day in / day out. KEY RULES:
+  //   1. Use navigator.mediaDevices.getUserMedia(...).then(stream => ...) —
+  //      NOT await — because iOS requires the gesture-scoped microtask chain
+  //      to stay intact for the AudioContext creation that follows.
+  //   2. Create a FRESH AudioContext inside the .then handler. Do NOT reuse a
+  //      cached one — iOS leaves suspended contexts suspended even inside a
+  //      gesture if they were created earlier.
+  //   3. new MediaRecorder(stream) — no mimeType. Safari rejects
+  //      'audio/webm;codecs=opus' and silently fails.
+  //   4. mediaRecorder.start() — no timeslice. Safari emits malformed chunks
+  //      otherwise. One 'dataavailable' fires at stop() with the full blob.
+  //   5. Build the Blob with voiceRec.mimeType (iOS gives audio/mp4).
+  //   6. Discard sub-1 KB blobs — iOS sometimes finalizes empty on fast stops.
+
+  // Analyser kept at module scope so stopMicLevelLoop and cleanupRecording
+  // can tear it down independent of whether MediaRecorder is still alive.
+  let micAudioCtx = null;
+  let micMeterSource = null;
+
+  function stopMicMeter() {
+    stopMicLevelLoop();
+    try { micMeterSource?.disconnect?.(); } catch (_) {}
+    micMeterSource = null;
+    audioAnalyser = null;
+    if (micAudioCtx && micAudioCtx.state !== 'closed') {
+      try { micAudioCtx.close(); } catch (_) {}
+    }
+    micAudioCtx = null;
+  }
+
+  function toggleRecording() {
     if (isRecording) {
-      // Stop recording
+      // Stop: delegates to mediaRecorder.onstop which builds the blob + sends.
       if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        if (streamingManager) {
-          streamingManager.signalStop('stop');
-        }
-        mediaRecorder.stop();
+        try { mediaRecorder.stop(); } catch (_) {}
       }
       isRecording = false;
       evaluating = true;
       startSpeechWatchdog();
-      stopMicLevelLoop();
-      audioAnalyser = null;
-      disconnectAnalyser();
-    } else {
-      userHasInteracted = true;
-      stopAudio();
-      ensureAudioContext();
-      // Re-create streaming manager each time so getScenario picks up current state
-      if (streamingManager) {
-        streamingManager.close();
-        streamingManager = null;
-      }
-      initStreamingManager();
+      stopMicMeter();
+      return;
+    }
 
+    userHasInteracted = true;
+    stopAudio();
+
+    // Reset the UI *synchronously* so the red banner appears before the
+    // getUserMedia prompt (iOS shows a permission sheet; the user needs to
+    // see we're asking for mic).
+    liveTranscript = '';
+    speakResult = null;
+    bimboReaction = null;
+    bimboReactionLoading = false;
+    if (devToolsRef?.resetDevMic) devToolsRef.resetDevMic();
+
+    // Recreate the streaming manager up-front, synchronously, so it's ready
+    // when onstop fires. getScenario / getLanguage capture the current panel.
+    if (streamingManager) {
+      try { streamingManager.close(); } catch (_) {}
+      streamingManager = null;
+    }
+    initStreamingManager();
+    streamingManager.setEnabled(true);
+    streamingManager.connect();
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      speakResult = { success: false, message: 'Grabación de voz no disponible en este navegador' };
+      return;
+    }
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      recordingStream = stream;
       try {
-        liveTranscript = '';
-        speakResult = null;
-        bimboReaction = null;
-        bimboReactionLoading = false;
+        const t = stream.getAudioTracks?.()[0];
+        console.log('[Mic] stream track:', t && { enabled: t.enabled, muted: t.muted, readyState: t.readyState, label: (t.label || '').slice(0, 60) });
+      } catch (_) {}
 
-        const micId = getString(STORAGE_KEYS.MIC_DEVICE_ID, '');
-        let stream;
+      // Build a FRESH AudioContext right here, inside the .then — iOS keeps
+      // the gesture pass alive through this microtask. A fresh context starts
+      // in 'running' on iOS when created inside a gesture; a cached one does not.
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        micAudioCtx = new Ctx();
+        const src = micAudioCtx.createMediaStreamSource(stream);
+        const analyser = micAudioCtx.createAnalyser();
+        analyser.fftSize = 1024;
+        analyser.smoothingTimeConstant = 0.6;
+        src.connect(analyser);
+        micMeterSource = src;
+        audioAnalyser = analyser;
+        if (devToolsRef?.setDevMicCtxState) devToolsRef.setDevMicCtxState(micAudioCtx.state);
+        console.log('[Mic] fresh AudioContext state:', micAudioCtx.state, 'sampleRate:', micAudioCtx.sampleRate);
+        // Smoke test
         try {
-          const audioConstraints = micId ? { deviceId: { exact: micId } } : true;
-          stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
-        } catch (_) {
-          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        }
-        recordingStream = stream;
-        // Critical iOS fix 1: DO NOT pass a mimeType. iOS Safari rejects
-        // audio/webm;codecs=opus and silently fails. Let the browser pick —
-        // iOS gives us audio/mp4, desktop/Android give webm. Read the actual
-        // type back off voiceRec.mimeType when building the final Blob.
-        mediaRecorder = new MediaRecorder(stream);
-        audioAnalyser = await setupAudioAnalyser(stream);
-        if (!audioAnalyser) {
-          console.warn('[Mic] setupAudioAnalyser returned null — level bar will not update');
-        }
-        startMicLevelLoop();
+          const buf = new Uint8Array(analyser.fftSize);
+          analyser.getByteTimeDomainData(buf);
+          let maxDev = 0;
+          for (let i = 0; i < buf.length; i++) { const d = Math.abs(buf[i] - 128); if (d > maxDev) maxDev = d; }
+          if (devToolsRef?.setDevMicFirstFrame) devToolsRef.setDevMicFirstFrame(maxDev);
+          console.log('[Mic] first-frame max deviation:', maxDev);
+        } catch (_) {}
+      } catch (err) {
+        console.warn('[Mic] AudioContext setup failed (meter will be dead but recording continues):', err);
+      }
 
+      // MediaRecorder — no mimeType, no timeslice.
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = (e) => {
+        if (e?.data && e.data.size > 0) audioChunks.push(e.data);
+      };
+      mediaRecorder.onerror = (e) => {
+        console.error('[Mic] MediaRecorder error:', e);
+        try { stream.getTracks().forEach(t => t.stop()); } catch (_) {}
+        speakResult = { success: false, message: 'Error al grabar — intenta otra vez' };
+        isRecording = false;
+        evaluating = false;
+        clearSpeechWatchdog();
+        stopMicMeter();
+      };
+      mediaRecorder.onstop = () => {
+        try { stream.getTracks().forEach(t => t.stop()); } catch (_) {}
+        recordingStream = null;
+
+        const actualMime = mediaRecorder.mimeType || 'audio/mp4';
+        const blob = new Blob(audioChunks, { type: actualMime });
         audioChunks = [];
-        mediaRecorder.ondataavailable = (event) => {
-          if (event?.data && event.data.size > 0) audioChunks.push(event.data);
-        };
+        console.log('[Mic] stop → blob:', blob.size, 'bytes, type=', blob.type);
 
-        mediaRecorder.onstop = async () => {
-          try { recordingStream?.getTracks?.().forEach(t => t.stop()); } catch (_) {}
-          recordingStream = null;
+        if (blob.size < 1000) {
+          console.warn('[Mic] blob too small, discarding');
+          speakResult = { success: false, message: 'Grabación muy corta — intenta otra vez', silence: true };
+          isRecording = false;
+          evaluating = false;
+          clearSpeechWatchdog();
+          stopMicMeter();
+          return;
+        }
 
-          const actualMime = mediaRecorder.mimeType || 'audio/mp4';
-          const blob = new Blob(audioChunks, { type: actualMime });
-          audioChunks = [];
-          console.log('[Mic] stop → blob:', blob.size, 'bytes, type=', blob.type);
-
-          // Critical iOS fix 3: guard against sub-1 KB blobs. iOS sometimes
-          // finalizes an empty recording if stop() fires too fast.
-          if (blob.size < 1000) {
-            console.warn('[Mic] blob too small, discarding');
-            speakResult = { success: false, message: 'Grabación muy corta — intenta otra vez', silence: true };
-            isRecording = false;
-            evaluating = false;
-            clearSpeechWatchdog();
-            cleanupRecording();
-            return;
-          }
-
-          // Send the single consolidated blob + stop signal. The backend's
-          // StreamingSession buffers chunks and only transcribes on 'stop',
-          // so sending once + stop is equivalent to the chunked flow for its
-          // purposes, and avoids the Safari timeslice bug entirely.
+        // Send the single consolidated blob + mime hint + stop.
+        (async () => {
           try {
             if (streamingManager) {
-              await streamingManager.sendChunk(blob);
               await streamingManager.sendMimeType(blob.type);
+              await streamingManager.sendChunk(blob);
               streamingManager.signalStop('stop');
             }
           } catch (err) {
@@ -1026,27 +1086,21 @@
             isRecording = false;
             evaluating = false;
             clearSpeechWatchdog();
-            cleanupRecording();
           }
-        };
+        })();
+      };
 
-        streamingManager.setEnabled(true);
-        streamingManager.connect();
-        // Critical iOS fix 2: NO timeslice. mediaRecorder.start() with no
-        // argument makes it emit one 'dataavailable' event at stop() with
-        // the full recording. Passing a number (even 200) makes Safari
-        // either produce malformed chunks or silently stop recording.
-        mediaRecorder.start();
-        isRecording = true;
-
-      } catch (err) {
-        // Rate-limited: ArrowRight-while-time-frozen fires toggleRecording per
-        // keypress; on a mic-less device each log spammed a full stack. Keep
-        // one-per-minute-per-error-class so real failures still surface.
-        logMicError(err);
-        speakResult = { success: false, message: 'Microphone access denied' };
+      mediaRecorder.start();  // no timeslice
+      isRecording = true;
+      startMicLevelLoop();
+    }).catch((err) => {
+      logMicError(err);
+      if (err && err.name === 'NotAllowedError') {
+        speakResult = { success: false, message: 'Acceso al micrófono denegado. Permítelo en los ajustes del navegador.' };
+      } else {
+        speakResult = { success: false, message: 'No se pudo acceder al micrófono' };
       }
-    }
+    });
   }
 
   const _micErrorLastLogged = new Map();
@@ -1095,7 +1149,7 @@
   }
 
   function cleanupRecording() {
-    stopMicLevelLoop();
+    stopMicMeter();
     if (recordingStream) {
       try {
         recordingStream.getTracks().forEach(t => t.stop());
@@ -1105,7 +1159,6 @@
     if (streamingManager) {
       streamingManager.setEnabled(false);
     }
-    audioAnalyser = null;
     disconnectAnalyser();
     liveTranscript = '';
   }
