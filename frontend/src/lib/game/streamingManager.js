@@ -32,7 +32,7 @@ import { playBeep } from './audioUtils';
 export function createStreamingManager(options = {}) {
   const {
     getScenario = () => null,
-    getLanguage = () => 'Japanese',
+    getLanguage = () => 'Spanish',
     getGameState = () => ({ score: 0, lives: 3, livesTotal: 3, judgeFocus: 0 }),
     onStateUpdate = () => {},
     onTranscript = () => {},

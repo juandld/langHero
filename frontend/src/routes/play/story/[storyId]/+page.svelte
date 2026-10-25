@@ -755,6 +755,7 @@
         if (devToolsRef) devToolsRef.setDevLastResult(result);
         isRecording = false;
         evaluating = false;
+        clearSpeechWatchdog();
         cleanupRecording();
 
         const matchLevel = result.match_level ?? 0;
@@ -848,19 +849,41 @@
       },
       onPenalty: (data) => {
         console.log('[Speech] Penalty:', data);
-        speakResult = { success: false, message: data.message || 'Try in Japanese' };
+        const lang = skeleton?.target_language || 'Spanish';
+        speakResult = { success: false, message: data.message || `Prueba de nuevo en ${lang === 'Spanish' ? 'español' : lang}` };
         isRecording = false;
         evaluating = false;
+        clearSpeechWatchdog();
         cleanupRecording();
       },
       onError: (err) => {
         console.error('[Speech] Error:', err);
-        speakResult = { success: false, message: 'Connection error - try again' };
+        speakResult = { success: false, message: 'Error de conexión — intenta otra vez' };
         isRecording = false;
         evaluating = false;
+        clearSpeechWatchdog();
         cleanupRecording();
       },
     });
+  }
+
+  // Watchdog: if the backend never emits a final/penalty/error event within
+  // 20 s of a stop signal, surface it to the user instead of spinning forever.
+  let speechWatchdog = null;
+  function startSpeechWatchdog() {
+    clearSpeechWatchdog();
+    speechWatchdog = setTimeout(() => {
+      if (evaluating) {
+        console.warn('[Speech] watchdog fired — no response from backend');
+        speakResult = { success: false, message: 'Sin respuesta del servidor — intenta otra vez', canSkip: true };
+        isRecording = false;
+        evaluating = false;
+        cleanupRecording();
+      }
+    }, 20000);
+  }
+  function clearSpeechWatchdog() {
+    if (speechWatchdog) { clearTimeout(speechWatchdog); speechWatchdog = null; }
   }
 
   async function toggleRecording() {
@@ -874,6 +897,7 @@
       }
       isRecording = false;
       evaluating = true;
+      startSpeechWatchdog();
       audioAnalyser = null;
       disconnectAnalyser();
     } else {

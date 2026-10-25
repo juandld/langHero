@@ -238,8 +238,34 @@ MANUELA_SKELETON = StorySkeleton(
                     "id": "manuela_ch4_06_corona",
                     "image": f"{IMAGE_BASE_URL}/panels/manuela_ch4/manuela_ch4_06_corona.png",
                     "aspect": "tall",
-                    "narration": "El Libertador se acerca. La corona está en tus manos.",
+                    "narration": "El Libertador se acerca. La corona está en tus manos. ¿Qué haces?",
                     "dialogue": None,
+                    "options": [
+                        {
+                            "text": "Throw the crown hard, like a challenge",
+                            "style": "bold",
+                            "examples": [{
+                                "native": "Let him receive it on my behalf!",
+                                "target": "¡Que la reciba de mi parte!",
+                            }],
+                        },
+                        {
+                            "text": "Let it fall softly, like a flower",
+                            "style": "poetic",
+                            "examples": [{
+                                "native": "May it fall upon him like a flower.",
+                                "target": "Que caiga como una flor sobre él.",
+                            }],
+                        },
+                        {
+                            "text": "Aim directly at his head",
+                            "style": "mischievous",
+                            "examples": [{
+                                "native": "I'll aim straight for his head.",
+                                "target": "Apuntaré directo a su cabeza.",
+                            }],
+                        },
+                    ],
                 },
             ],
             next_anchor="manuela_ch4_mirada",
@@ -264,6 +290,32 @@ MANUELA_SKELETON = StorySkeleton(
                         "text": "¿Y a quién debo tan dulce agresión, señora?",
                         "translation": "And to whom do I owe such a sweet assault, madam?",
                     },
+                    "options": [
+                        {
+                            "text": "Smile mysteriously",
+                            "style": "coy",
+                            "examples": [{
+                                "native": "Let you guess that for yourself, General.",
+                                "target": "Que lo adivine usted, General.",
+                            }],
+                        },
+                        {
+                            "text": "Introduce yourself boldly",
+                            "style": "bold",
+                            "examples": [{
+                                "native": "Manuela Sáenz, at your service, General.",
+                                "target": "Manuela Sáenz, para servirle, General.",
+                            }],
+                        },
+                        {
+                            "text": "Feign innocence",
+                            "style": "demure",
+                            "examples": [{
+                                "native": "Forgive me, General, the wind betrayed me.",
+                                "target": "Perdón, General, el viento me traicionó.",
+                            }],
+                        },
+                    ],
                 },
             ],
         ),

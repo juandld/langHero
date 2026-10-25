@@ -359,8 +359,8 @@ class StreamingSession:
                             logger.error("[%s] FINALIZE vocab transcription failed: %s", tag, e)
                             return {"error": "transcription_failed", "heard": "", "match_level": 0}
                     if self.expected_response:
-                        return compare_vocab_response(transcript, self.expected_response, tag=tag, target_language=self.target_language or "japanese")
-                    return compare_vocab_multi(transcript, self.expected_responses, tag=tag, target_language=self.target_language or "japanese")
+                        return compare_vocab_response(transcript, self.expected_response, tag=tag, target_language=self.target_language or "spanish")
+                    return compare_vocab_multi(transcript, self.expected_responses, tag=tag, target_language=self.target_language or "spanish")
 
                 # Scenario mode: use process_interaction
                 if self.scenario_id is None:
