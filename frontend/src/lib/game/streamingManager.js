@@ -139,9 +139,18 @@ export function createStreamingManager(options = {}) {
         onError(new Error('WebSocket error'));
       };
 
-      ws.onclose = () => {
+      ws.onclose = (ev) => {
         const currentStatus = get(status);
         if (currentStatus !== 'final') {
+          // The server closed us without emitting a final/penalty event.
+          // Surface it so the caller can reset their 'evaluating' spinner.
+          status.set('closed');
+          try {
+            onError(new Error(
+              `Stream closed before final (code=${ev?.code ?? '?'} reason=${ev?.reason || 'none'})`
+            ));
+          } catch (_) { /* ignore handler errors */ }
+        } else {
           status.set('closed');
         }
         socket = null;

@@ -1610,26 +1610,6 @@
                captured. Shows a pulsing red dot, a 'Grabando…' label, and a
                real-time mic-level bar driven by the AnalyserNode (RMS of the
                frequency-domain data). Switches to 'Procesando…' once stopped. -->
-          {#if isRecording || evaluating}
-            <div class="mic-live" transition:fade={{ duration: 120 }}>
-              <div class="mic-live-row">
-                <span class="mic-live-dot" class:recording={isRecording} class:processing={!isRecording && evaluating}></span>
-                <span class="mic-live-label">
-                  {#if isRecording}🎙️ Grabando…{:else}⏳ Procesando audio…{/if}
-                </span>
-                {#if isRecording}
-                  <span class="mic-live-level">
-                    <span class="mic-live-level-fill" style="transform: scaleX({micLevel.toFixed(3)})"></span>
-                  </span>
-                {/if}
-              </div>
-              {#if liveTranscript}
-                <div class="mic-live-transcript">"{liveTranscript}"</div>
-              {:else if isRecording}
-                <div class="mic-live-hint">Habla ahora — pulsa el botón otra vez para enviar</div>
-              {/if}
-            </div>
-          {/if}
 
           <!-- Result feedback -->
           <SpeakResultCard
@@ -1652,6 +1632,34 @@
               on:toggle={toggleRecording}
             />
           </div>
+        {/if}
+      </div>
+    {/if}
+
+    <!-- Live mic indicator — rendered OUTSIDE the hasOptions block and
+         positioned as a fixed overlay so it is ALWAYS visible when recording
+         or processing, regardless of where the user has scrolled. Was
+         previously nested near the mic button where it could sit off-screen
+         on mobile and the user would miss it entirely. -->
+    {#if isRecording || evaluating}
+      <div class="mic-live mic-live-fixed" transition:fade={{ duration: 120 }}>
+        <div class="mic-live-row">
+          <span class="mic-live-dot" class:recording={isRecording} class:processing={!isRecording && evaluating}></span>
+          <span class="mic-live-label">
+            {#if isRecording}🎙️ Grabando…{:else}⏳ Procesando audio…{/if}
+          </span>
+          {#if isRecording}
+            <span class="mic-live-level">
+              <span class="mic-live-level-fill" style="transform: scaleX({micLevel.toFixed(3)})"></span>
+            </span>
+          {/if}
+        </div>
+        {#if liveTranscript}
+          <div class="mic-live-transcript">"{liveTranscript}"</div>
+        {:else if isRecording}
+          <div class="mic-live-hint">Habla ahora — pulsa el botón otra vez para enviar</div>
+        {:else if evaluating}
+          <div class="mic-live-hint">Enviando audio al servidor…</div>
         {/if}
       </div>
     {/if}
@@ -2006,11 +2014,24 @@
   .mic-live {
     margin: 0.75rem auto;
     padding: 0.75rem 1rem;
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.45);
+    background: rgba(239, 68, 68, 0.95);
+    border: 2px solid rgba(239, 68, 68, 0.9);
     border-radius: 14px;
     max-width: 520px;
-    color: #fecaca;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+  }
+  /* Fixed-position variant — anchored to the top of the viewport so the user
+     cannot miss it, even if the panel is scrolled or the suggestions take up
+     the whole screen on mobile. */
+  .mic-live.mic-live-fixed {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    top: calc(env(safe-area-inset-top, 0px) + 72px);
+    width: calc(100% - 32px);
+    max-width: 420px;
+    z-index: 9999;
   }
   .mic-live-row {
     display: flex;
