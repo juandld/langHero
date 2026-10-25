@@ -181,6 +181,20 @@ export function createStreamingManager(options = {}) {
   }
 
   /**
+   * Send the audio mimeType so the backend can pick the right file_ext/mime
+   * when it calls the transcription provider. iOS Safari gives us audio/mp4,
+   * everyone else gives audio/webm; the backend hardcoded webm before.
+   */
+  async function sendMimeType(mime) {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+    try {
+      socket.send(JSON.stringify({ type: 'audio_meta', mime_type: mime || 'audio/webm' }));
+    } catch (err) {
+      console.error('[Stream] mime send error', err);
+    }
+  }
+
+  /**
    * Signal the stream to stop (but keep connection open).
    */
   function signalStop(reason = 'stop') {
@@ -328,6 +342,7 @@ export function createStreamingManager(options = {}) {
     setMode,
     connect,
     sendChunk,
+    sendMimeType,
     signalStop,
     close,
     isEnabled,

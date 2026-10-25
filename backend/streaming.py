@@ -121,6 +121,10 @@ async def transcribe_audio(audio_bytes: bytes, language: Optional[str] = None) -
             if not _audio_has_speech(audio_bytes):
                 return ""
             start = time.perf_counter()
+            # Default to webm; the real session's audio_file_ext overrides at
+            # the two FINALIZE call sites below. This path is only used for
+            # the partial-transcript estimator which never fires in the
+            # single-blob iOS flow.
             result = providers.transcribe_audio(
                 audio_bytes,
                 file_ext="webm",
@@ -164,6 +168,12 @@ class StreamingSession:
     last_auto_check: float = 0.0
     judge_story_weight: float = 0.0
     session_tag: str = ""
+    # Audio container format the browser actually recorded. Set by an
+    # 'audio_meta' control frame from the frontend. Defaults are safe for
+    # desktop Chrome/Firefox/Android. iOS Safari overrides to m4a/mp4 so
+    # Whisper doesn't 400 on a webm-labeled mp4 payload.
+    audio_file_ext: str = "webm"
+    audio_mime_type: str = "audio/webm"
     _audio_hash: str = ""
     _transcript_cache_hash: str = ""  # hash of audio when last transcription was done
     _transcript_cache_text: str = ""  # cached transcription result
@@ -346,15 +356,15 @@ class StreamingSession:
                             t0 = time.perf_counter()
                             transcript_result = providers.transcribe_audio(
                                 audio_bytes,
-                                file_ext="webm",
-                                mime_type="audio/webm",
+                                file_ext=self.audio_file_ext,
+                                mime_type=self.audio_mime_type,
                                 language_hint=self.target_language,
                                 context=providers.CONTEXT_STREAMING,
                             )
                             transcript = transcript_result.text
                             elapsed = int((time.perf_counter() - t0) * 1000)
-                            logger.info("[%s] FINALIZE transcription (%dms, provider=%s): %r",
-                                         tag, elapsed, transcript_result.provider, (transcript or "")[:100])
+                            logger.info("[%s] FINALIZE transcription (%dms, provider=%s, ext=%s): %r",
+                                         tag, elapsed, transcript_result.provider, self.audio_file_ext, (transcript or "")[:100])
                         except Exception as e:
                             logger.error("[%s] FINALIZE vocab transcription failed: %s", tag, e)
                             return {"error": "transcription_failed", "heard": "", "match_level": 0}
@@ -501,15 +511,15 @@ class StreamingSession:
                         t0 = time.perf_counter()
                         transcript_result = providers.transcribe_audio(
                             audio_bytes,
-                            file_ext="webm",
-                            mime_type="audio/webm",
+                            file_ext=self.audio_file_ext,
+                            mime_type=self.audio_mime_type,
                             language_hint=self.target_language,
                             context=providers.CONTEXT_STREAMING,
                         )
                         transcript = transcript_result.text
                         elapsed = int((time.perf_counter() - t0) * 1000)
-                        logger.info("[%s] AUTO-FINALIZE transcription (%dms, provider=%s): %r",
-                                     tag, elapsed, transcript_result.provider, (transcript or "")[:100])
+                        logger.info("[%s] AUTO-FINALIZE transcription (%dms, provider=%s, ext=%s): %r",
+                                     tag, elapsed, transcript_result.provider, self.audio_file_ext, (transcript or "")[:100])
                     except Exception as e:
                         logger.error("[%s] AUTO-FINALIZE transcription failed: %s", tag, e)
                         return {"error": "transcription_failed", "heard": "", "match_level": 0}

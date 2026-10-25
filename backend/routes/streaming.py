@@ -211,7 +211,43 @@ async def interaction_stream_endpoint(websocket: WebSocket):
                         break
                     await session.append_chunk(chunk, websocket)
                 elif message.get("text") is not None:
-                    text = (message.get("text") or "").strip().lower()
+                    raw = (message.get("text") or "").strip()
+                    # JSON control frame?  Lets the frontend tell us what MIME
+                    # the audio actually was (iOS Safari gives audio/mp4,
+                    # desktop/Android give audio/webm). The hardcoded 'webm'
+                    # fallback made Whisper fail silently on iOS recordings.
+                    if raw.startswith('{'):
+                        try:
+                            import json as _json
+                            meta = _json.loads(raw)
+                            if isinstance(meta, dict) and meta.get("type") == "audio_meta":
+                                mime = str(meta.get("mime_type") or "").split(';')[0].strip().lower()
+                                if mime:
+                                    # Map mime → (ext, mime). Covers iOS mp4,
+                                    # Chrome webm, mp3, m4a, wav, ogg.
+                                    EXT_MAP = {
+                                        "audio/mp4":  ("m4a", "audio/mp4"),
+                                        "audio/aac":  ("m4a", "audio/mp4"),
+                                        "audio/x-m4a": ("m4a", "audio/mp4"),
+                                        "audio/webm": ("webm", "audio/webm"),
+                                        "audio/ogg":  ("ogg", "audio/ogg"),
+                                        "audio/wav":  ("wav", "audio/wav"),
+                                        "audio/wave": ("wav", "audio/wav"),
+                                        "audio/mp3":  ("mp3", "audio/mp3"),
+                                        "audio/mpeg": ("mp3", "audio/mp3"),
+                                    }
+                                    ext, canonical = EXT_MAP.get(mime, ("webm", "audio/webm"))
+                                    session.audio_file_ext = ext
+                                    session.audio_mime_type = canonical
+                                    logger.info("[%s] audio_meta: client sent %r → ext=%s mime=%s",
+                                                 session.session_tag, mime, ext, canonical)
+                                    continue
+                        except Exception as e:
+                            logger.warning("[%s] JSON control frame parse failed: %s raw=%r",
+                                           session.session_tag, e, raw[:120])
+                            continue
+
+                    text = raw.lower()
                     if text in {"stop", "done", "finish"}:
                         logger.info("[%s] STOP signal received (%r), final_event_sent=%s auto_finalized=%s",
                                      session.session_tag, text, session.final_event_sent, session.auto_finalized)

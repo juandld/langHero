@@ -971,6 +971,10 @@
           stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         }
         recordingStream = stream;
+        // Critical iOS fix 1: DO NOT pass a mimeType. iOS Safari rejects
+        // audio/webm;codecs=opus and silently fails. Let the browser pick —
+        // iOS gives us audio/mp4, desktop/Android give webm. Read the actual
+        // type back off voiceRec.mimeType when building the final Blob.
         mediaRecorder = new MediaRecorder(stream);
         audioAnalyser = await setupAudioAnalyser(stream);
         if (!audioAnalyser) {
@@ -978,26 +982,59 @@
         }
         startMicLevelLoop();
 
-        mediaRecorder.ondataavailable = async (event) => {
-          if (!event?.data) return;
-          audioChunks.push(event.data);
-          if (streamingManager) {
-            await streamingManager.sendChunk(event.data);
+        audioChunks = [];
+        mediaRecorder.ondataavailable = (event) => {
+          if (event?.data && event.data.size > 0) audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          try { recordingStream?.getTracks?.().forEach(t => t.stop()); } catch (_) {}
+          recordingStream = null;
+
+          const actualMime = mediaRecorder.mimeType || 'audio/mp4';
+          const blob = new Blob(audioChunks, { type: actualMime });
+          audioChunks = [];
+          console.log('[Mic] stop → blob:', blob.size, 'bytes, type=', blob.type);
+
+          // Critical iOS fix 3: guard against sub-1 KB blobs. iOS sometimes
+          // finalizes an empty recording if stop() fires too fast.
+          if (blob.size < 1000) {
+            console.warn('[Mic] blob too small, discarding');
+            speakResult = { success: false, message: 'Grabación muy corta — intenta otra vez', silence: true };
+            isRecording = false;
+            evaluating = false;
+            clearSpeechWatchdog();
+            cleanupRecording();
+            return;
+          }
+
+          // Send the single consolidated blob + stop signal. The backend's
+          // StreamingSession buffers chunks and only transcribes on 'stop',
+          // so sending once + stop is equivalent to the chunked flow for its
+          // purposes, and avoids the Safari timeslice bug entirely.
+          try {
+            if (streamingManager) {
+              await streamingManager.sendChunk(blob);
+              await streamingManager.sendMimeType(blob.type);
+              streamingManager.signalStop('stop');
+            }
+          } catch (err) {
+            console.error('[Mic] send failed:', err);
+            speakResult = { success: false, message: 'Error al enviar — intenta otra vez' };
+            isRecording = false;
+            evaluating = false;
+            clearSpeechWatchdog();
+            cleanupRecording();
           }
         };
 
-        mediaRecorder.onstop = () => {
-          try {
-            recordingStream?.getTracks?.().forEach(t => t.stop());
-          } catch (_) {}
-          recordingStream = null;
-          audioChunks = [];
-        };
-
-        audioChunks = [];
         streamingManager.setEnabled(true);
         streamingManager.connect();
-        mediaRecorder.start(200);
+        // Critical iOS fix 2: NO timeslice. mediaRecorder.start() with no
+        // argument makes it emit one 'dataavailable' event at stop() with
+        // the full recording. Passing a number (even 200) makes Safari
+        // either produce malformed chunks or silently stop recording.
+        mediaRecorder.start();
         isRecording = true;
 
       } catch (err) {
