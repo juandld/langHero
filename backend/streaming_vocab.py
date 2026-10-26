@@ -99,9 +99,10 @@ def compare_vocab_response(transcript: str, expected: str, tag: str = "", target
     tier = compute_outcome_tier(match_level, transcript, target_language)
     success = tier in ("perfect", "good")
     logger.info("[%s] compare_vocab: heard=%r expected=%r match=%.3f tier=%s detected=%s", tag, transcript[:80], expected[:80], match_level, tier, detected)
-    heard_translation = "" if success else _quick_translate(transcript)
+    pretty_lang = (target_language or "japanese").title()
+    heard_translation = "" if success else _quick_translate(transcript, source=pretty_lang)
     try:
-        heard_pronunciation = providers.romanize(transcript, "Japanese") if transcript.strip() else ""
+        heard_pronunciation = providers.romanize(transcript, pretty_lang) if transcript.strip() else ""
     except Exception:
         heard_pronunciation = ""
 
@@ -152,9 +153,10 @@ def compare_vocab_multi(transcript: str, expected_list: list, tag: str = "", tar
     success = tier in ("perfect", "good")
     logger.info("[%s] compare_vocab_multi: best_index=%d best_level=%.3f tier=%s detected=%s", tag, best_index, best_level, tier, detected)
 
-    heard_translation = "" if success else _quick_translate(transcript)
+    pretty_lang = (target_language or "japanese").title()
+    heard_translation = "" if success else _quick_translate(transcript, source=pretty_lang)
     try:
-        heard_pronunciation = providers.romanize(transcript, "Japanese") if transcript.strip() else ""
+        heard_pronunciation = providers.romanize(transcript, pretty_lang) if transcript.strip() else ""
     except Exception:
         heard_pronunciation = ""
 
