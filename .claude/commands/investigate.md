@@ -41,7 +41,7 @@ A method tournament ran 5 candidates against 5 topics (3 lead pages + 2 technica
 | 4 | fanout | 1479 | 0.5s | 22 | 10 Nouls per paragraph; density signal. Loses to focused methods. |
 | 5 | length_only | 1445 | 0.0s | 0 | No Jev — sanity baseline. Beaten by every Jev method. |
 
-`--method hierarchical` (default) vs `--method solo` (fast/cheap fallback). Full results: `scripts/jev_method_tournament_results.json`.
+`--method hierarchical` (default) vs `--method solo` (fast/cheap fallback). Full results: `orchestratorHero/scripts/jev/jev_method_tournament_results.json`.
 
 ### Presets bundled (define WHAT to score; method defines HOW)
 
