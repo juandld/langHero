@@ -9,20 +9,11 @@ and skips the log, so the practice route never fails because of a grader.
 from __future__ import annotations
 
 import time
-from typing import Any
 
 from lib import grade_log, jev_client
-from practice_scoring import mock_enabled
+from practice_scoring import _clamp01, mock_enabled
 
 MOCK_TUTOR_SCORES = {"register_fits": 0.9, "naturalness": 0.85, "level_appropriate": 0.9}
-
-
-def _clamp01(value: Any) -> float:
-    try:
-        v = float(value)
-    except (TypeError, ValueError):
-        return 0.0
-    return max(0.0, min(1.0, v))
 
 
 def grade_tutor_line(

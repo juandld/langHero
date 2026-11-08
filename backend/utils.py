@@ -3,24 +3,12 @@ import json
 import re
 import shutil
 import asyncio
-import wave
-import contextlib
 from datetime import datetime
 from services import transcribe_and_save
 import usage_log as usage
+from note_store import audio_length_seconds
 
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
-def audio_length_seconds(path: str) -> float | None:
-    """Return the duration of a WAV file in seconds, or None on error."""
-    try:
-        with contextlib.closing(wave.open(path, 'rb')) as wf:
-            frames = wf.getnframes()
-            rate = wf.getframerate()
-            return round(frames / float(rate), 2) if rate else None
-    except Exception:
-        return None
 
 
 _TOPIC_STOPWORDS = set(
