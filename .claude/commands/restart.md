@@ -81,7 +81,7 @@ Call this skill, passing the service name as `$ARGUMENTS`. Allowlisted units:
    ```bash
    curl -sS -X POST http://localhost:8000/api/services/<unit-mapped-key>/restart
    ```
-   The endpoint maps `llmTerminal` → unit `llm-terminal`. Other keys: see `SIBLING_SERVICES` in `narrativeHero/backend/routes/compositions.py`.
+   The endpoint maps `llmTerminal` → unit `llm-terminal`. Other keys: see `SIBLING_SERVICES` in `orchestratorHero/backend/routes/compositions.py`.
 
 4. **Parse the response.**
    - Success: `{"ok": true, "code": 0, "unit": "...", "action": "restart", "stdout": "", "stderr": ""}`
