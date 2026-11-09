@@ -9,7 +9,11 @@ import { expect, test } from '@playwright/test';
 async function pickFirstScenario(page: import('@playwright/test').Page) {
   await page.getByTestId('practice-scenario-menu').waitFor();
   // scenario-menu renders one card per scenario; click the first available.
-  await page.locator('[data-testid^="practice-scenario-"]').first().click();
+  // Must scope to button[data-testid^=...] — the plain attribute selector
+  // also matches the menu container's own "practice-scenario-menu" testid
+  // (same prefix), and .first() would grab that no-op div instead of a card
+  // whenever the click races ahead of the scenarios fetch populating cards.
+  await page.locator('button[data-testid^="practice-scenario-"]').first().click();
 }
 
 test.describe('/practice', () => {
@@ -46,5 +50,26 @@ test.describe('/practice', () => {
       /^0?\.\d+$/,
       { timeout: 5000 },
     );
+  });
+
+  test('mic button records and fills the chat input via transcription', async ({ page }) => {
+    const resp = await page.goto('/practice');
+    test.skip(resp?.status() === 404, '/practice not implemented yet');
+    await pickFirstScenario(page);
+
+    const input = page.getByTestId('practice-chat-input');
+    await expect(input).toHaveValue('');
+
+    const micButton = page.getByTestId('practice-mic-button');
+    await micButton.click();
+    await expect(micButton).toHaveClass(/recording/);
+
+    // Let the fake audio device feed a couple seconds of audio before stopping.
+    await page.waitForTimeout(1500);
+    await micButton.click();
+    await expect(micButton).not.toHaveClass(/recording/);
+
+    // Transcription round-trip fills the textarea (fake capture + real STT backend).
+    await expect(input).not.toHaveValue('', { timeout: 15000 });
   });
 });

@@ -144,6 +144,8 @@ def detect_audio_mime(content_type: str) -> str:
         return 'audio/webm'
     if 'ogg' in ct:
         return 'audio/ogg'
+    if 'mp4' in ct:
+        return 'audio/mp4'
     if 'm4a' in ct:
         return 'audio/mp4'
     if 'mp3' in ct:

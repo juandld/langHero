@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 from typing import Literal, Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, File, Form, UploadFile
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel
 
@@ -24,6 +24,22 @@ from practice_scoring import mock_enabled, score_utterance
 router = APIRouter(prefix="/api/practice", tags=["practice"])
 
 SCENARIOS_DIR = Path(__file__).resolve().parent.parent / "scenarios" / "practice"
+
+# Mirrors streaming.py's EXT_MAP: iOS Safari records audio/mp4, desktop/Android
+# webm. detect_audio_mime() doesn't match iOS's real Content-Type — see
+# development/notes/iphone-voice-recognition-20261025.md §4a — so this is kept
+# as a local copy rather than reused.
+_AUDIO_EXT_MAP = {
+    "audio/mp4": ("m4a", "audio/mp4"),
+    "audio/aac": ("m4a", "audio/mp4"),
+    "audio/x-m4a": ("m4a", "audio/mp4"),
+    "audio/webm": ("webm", "audio/webm"),
+    "audio/ogg": ("ogg", "audio/ogg"),
+    "audio/wav": ("wav", "audio/wav"),
+    "audio/wave": ("wav", "audio/wav"),
+    "audio/mp3": ("mp3", "audio/mp3"),
+    "audio/mpeg": ("mp3", "audio/mp3"),
+}
 
 
 class HistoryTurn(BaseModel):
@@ -103,6 +119,24 @@ async def practice_scenarios() -> list[dict]:
     scenarios = [json.loads(p.read_text()) for p in SCENARIOS_DIR.glob("*.json")]
     scenarios.sort(key=lambda s: s["id"])
     return scenarios
+
+
+@router.post("/transcribe")
+async def practice_transcribe(
+    audio_file: UploadFile = File(...),
+    language: str = Form(None),
+) -> dict:
+    mime = (audio_file.content_type or "").split(";")[0].strip().lower()
+    ext, canonical = _AUDIO_EXT_MAP.get(mime, ("webm", "audio/webm"))
+    audio_bytes = audio_file.file.read()
+    result = providers.transcribe_audio(
+        audio_bytes,
+        file_ext=ext,
+        mime_type=canonical,
+        language_hint=language,
+        context=providers.CONTEXT_TRANSLATE,
+    )
+    return {"text": result.text}
 
 
 @router.post("/chat", response_model=PracticeChatResponse)

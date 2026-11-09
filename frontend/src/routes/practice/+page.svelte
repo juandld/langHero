@@ -42,6 +42,17 @@
   let sessionId = '';
   let learnerLevel = 'A2';
 
+  // iOS-safe mic flow — ported from the story route
+  // (frontend/src/routes/play/story/[storyId]/+page.svelte:937-1106), itself
+  // ported from llmTerminal/web/public/app-voice.js. No AudioContext/analyser
+  // here — this page has no waveform to drive, so it's pure record → upload.
+  let isRecording = false;
+  let transcribing = false;
+  let micError = '';
+  let mediaRecorder: MediaRecorder | null = null;
+  let audioChunks: Blob[] = [];
+  let recordingStream: MediaStream | null = null;
+
   $: worst = worstDimension(scores);
 
   onMount(async () => {
@@ -94,6 +105,95 @@
     } finally {
       sending = false;
     }
+  }
+
+  async function uploadRecording(blob: Blob) {
+    transcribing = true;
+    try {
+      const form = new FormData();
+      const ext = blob.type.includes('mp4') ? 'm4a' : blob.type.includes('wav') ? 'wav' : 'webm';
+      form.append('audio_file', blob, `recording.${ext}`);
+      if (selected) form.append('language', selected.target_language);
+
+      const res = await fetch(`${getApiBase()}/api/practice/transcribe`, {
+        method: 'POST',
+        body: form,
+      });
+      const data = await res.json();
+      if (data.text) input = data.text;
+    } catch {
+      micError = 'Could not transcribe recording.';
+    } finally {
+      transcribing = false;
+    }
+  }
+
+  function toggleRecording() {
+    if (isRecording) {
+      // Stop: delegates to mediaRecorder.onstop which builds the blob + uploads.
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        try {
+          mediaRecorder.stop();
+        } catch {
+          /* already stopped */
+        }
+      }
+      isRecording = false;
+      return;
+    }
+
+    micError = '';
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      micError = 'Microphone not supported on this browser.';
+      return;
+    }
+
+    // iOS Safari rule: .then, not await — keeps the gesture-scoped microtask
+    // chain intact so the permission prompt and recording both work.
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      recordingStream = stream;
+
+      // iOS Safari rule: no mimeType option, no timeslice on start().
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = (e: BlobEvent) => {
+        if (e?.data && e.data.size > 0) audioChunks.push(e.data);
+      };
+      mediaRecorder.onerror = () => {
+        try {
+          stream.getTracks().forEach((t) => t.stop());
+        } catch {
+          /* already stopped */
+        }
+        micError = 'Recording error.';
+        isRecording = false;
+      };
+      mediaRecorder.onstop = () => {
+        try {
+          stream.getTracks().forEach((t) => t.stop());
+        } catch {
+          /* already stopped */
+        }
+        recordingStream = null;
+
+        const actualMime = mediaRecorder?.mimeType || 'audio/mp4';
+        const blob = new Blob(audioChunks, { type: actualMime });
+        audioChunks = [];
+
+        if (blob.size < 1000) {
+          micError = 'Recording too short.';
+          return;
+        }
+
+        uploadRecording(blob);
+      };
+
+      mediaRecorder.start(); // no timeslice
+      isRecording = true;
+    }).catch((err: DOMException) => {
+      micError = err?.name === 'NotAllowedError' ? 'Microphone permission denied.' : 'Microphone unavailable.';
+    });
   }
 
   function onKeydown(e: KeyboardEvent) {
@@ -168,14 +268,28 @@
       </div>
     {/if}
 
+    {#if micError}
+      <p class="mic-error">{micError}</p>
+    {/if}
+
     <form class="composer" on:submit|preventDefault={send}>
       <textarea
         data-testid="practice-chat-input"
         bind:value={input}
         on:keydown={onKeydown}
-        placeholder="Type your response..."
+        placeholder={transcribing ? 'Transcribing...' : 'Type your response...'}
         rows="2"
       ></textarea>
+      <button
+        data-testid="practice-mic-button"
+        type="button"
+        class="mic-button"
+        class:recording={isRecording}
+        disabled={transcribing}
+        on:click={toggleRecording}
+      >
+        {isRecording ? '⏹' : '🎙'}
+      </button>
       <button data-testid="practice-chat-send" type="submit" disabled={sending || !input.trim()}>
         Send
       </button>
@@ -325,9 +439,25 @@
     color: #eab308;
   }
 
+  .mic-error {
+    color: #f87171;
+    font-size: 13px;
+    margin: 0 0 8px;
+  }
+
   .composer {
     display: flex;
     gap: 8px;
+  }
+
+  .mic-button {
+    flex: 0 0 auto;
+    padding: 0 16px;
+    background: #334155;
+  }
+
+  .mic-button.recording {
+    background: #dc2626;
   }
 
   textarea {
