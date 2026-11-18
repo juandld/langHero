@@ -52,6 +52,30 @@ Call this skill, passing the service name as `$ARGUMENTS`. Allowlisted units:
 
 ### Steps to perform
 
+0. **Restarting `llm-terminal`? One command, NOT the socket.**
+
+   A chat runs *inside* `llm-terminal`. A direct socket restart deadlocks: SIGTERM →
+   `gracefulShutdown` waits up to 60s for active subprocesses → the only active subprocess
+   is **you**, blocked waiting on the restart you asked for → systemd SIGKILLs you
+   mid-sentence. Your reply never reaches David; the chat just goes blank. This happened
+   twice on 2026-07-29 before the fix existed.
+
+   ```bash
+   python3 /home/claude-user/projects/orchestratorHero/scripts/ops/llmt_restart.py                  # what a restart would load; changes nothing
+   python3 /home/claude-user/projects/orchestratorHero/scripts/ops/llmt_restart.py --reason "why"   # ask, and leave a watcher behind
+   ```
+
+   It asks the terminal's own deferred restart (`POST /api/deferred-restart`), which fires once
+   your turn has ended and no run is in flight — so **finish your turn normally**, and never
+   ScheduleWakeup to wait for it (a sleeping run keeps it from firing). The watcher is silent
+   when the terminal comes back (`orchestratorHero/storage/progress/llmt_restart.log`) and sends
+   one Telegram when it does not. The same command serves a queue run.
+
+   **Committed server-side code (`web/server.js`, `web/src`) is not live until this runs.** Ask
+   in the session that committed it; "left the restart to you" leaves the fix unloaded (two
+   fixes sat for a day and a half, 2026-11-17). Everything below is for *other* units, which
+   you can restart directly.
+
 1. **Pick the unit.** If the user said "restart it" without specifying, ask. Default for "restart the chat" / "restart llmTerminal" → `llm-terminal`.
 
 2. **Warn the user, especially for `llm-terminal`.**
