@@ -57,6 +57,9 @@ def app(_isolated_paths) -> FastAPI:
     for module_name in ["config", "services", "note_store", "main", "published_runs", "import_cache", "usage_log"]:
         _set_paths(module_name, path_mapping)
 
+    # Jev grades of the stubbed tutor line stay out of the live log the scoreboard reads.
+    mp.setattr(importlib.import_module("lib.grade_log"), "DB_PATH", root_dir / "grades.sqlite")
+
     app_module = importlib.import_module("main")
     application = app_module.app
 
