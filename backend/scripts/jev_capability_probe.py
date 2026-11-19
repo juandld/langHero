@@ -1,15 +1,21 @@
 """Jev capability probe — detects drift in what Jev will and won't score.
 
-Established baselines (2026-10-15, jev-latest, 6 live calls):
+Baselines (first measured 2026-10-15; P2 re-measured 2026-11-19 on jev-1.14.0):
 
   P1  Register of a BAD tutor line (archaic 阁下 at a dumpling stall)
       → 0.06 (deterministic across 3 identical calls: 0.06, 0.06, 0.05)
       Jev is sharp on register when state carries the Mandarin + scene.
 
-  P2  Pacing from an events_ms list (TTS starts 520ms after typewriter)
-      → ~0.52 / 0.54 (hedged neutral; same for the inverse question)
-      HARD WALL: Jev will not reason about time deltas described as text.
-      Timing/sync observability must not rely on Jev.
+  P2  Pacing from an events_ms list (typewriter text + TTS audio)
+      2026-10-15: a 520ms TTS lag scored ~0.52 / 0.54, and so did the inverse
+      question. Jev would not take a position on timing given as text.
+      From 2026-11-06 at the latest: the 520ms lag scores 0.24-0.28, a 10ms
+      lag scores 0.68-0.72, and the inverse question mirrors both. Jev now
+      tells in-sync from out-of-sync.
+      STILL A WALL: it does not rank severity. A 2s lag scores 0.33 and audio
+      that starts after the text has finished scores 0.38, both above the
+      520ms lag. Sync QA reads the measured numbers
+      (/api/observability/sync-stats), not Jev.
 
   P3  Mood coherence of a *described* chapter transition (frames as text)
       → 0.90 / 0.95
@@ -38,6 +44,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from lib import jev_client  # noqa: E402
 
+# Version "jev-latest" resolved to when the bands below were last measured. The alias moves
+# without notice; a shifted baseline next to a different version here is a Jev update.
+BASELINE_MODEL = "jev-1.14.0"
+
 
 def _call(state: Any, questions: dict) -> dict:
     t0 = time.perf_counter()
@@ -65,17 +75,22 @@ REGISTER_QUESTION = {
     }
 }
 
-TIMING_STATE = {
-    "scene": "A learning app shows a story panel. A character line appears with "
-             "typewriter animation while a TTS voice reads it aloud.",
-    "events_ms": [
-        {"t_ms": 0, "event": "panel displayed"},
-        {"t_ms": 120, "event": "typewriter starts for 42-char line"},
-        {"t_ms": 640, "event": "TTS audio begins"},
-        {"t_ms": 4200, "event": "typewriter completes"},
-        {"t_ms": 4950, "event": "TTS audio ends"},
-    ],
-}
+def _timing_state(tts_start_ms: int, tts_end_ms: int) -> dict:
+    return {
+        "scene": "A learning app shows a story panel. A character line appears with "
+                 "typewriter animation while a TTS voice reads it aloud.",
+        "events_ms": [
+            {"t_ms": 0, "event": "panel displayed"},
+            {"t_ms": 120, "event": "typewriter starts for 42-char line"},
+            {"t_ms": tts_start_ms, "event": "TTS audio begins"},
+            {"t_ms": 4200, "event": "typewriter completes"},
+            {"t_ms": tts_end_ms, "event": "TTS audio ends"},
+        ],
+    }
+
+
+TIMING_LAGGED = _timing_state(640, 4950)  # TTS trails the text by 520ms; the payload sent since 2026-10-15
+TIMING_TIGHT = _timing_state(130, 4230)   # TTS trails the text by 10ms
 TIMING_QUESTION = {
     "sync_feels_tight": {
         "type": "noul",
@@ -156,6 +171,10 @@ SETPHRASE_QUESTIONS = {
 }
 
 
+def _noul(result: dict, key: str) -> float | None:
+    return ((result.get("answers") or {}).get(key) or {}).get("noul") if result["ok"] else None
+
+
 def _check(label: str, actual: float | None, expected_lo: float, expected_hi: float) -> tuple[bool, str]:
     if actual is None:
         return False, f"{label}: NO RESPONSE"
@@ -168,44 +187,31 @@ def main() -> int:
     print("Running Jev capability probe…\n")
 
     p1 = _call(BAD_TUTOR_STATE, REGISTER_QUESTION)
-    p2 = _call(TIMING_STATE, TIMING_QUESTION)
+    p2 = _call(TIMING_LAGGED, TIMING_QUESTION)
+    p2_tight = _call(TIMING_TIGHT, TIMING_QUESTION)
     p3 = _call(TRANSITION_STATE, TRANSITION_QUESTION)
     p4 = _call(SETPHRASE_STATE, SETPHRASE_QUESTIONS)
 
-    print(json.dumps({"P1": p1, "P2": p2, "P3": p3, "P4_setphrase": p4}, indent=2, ensure_ascii=False))
-    print()
-
-    p4_answers = p4.get("answers") or {} if p4["ok"] else {}
-    def _p4(k: str) -> float | None:
-        return (p4_answers.get(k) or {}).get("noul") if p4_answers else None
+    print(json.dumps({"P1": p1, "P2": p2, "P2_tight": p2_tight, "P3": p3, "P4_setphrase": p4},
+                     indent=2, ensure_ascii=False))
+    print(f"\nModel: {jev_client.last_model} (baselines measured on {BASELINE_MODEL})")
 
     checks = [
-        _check(
-            "P1 register (bad line) stays low",
-            (p1.get("answers") or {}).get("register_fits_scene", {}).get("noul") if p1["ok"] else None,
-            0.0, 0.25,
-        ),
-        _check(
-            "P2 timing wall persists (neutral band)",
-            (p2.get("answers") or {}).get("sync_feels_tight", {}).get("noul") if p2["ok"] else None,
-            0.35, 0.65,
-        ),
-        _check(
-            "P3 described transition reads coherent",
-            (p3.get("answers") or {}).get("mood_shift_reads_coherent", {}).get("noul") if p3["ok"] else None,
-            0.75, 1.0,
-        ),
-        _check("P4 setphrase いらっしゃいませ (casual)",     _p4("irasshaimase_in_casual"), 0.65, 1.0),
-        _check("P4 setphrase いらっしゃいませ (formal)",     _p4("irasshaimase_in_formal"), 0.65, 1.0),
-        _check("P4 setphrase どうぞ召し上がれ (casual)",       _p4("douzo_in_casual"),        0.65, 1.0),
-        _check("P4 setphrase どうぞ召し上がれ (formal)",       _p4("douzo_in_formal"),        0.65, 1.0),
+        _check("P1 register (bad line) stays low", _noul(p1, "register_fits_scene"), 0.0, 0.25),
+        _check("P2 timing: 520ms TTS lag reads loose", _noul(p2, "sync_feels_tight"), 0.10, 0.40),
+        _check("P2 timing: 10ms TTS lag reads tight", _noul(p2_tight, "sync_feels_tight"), 0.55, 0.90),
+        _check("P3 described transition reads coherent", _noul(p3, "mood_shift_reads_coherent"), 0.75, 1.0),
+        _check("P4 setphrase いらっしゃいませ (casual)",     _noul(p4, "irasshaimase_in_casual"), 0.65, 1.0),
+        _check("P4 setphrase いらっしゃいませ (formal)",     _noul(p4, "irasshaimase_in_formal"), 0.65, 1.0),
+        _check("P4 setphrase どうぞ召し上がれ (casual)",       _noul(p4, "douzo_in_casual"),        0.65, 1.0),
+        _check("P4 setphrase どうぞ召し上がれ (formal)",       _noul(p4, "douzo_in_formal"),        0.65, 1.0),
         # またお待ちしています scores 0.52/0.58 measured 2026-10-15. Native speakers use
         # it universally in shop farewells, but Jev consistently under-scores it —
         # a known weakness captured here as a calibrated threshold rather than a
         # failing gate. Authored content using this phrase should expect similar
         # low scores and not be flagged as defective purely on that signal.
-        _check("P4 setphrase またお待ちしています (casual, known-weak)", _p4("mata_in_casual"), 0.45, 1.0),
-        _check("P4 setphrase またお待ちしています (formal, known-weak)", _p4("mata_in_formal"), 0.45, 1.0),
+        _check("P4 setphrase またお待ちしています (casual, known-weak)", _noul(p4, "mata_in_casual"), 0.45, 1.0),
+        _check("P4 setphrase またお待ちしています (formal, known-weak)", _noul(p4, "mata_in_formal"), 0.45, 1.0),
     ]
     print("\nBaselines:")
     for _ok, msg in checks:

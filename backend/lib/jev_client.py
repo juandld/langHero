@@ -49,6 +49,9 @@ KEYS_URL = "https://console.typesafe.ai/keys"
 BILLING_URL = "https://console.typesafe.ai/settings/billing"
 
 _cached_key: str | None = None
+# Version the "jev-latest" alias resolved to on the last live call. The alias moves without
+# notice and scores move with it, so the heartbeat and the capability probe record it.
+last_model: str | None = None
 
 # In-process response cache for identical (state, questions, model) triples.
 # Jev scores are deterministic within a model version (empirically verified in
@@ -170,6 +173,7 @@ def call(
     """Return the `answers` dict from Jev. Raises a specific JevError on failure
     (and Telegram-alerts David for auth / quota / rate-limit / network faults).
     """
+    global last_model
     cache_key = _cache_key(state, questions, model)
     cached = _response_cache.get(cache_key)
     if cached is not None:
@@ -236,13 +240,15 @@ def call(
         # Success path
         if r.status_code == 200:
             try:
-                answers = r.json()["answers"]
+                body = r.json()
+                answers = body["answers"]
             except (KeyError, ValueError) as e:
                 _alert(
                     "bad_response",
                     f"HTTP 200 but response missing 'answers' key: {r.text[:200]}",
                 )
                 raise JevError(f"malformed response: {e}") from e
+            last_model = body.get("model")
             _cache_put(cache_key, answers)
             return answers
 
@@ -270,7 +276,7 @@ def diagnostic() -> dict:
             max_retries=1,
             timeout=15,
         )
-        return {"ok": True, "latency_ms": round((time.perf_counter() - t0) * 1000, 1), "answer": ans.get("is_ping", {}).get("noul")}
+        return {"ok": True, "latency_ms": round((time.perf_counter() - t0) * 1000, 1), "answer": ans.get("is_ping", {}).get("noul"), "model": last_model}
     except JevError as e:
         return {"ok": False, "latency_ms": round((time.perf_counter() - t0) * 1000, 1), "error": type(e).__name__, "detail": str(e)}
 
