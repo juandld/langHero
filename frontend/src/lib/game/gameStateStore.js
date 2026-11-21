@@ -2,7 +2,7 @@
  * Game State Store for LangHero.
  *
  * Centralizes game state (lives, score, etc.) with persistence
- * to localStorage and runStore. Used by GameView and ScenarioDisplay.
+ * to localStorage and runStore. Used by GameView.
  */
 
 import { writable, derived, get } from 'svelte/store';

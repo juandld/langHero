@@ -2,7 +2,7 @@
  * Audio Prompt Manager for LangHero.
  *
  * Handles playing audio prompts with TTS fallback.
- * Used by GameView and ScenarioDisplay for option playback.
+ * Used by GameView for option playback.
  */
 
 import { toBackendUrl } from '$lib/utils';

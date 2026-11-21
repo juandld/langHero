@@ -2,7 +2,7 @@
  * Streaming Manager for real-time game interactions.
  *
  * Manages WebSocket connections for live speech-to-text streaming
- * and game state updates. Used by GameView and ScenarioDisplay.
+ * and game state updates. Used by GameView.
  */
 
 import { writable, get } from 'svelte/store';
@@ -310,7 +310,7 @@ export function createStreamingManager(options = {}) {
       return;
     }
 
-    // Info event (ScenarioDisplay specific)
+    // Info events carry nothing the game uses
     if (evt === 'info') {
       // Just log for debugging
       return;
