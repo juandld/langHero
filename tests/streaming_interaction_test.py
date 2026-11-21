@@ -9,7 +9,8 @@ def test_streaming_interaction_flow(app_client, monkeypatch):
         return "hello world"
 
     def _fake_process(_audio_file, _scenario_id, _lang, judge=None):
-        return {"heard": "final heard", "nextScenario": 5}
+        # scenario results always carry scoreDelta/livesDelta (services/interaction.py); without it finalize takes the vocab tier branch
+        return {"heard": "final heard", "nextScenario": 5, "scoreDelta": 0, "livesDelta": 0}
 
     monkeypatch.setattr(streaming, "transcribe_audio", _fake_transcribe, raising=False)
     monkeypatch.setattr(streaming, "process_interaction", _fake_process, raising=False)

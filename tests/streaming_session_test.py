@@ -164,12 +164,17 @@ def test_auto_finalize_on_match(session_env, monkeypatch):
         }
 
     monkeypatch.setattr(streaming, "process_interaction", fake_process_interaction)
+    # Fake bytes are not decodable audio; the real check fails open after ~100 ms of ffmpeg.
+    monkeypatch.setattr(streaming, "_audio_has_speech", lambda _audio: True)
 
     ws = DummyWebSocket()
 
     async def run_flow():
         await session.append_chunk(b"0" * 20000, ws)
-        await asyncio.sleep(0.05)
+        for _ in range(100):  # up to 2 s; finalize runs in a background task
+            if session.final_event_sent:
+                break
+            await asyncio.sleep(0.02)
 
     asyncio.run(run_flow())
 

@@ -14,13 +14,14 @@ def test_api_tts_requires_text(app_client):
 def test_api_tts_creates_and_reuses_clip(app_client, monkeypatch):
     calls: list[tuple[str, str, str]] = []
 
-    def counting_tts(text: str, voice: str = "alloy", fmt: str = "mp3") -> bytes:
+    def counting_tts(text: str, voice: str = "alloy", fmt: str = "mp3", instructions=None) -> bytes:
         calls.append((text, voice, fmt))
         return f"audio:{len(calls)}:{voice}:{fmt}:{text}".encode("utf-8")
 
     monkeypatch.setattr(providers, "tts_with_openai", counting_tts, raising=False)
 
-    payload = {"text": "はい、お願いします。", "language": "Japanese"}
+    # provider=openai: the default is now ElevenLabs, which is paid and writes the live examples_audio cache; this test covers the OpenAI manifest clip path
+    payload = {"text": "はい、お願いします。", "language": "Japanese", "provider": "openai"}
 
     first = app_client.post("/api/tts", json=payload)
     assert first.status_code == 200
