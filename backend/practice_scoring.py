@@ -106,6 +106,7 @@ def score_utterance(
         state=state,
         questions=_questions(target_language, scenario, user_intent),
         api_key=os.environ.get("JEV_API_TOKEN") or None,
+        caller="practice_scoring",
     )
 
     result: dict[str, Any] = {}

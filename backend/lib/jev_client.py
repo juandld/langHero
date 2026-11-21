@@ -176,6 +176,8 @@ def call(
 
     Each call that reaches the network books one AI-calls row (lib/ai_calls): service "jev",
     the resolved model version, `calls` = HTTP attempts. Cache hits book nothing.
+    Every call site passes `caller=` (its component name) so the ledger shows who spent;
+    the default `jev_client` is only a fallback.
     """
     cache_key = _cache_key(state, questions, model)
     cached = _response_cache.get(cache_key)
@@ -295,6 +297,7 @@ def diagnostic() -> dict:
             questions={"is_ping": {"type": "noul", "instructions": "This state is the word 'ping'."}},
             max_retries=1,
             timeout=15,
+            caller="jev_diagnostic",
         )
         return {"ok": True, "latency_ms": round((time.perf_counter() - t0) * 1000, 1), "answer": ans.get("is_ping", {}).get("noul"), "model": last_model}
     except JevError as e:

@@ -66,7 +66,7 @@ def grade_tutor_line(
 
     t0 = time.perf_counter()
     try:
-        answers = jev_client.call(state=state, questions=questions)
+        answers = jev_client.call(state=state, questions=questions, caller="tutor_line_grade")
     except jev_client.JevError:
         return {}
     latency_ms = round((time.perf_counter() - t0) * 1000, 1)
@@ -136,7 +136,7 @@ def grade_authored_line(
 
     t0 = time.perf_counter()
     try:
-        answers = jev_client.call(state=state, questions=questions)
+        answers = jev_client.call(state=state, questions=questions, caller="authored_line_grade")
     except jev_client.JevError:
         return {}
     latency_ms = round((time.perf_counter() - t0) * 1000, 1)

@@ -52,7 +52,8 @@ BASELINE_MODEL = "jev-1.14.0"
 def _call(state: Any, questions: dict) -> dict:
     t0 = time.perf_counter()
     try:
-        answers = jev_client.call(state=state, questions=questions, max_retries=1, timeout=25)
+        answers = jev_client.call(state=state, questions=questions, max_retries=1, timeout=25,
+                                  caller="jev_capability_probe")
         return {"ok": True, "latency_ms": round((time.perf_counter() - t0) * 1000, 1), "answers": answers}
     except jev_client.JevError as e:
         return {"ok": False, "latency_ms": round((time.perf_counter() - t0) * 1000, 1),

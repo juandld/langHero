@@ -126,6 +126,41 @@ def test_jev_books_one_row(ledger, monkeypatch):
     assert len(ledger()) == 1
 
 
+def test_every_jev_call_site_names_its_caller():
+    """No Jev call site may fall back to the default caller `jev_client` (the ledger would
+    then book all Jev spend under one name)."""
+    import ast
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    files = [p for p in (root / "backend").rglob("*.py")
+             if "venv" not in p.parts and "__pycache__" not in p.parts]
+    files.append(root / "tests" / "improvements" / "suite.py")
+    client = root / "backend" / "lib" / "jev_client.py"
+
+    sites, missing = 0, []
+    for path in files:
+        tree = ast.parse(path.read_text(), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            f = node.func
+            is_jev = (isinstance(f, ast.Attribute) and f.attr == "call"
+                      and isinstance(f.value, ast.Name) and f.value.id == "jev_client")
+            is_jev = is_jev or (path == client and isinstance(f, ast.Name) and f.id == "call")
+            if not is_jev:
+                continue
+            sites += 1
+            kw = next((k for k in node.keywords if k.arg == "caller"), None)
+            good = (kw is not None and isinstance(kw.value, ast.Constant)
+                    and isinstance(kw.value.value, str) and kw.value.value
+                    and ":" not in kw.value.value)
+            if not good:
+                missing.append(f"{path.relative_to(root)}:{node.lineno}")
+    assert sites >= 6, f"found only {sites} Jev call sites; the scan is broken"
+    assert not missing, f"Jev call sites without a bare caller= name: {missing}"
+
+
 def test_failed_call_books_ok_false_and_reraises(ledger):
     with pytest.raises(ValueError):
         with ai_calls.track("openai", "gpt-x", "unit"):

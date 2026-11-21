@@ -297,12 +297,12 @@ def t_jev_cache() -> CheckResult:
     state = {"probe": "cache-test", "nonce": "fixed"}
     qs = {"q": {"type": "noul", "instructions": "This state has nonce=fixed. 1 if nonce present, 0 otherwise."}}
     try:
-        jev_client.call(state=state, questions=qs, max_retries=1, timeout=15)
+        jev_client.call(state=state, questions=qs, max_retries=1, timeout=15, caller="improvements_suite")
     except Exception as e:
         return CheckResult("SKIP", f"first call failed: {e}", "", "")
     t0 = time.perf_counter()
     try:
-        jev_client.call(state=state, questions=qs, max_retries=1, timeout=15)
+        jev_client.call(state=state, questions=qs, max_retries=1, timeout=15, caller="improvements_suite")
     except Exception as e:
         return CheckResult("SKIP", f"second call failed: {e}", "", "")
     dt = round((time.perf_counter() - t0) * 1000, 1)
