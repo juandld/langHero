@@ -25,6 +25,7 @@ sys.path.insert(0, str(ROOT / "backend"))
 
 from story.manifest import MANUELA_CHARACTERS  # noqa: E402
 from image.google import generate_character_ref  # noqa: E402
+from lib import ai_calls  # noqa: E402
 
 OUTPUT_DIR = ROOT / "image_cache" / "characters"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -45,13 +46,15 @@ def _openai_fallback(char_id: str, description: str, force: bool) -> dict:
         return {"character_id": char_id, "path": str(out), "cached": True}
     from openai import OpenAI
     client = OpenAI()
-    r = client.images.generate(
-        model="gpt-image-1.5",
-        prompt=_hud_portrait_prompt(description),
-        size="1024x1024",
-        quality="medium",
-        n=1,
-    )
+    with ai_calls.track("openai", "gpt-image-1.5", "gen_roberto",
+                        units={"images": 1, "size": "1024x1024"}) as t:
+        r = t.response = client.images.generate(
+            model="gpt-image-1.5",
+            prompt=_hud_portrait_prompt(description),
+            size="1024x1024",
+            quality="medium",
+            n=1,
+        )
     d = r.data[0]
     data = base64.b64decode(d.b64_json) if getattr(d, "b64_json", None) else urllib.request.urlopen(d.url).read()
     out.write_bytes(data)

@@ -9,6 +9,7 @@ import os
 from typing import Optional
 from dotenv import load_dotenv
 
+from lib import ai_calls
 from voice.cache import tts_cache_key, tts_cache_lookup, tts_cache_path, tts_response
 
 load_dotenv()
@@ -232,23 +233,26 @@ def synthesize_speech(
     # Generate speech
     client = get_client()
 
-    audio = client.text_to_speech.convert(
-        text=text,
-        voice_id=voice_id,
-        model_id="eleven_multilingual_v2",  # Best quality multilingual model
-        voice_settings=VoiceSettings(
-            stability=stability,
-            similarity_boost=similarity_boost,
-            style=style,
-            use_speaker_boost=use_speaker_boost,
-        ),
-        output_format="mp3_44100_128" if output_format == "mp3" else "pcm_44100",
-    )
+    # The SDK streams: the request runs while the chunks are read, so both sit in the tracked block.
+    with ai_calls.track("elevenlabs", "eleven_multilingual_v2", "elevenlabs_tts",
+                        units={"chars": len(text or ""), "voice_id": voice_id}):
+        audio = client.text_to_speech.convert(
+            text=text,
+            voice_id=voice_id,
+            model_id="eleven_multilingual_v2",  # Best quality multilingual model
+            voice_settings=VoiceSettings(
+                stability=stability,
+                similarity_boost=similarity_boost,
+                style=style,
+                use_speaker_boost=use_speaker_boost,
+            ),
+            output_format="mp3_44100_128" if output_format == "mp3" else "pcm_44100",
+        )
 
-    # Save to cache
-    with open(cache_file, "wb") as f:
-        for chunk in audio:
-            f.write(chunk)
+        # Save to cache
+        with open(cache_file, "wb") as f:
+            for chunk in audio:
+                f.write(chunk)
 
     return tts_response(cache_file, voice_id, output_format, "elevenlabs")
 

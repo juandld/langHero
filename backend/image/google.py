@@ -12,6 +12,8 @@ from typing import Optional
 import httpx
 from dotenv import load_dotenv
 
+from lib import ai_calls
+
 load_dotenv()
 
 # Cache directories
@@ -126,33 +128,34 @@ async def generate_image(
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{NANO_BANANA}:generateContent"
     api_key = _get_api_key()
 
-    async with httpx.AsyncClient(timeout=120.0) as client:
-        response = await client.post(
-            api_url,
-            params={"key": api_key},
-            json=payload,
-        )
+    with ai_calls.track("google", NANO_BANANA, "gemini_image", units={"images": 1}) as t:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(
+                api_url,
+                params={"key": api_key},
+                json=payload,
+            )
 
-        if response.status_code != 200:
-            raise RuntimeError(f"Generation failed ({response.status_code}): {response.text[:500]}")
+            if response.status_code != 200:
+                raise RuntimeError(f"Generation failed ({response.status_code}): {response.text[:500]}")
 
-        result = response.json()
-        candidates = result.get("candidates", [])
+            result = t.response = response.json()
+            candidates = result.get("candidates", [])
 
-        if not candidates:
-            raise RuntimeError("No candidates in response")
+            if not candidates:
+                raise RuntimeError("No candidates in response")
 
-        parts = candidates[0].get("content", {}).get("parts", [])
+            parts = candidates[0].get("content", {}).get("parts", [])
 
-        for part in parts:
-            if "inlineData" in part:
-                img_data = base64.b64decode(part["inlineData"]["data"])
-                os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                with open(output_path, "wb") as f:
-                    f.write(img_data)
-                return {"path": output_path, "cached": False}
+            for part in parts:
+                if "inlineData" in part:
+                    img_data = base64.b64decode(part["inlineData"]["data"])
+                    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+                    with open(output_path, "wb") as f:
+                        f.write(img_data)
+                    return {"path": output_path, "cached": False}
 
-        raise RuntimeError("No image in response")
+            raise RuntimeError("No image in response")
 
 
 async def generate_character_ref(

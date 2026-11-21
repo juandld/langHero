@@ -9,6 +9,15 @@ from _pytest.monkeypatch import MonkeyPatch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+import os
+import tempfile
+
+# No test may write the live AI-calls ledger (hero_common.ai_calls reads this env per call).
+# Tests that count rows point it at their own temp file with monkeypatch.setenv.
+os.environ["AI_CALLS_LEDGER"] = os.path.join(
+    tempfile.mkdtemp(prefix="langhero-ai-calls-"), "provider_spend_test.jsonl"
+)
+
 
 class _DummyResponse:
     def __init__(self, content: str):

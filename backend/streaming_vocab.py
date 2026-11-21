@@ -9,6 +9,7 @@ import re
 from typing import Any, Dict
 
 import providers
+from lib import ai_calls
 from language import detect_language_from_text
 
 logger = logging.getLogger(__name__)
@@ -24,15 +25,16 @@ def _quick_translate(text: str, source: str = "Japanese", target: str = "English
             return ""
         from openai import OpenAI
         client = OpenAI(api_key=cfg.OPENAI_API_KEY)
-        resp = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": f"Translate this {source} text to literal {target}. Reply with ONLY the translation, nothing else. If the input is gibberish, translate it as literally as possible — the humor matters."},
-                {"role": "user", "content": text},
-            ],
-            max_tokens=60,
-            temperature=0,
-        )
+        with ai_calls.track("openai", "gpt-4o-mini", "vocab_quick_translate") as t:
+            resp = t.response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": f"Translate this {source} text to literal {target}. Reply with ONLY the translation, nothing else. If the input is gibberish, translate it as literally as possible — the humor matters."},
+                    {"role": "user", "content": text},
+                ],
+                max_tokens=60,
+                temperature=0,
+            )
         return resp.choices[0].message.content.strip()
     except Exception as e:
         logger.debug("Quick translate failed: %s", e)

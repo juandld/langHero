@@ -17,6 +17,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
 
 import config
+from lib import ai_calls
 
 # Initialize module logger early (before any usage)
 logger = logging.getLogger("narrative.providers")
@@ -238,10 +239,12 @@ def invoke_google(messages: List[HumanMessage], model: str | None = None) -> Tup
         llms = [ChatGoogleGenerativeAI(model=model, api_key=k) for k in GOOGLE_KEYS]
     else:
         llms = GOOGLE_LLMS
+    use_model = model or config.GOOGLE_MODEL
     for idx, llm in enumerate(llms):
         try:
             # Disable internal retries by overriding keyword
-            resp = llm.invoke(messages, max_retries=0)
+            with ai_calls.track("google", use_model, "gemini") as t:
+                resp = t.response = llm.invoke(messages, max_retries=0)
             logger.info("[invoke_google] OK key_index=%d/%d", idx, len(llms))
             return resp, idx
         except Exception as e:

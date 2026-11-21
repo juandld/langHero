@@ -1,0 +1,2 @@
+backend/generate_jw_images.py  # one-off Journey to the West image generator, last run 2026-05-19 (image mtimes), no route/cron/timer runs it
+backend/main.py  # makes no AI request: only names the langchain_google_genai logger to silence it

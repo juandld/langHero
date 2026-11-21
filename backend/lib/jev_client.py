@@ -37,7 +37,7 @@ from typing import Any
 
 import requests
 
-from lib import telegram_out  # noqa: E402
+from lib import ai_calls, telegram_out  # noqa: E402
 
 CRANKHERO_ENV = Path(os.environ.get("PROJECTS_DIR", "/home/claude-user/projects")) / "crankHero" / ".env"
 API_URL = "https://api.typesafe.ai/v1/systemone"
@@ -169,22 +169,42 @@ def call(
     model: str = DEFAULT_MODEL,
     timeout: int = DEFAULT_TIMEOUT,
     max_retries: int = DEFAULT_MAX_RETRIES,
+    caller: str = "jev_client",
 ) -> dict:
     """Return the `answers` dict from Jev. Raises a specific JevError on failure
     (and Telegram-alerts David for auth / quota / rate-limit / network faults).
+
+    Each call that reaches the network books one AI-calls row (lib/ai_calls): service "jev",
+    the resolved model version, `calls` = HTTP attempts. Cache hits book nothing.
     """
-    global last_model
     cache_key = _cache_key(state, questions, model)
     cached = _response_cache.get(cache_key)
     if cached is not None:
         return cached
 
     key = api_key or _load_key()
+    attempts = [0]
+    ok = False
+    try:
+        answers = _request(key, state, questions, model, timeout, max_retries, attempts)
+        ok = True
+        return answers
+    finally:
+        if attempts[0]:
+            ai_calls.record("jev", (last_model or model) if ok else model, caller,
+                            calls=attempts[0], ok=ok)
+
+
+def _request(key: str, state: Any, questions: dict, model: str, timeout: int, max_retries: int,
+             attempts: list[int]) -> dict:
+    global last_model
+    cache_key = _cache_key(state, questions, model)
     payload = {"state": state, "model": model, "questions": questions}
     headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
 
     last_exc: Exception | None = None
     for attempt in range(1, max_retries + 1):
+        attempts[0] = attempt
         try:
             r = requests.post(API_URL, headers=headers, json=payload, timeout=timeout)
         except requests.exceptions.RequestException as e:

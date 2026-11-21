@@ -16,6 +16,7 @@ import os
 from typing import Optional
 
 import config
+from lib import ai_calls
 
 logger = logging.getLogger(__name__)
 
@@ -186,13 +187,14 @@ Input (JSON object, id -> original text):
 
 Respond with ONLY a JSON object mapping the same ids to the localized text."""
 
-    response = await client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.4,
-        max_tokens=4000,
-        response_format={"type": "json_object"},
-    )
+    with ai_calls.track("openai", model, "story_localize") as t:
+        response = t.response = await client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.4,
+            max_tokens=4000,
+            response_format={"type": "json_object"},
+        )
 
     content = response.choices[0].message.content.strip()
     data = json.loads(content)

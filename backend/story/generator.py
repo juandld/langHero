@@ -11,6 +11,7 @@ import os
 from typing import Optional
 
 import config
+from lib import ai_calls
 from story.skeleton import StorySkeleton, Anchor
 from story.segment_cache import compute_state_hash, get_cached, set_cached
 
@@ -194,13 +195,14 @@ async def _call_llm(prompt: str) -> list[dict]:
     client = AsyncOpenAI(api_key=api_key)
     model = getattr(config, "OPENAI_NARRATIVE_MODEL", "gpt-4o")
 
-    response = await client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.8,
-        max_tokens=4000,
-        response_format={"type": "json_object"},
-    )
+    with ai_calls.track("openai", model, "story_generator") as t:
+        response = t.response = await client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.8,
+            max_tokens=4000,
+            response_format={"type": "json_object"},
+        )
 
     content = response.choices[0].message.content.strip()
 

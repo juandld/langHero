@@ -12,6 +12,7 @@ from typing import Optional
 from langchain_openai import ChatOpenAI
 
 import config
+from lib import ai_calls
 
 logger = logging.getLogger("narrative.providers")
 
@@ -26,7 +27,8 @@ def title_with_openai(text: str) -> str:
         "Use the same language as the transcription. Do not include quotes, bullets, markdown, or any extra text. "
         "Output only the title on a single line.\n\n" + text
     )
-    resp = llm.invoke(prompt)
+    with ai_calls.track("openai", config.OPENAI_TITLE_MODEL, "title") as t:
+        resp = t.response = llm.invoke(prompt)
     raw = str(getattr(resp, "content", resp))
     return normalize_title_output(raw)
 
@@ -37,7 +39,8 @@ def openai_chat(messages: list, model: str | None = None, temperature: float = 0
         raise RuntimeError("OpenAI fallback not configured.")
     use_model = model or config.OPENAI_NARRATIVE_MODEL
     llm = ChatOpenAI(model=use_model, api_key=config.OPENAI_API_KEY, temperature=temperature)
-    resp = llm.invoke(messages)
+    with ai_calls.track("openai", use_model, "openai_chat") as t:
+        resp = t.response = llm.invoke(messages)
     return str(getattr(resp, "content", resp))
 
 
@@ -127,7 +130,9 @@ def transcribe_with_openai(
             f"The speaker may be using {hint}. Transcribe in the language actually spoken using its usual writing system. "
             "Do not translate."
         )
-    resp = client.audio.transcriptions.create(**kwargs)
+    with ai_calls.track("openai", config.OPENAI_TRANSCRIBE_MODEL, "transcribe",
+                        units={"audio_bytes": len(audio_bytes)}) as t:
+        resp = t.response = client.audio.transcriptions.create(**kwargs)
     return resp if isinstance(resp, str) else getattr(resp, "text", "")
 
 
@@ -154,7 +159,8 @@ def tts_with_openai(
         kwargs["instructions"] = instructions
 
     try:
-        resp = client.audio.speech.create(**kwargs, response_format=fmt)
+        with ai_calls.track("openai", model, "tts", units={"chars": len(text or "")}):
+            resp = client.audio.speech.create(**kwargs, response_format=fmt)
         data = getattr(resp, "content", None)
         if data is None and hasattr(resp, "read"):
             data = resp.read()
@@ -162,7 +168,8 @@ def tts_with_openai(
             return bytes(data)
     except Exception:
         try:
-            resp = client.audio.speech.create(**kwargs)
+            with ai_calls.track("openai", model, "tts", units={"chars": len(text or "")}):
+                resp = client.audio.speech.create(**kwargs)
             data = getattr(resp, "content", None)
             if isinstance(data, (bytes, bytearray)):
                 return bytes(data)
@@ -181,7 +188,8 @@ def translate_text(text: str, to_language: str, from_language: str | None = None
         + text
         + "\nReturn only the translation, no quotes, no notes."
     )
-    resp = llm.invoke(prompt)
+    with ai_calls.track("openai", config.OPENAI_TITLE_MODEL, "translate") as t:
+        resp = t.response = llm.invoke(prompt)
     return str(getattr(resp, "content", resp)).strip().strip('"').strip("'")
 
 
@@ -201,7 +209,8 @@ def romanize(text: str, language: str) -> str:
             "Provide romaji for this Japanese phrase. Return only the romaji, no quotes or notes.\n" + text
         )
         try:
-            resp = llm.invoke(prompt)
+            with ai_calls.track("openai", config.OPENAI_TITLE_MODEL, "romanize") as t:
+                resp = t.response = llm.invoke(prompt)
             return str(getattr(resp, "content", resp)).strip().strip('"').strip("'")
         except Exception:
             return ""
@@ -214,7 +223,8 @@ def romanize(text: str, language: str) -> str:
             "Return only the pinyin, no quotes or notes.\n" + text
         )
         try:
-            resp = llm.invoke(prompt)
+            with ai_calls.track("openai", config.OPENAI_TITLE_MODEL, "romanize") as t:
+                resp = t.response = llm.invoke(prompt)
             return str(getattr(resp, "content", resp)).strip().strip('"').strip("'")
         except Exception:
             return ""
@@ -235,7 +245,8 @@ def makes_sense(text: str, language: str | None = None) -> bool:
             f"Text: {text}\n"
             "Answer strictly 'yes' or 'no'."
         )
-        resp = llm.invoke(prompt)
+        with ai_calls.track("openai", config.OPENAI_TITLE_MODEL, "makes_sense") as t:
+            resp = t.response = llm.invoke(prompt)
         out = str(getattr(resp, "content", resp)).strip().lower()
         return out.startswith('y')
     except Exception:

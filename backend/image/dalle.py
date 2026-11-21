@@ -11,6 +11,7 @@ import requests
 from typing import Optional, TYPE_CHECKING
 from openai import OpenAI
 import config
+from lib import ai_calls
 
 if TYPE_CHECKING:
     from image.visual_styles import Panel, ArtStyle
@@ -134,13 +135,15 @@ def generate_scene_image(scenario: dict, force: bool = False) -> dict:
     prompt = _build_prompt(scenario)
 
     try:
-        response = client.images.generate(
-            model="dall-e-3",
-            prompt=prompt,
-            size="1024x1024",
-            quality="standard",
-            n=1,
-        )
+        with ai_calls.track("openai", "dall-e-3", "dalle_scene",
+                            units={"images": 1, "size": "1024x1024"}):
+            response = client.images.generate(
+                model="dall-e-3",
+                prompt=prompt,
+                size="1024x1024",
+                quality="standard",
+                n=1,
+            )
 
         image_url = response.data[0].url
         _download_and_cache(image_url, cache_path)
@@ -244,13 +247,14 @@ def generate_panel_image(
     prompt = _build_panel_prompt(panel, context)
 
     try:
-        response = client.images.generate(
-            model="dall-e-3",
-            prompt=prompt,
-            size=size,
-            quality="standard",
-            n=1,
-        )
+        with ai_calls.track("openai", "dall-e-3", "dalle_panel", units={"images": 1, "size": size}):
+            response = client.images.generate(
+                model="dall-e-3",
+                prompt=prompt,
+                size=size,
+                quality="standard",
+                n=1,
+            )
 
         image_url = response.data[0].url
         _download_and_cache(image_url, cache_path)
