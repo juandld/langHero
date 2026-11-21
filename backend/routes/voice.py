@@ -6,8 +6,10 @@ Supports multiple TTS providers:
 - google: Google Cloud TTS (Neural2/Journey voices, more natural)
 """
 
+import asyncio
 import os
 import base64
+import threading
 
 from fastapi import APIRouter, Request, Response
 from voice import select as voice_select
@@ -33,6 +35,17 @@ except ImportError:
     elevenlabs_tts = None
 
 router = APIRouter(prefix="/api", tags=["voice"])
+
+# Generation blocks (provider SDKs, the clip manifest's read-modify-write). Run it off the event
+# loop so other requests stay live, one at a time so the manifest never loses an update.
+_synth_lock = threading.Lock()
+
+
+async def _synth(fn, *args, **kwargs):
+    def run():
+        with _synth_lock:
+            return fn(*args, **kwargs)
+    return await asyncio.to_thread(run)
 
 
 @router.get("/voices")
@@ -114,7 +127,8 @@ async def api_tts(request: Request):
                 character = "bimbo"
 
         try:
-            result = elevenlabs_tts.synthesize_speech(
+            result = await _synth(
+                elevenlabs_tts.synthesize_speech,
                 text=text,
                 character=character,
                 output_format=fmt if fmt in ("mp3", "wav") else "mp3",
@@ -153,7 +167,8 @@ async def api_tts(request: Request):
                 character = "bimbo"
 
         try:
-            result = google_tts.synthesize_speech(
+            result = await _synth(
+                google_tts.synthesize_speech,
                 text=text,
                 character=character,
                 language=language[:2] if language else None,
@@ -222,7 +237,8 @@ async def api_tts(request: Request):
         )
 
     try:
-        meta = voice_cache.get_or_create_clip(
+        meta = await _synth(
+            voice_cache.get_or_create_clip,
             text,
             language=language,
             voice=voice,
