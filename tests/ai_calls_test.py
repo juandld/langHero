@@ -141,13 +141,23 @@ def test_every_jev_call_site_names_its_caller():
     sites, missing = 0, []
     for path in files:
         tree = ast.parse(path.read_text(), filename=str(path))
+        # Names the module or its call() are bound to in this file, so an aliased or
+        # `from lib.jev_client import call` site is seen too (verifier gap on 5151c24d).
+        mods, funcs = {"jev_client"}, {"call"} if path == client else set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and (node.module or "").split(".")[-1] == "jev_client":
+                funcs |= {a.asname or a.name for a in node.names if a.name == "call"}
+            elif isinstance(node, ast.ImportFrom):
+                mods |= {a.asname or a.name for a in node.names if a.name == "jev_client"}
+            elif isinstance(node, ast.Import):
+                mods |= {a.asname for a in node.names if a.asname and a.name.endswith("jev_client")}
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
             f = node.func
             is_jev = (isinstance(f, ast.Attribute) and f.attr == "call"
-                      and isinstance(f.value, ast.Name) and f.value.id == "jev_client")
-            is_jev = is_jev or (path == client and isinstance(f, ast.Name) and f.id == "call")
+                      and isinstance(f.value, ast.Name) and f.value.id in mods)
+            is_jev = is_jev or (isinstance(f, ast.Name) and f.id in funcs)
             if not is_jev:
                 continue
             sites += 1
