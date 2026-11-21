@@ -154,7 +154,7 @@ def tts_with_openai(
         kwargs["instructions"] = instructions
 
     try:
-        resp = client.audio.speech.create(**kwargs, format=fmt)
+        resp = client.audio.speech.create(**kwargs, response_format=fmt)
         data = getattr(resp, "content", None)
         if data is None and hasattr(resp, "read"):
             data = resp.read()
