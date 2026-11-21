@@ -69,6 +69,12 @@ def app(_isolated_paths) -> FastAPI:
     # Jev grades of the stubbed tutor line stay out of the live log the scoreboard reads.
     mp.setattr(importlib.import_module("lib.grade_log"), "DB_PATH", root_dir / "grades.sqlite")
 
+    # TTS clips cached by /api/tts stay out of the live examples_audio/phrases cache
+    # (verifier gap on d2e4c64c, 2026-11-21). voice.cache reads TTS_CACHE_DIR per call.
+    tts_cache = root_dir / "tts_cache"
+    tts_cache.mkdir(parents=True, exist_ok=True)
+    mp.setattr(importlib.import_module("voice.cache"), "TTS_CACHE_DIR", tts_cache)
+
     app_module = importlib.import_module("main")
     application = app_module.app
 
