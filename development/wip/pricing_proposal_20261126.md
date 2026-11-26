@@ -65,6 +65,12 @@ No `gemini_image` or ElevenLabs rows fall in this window. Image cost below is an
 | Live streaming minute (worst case) | priced at whisper rate | $0.006/min |
 | **Paid generation**: one story import or generate | LLM compile ≈ 10 gemini calls × ~1.1k out tokens ≈ $0.03. TTS for all lines ≈ 15k chars ≈ $0.18. **6 panels** on Flash image ≈ $0.23. Video import ≤ 10 min whisper ≈ $0.06. | **≈ $0.50** (≈ $1.07 if panels use Pro image) |
 
+> **Correction (2026-11-26, master chat 5180daee).** Two inputs above are wrong; the launch-readiness note
+> (`launch_readiness_20261126.md`) has them right. (1) Jev grading does not run locally: `backend/lib/jev_client.py`
+> → `heroCommon/src/hero_common/jev_client.py:43` calls `https://api.typesafe.ai/v1/systemone`, billed by typesafe.ai,
+> ~50 calls per session, price unknown. The margins in §3 exclude it, so they are an upper bound. (2) Appwrite is coded
+> but not configured: the live `backend/.env` has no `APPWRITE_*` keys, so D1 accounts need setting up before quotas work.
+
 ## 3. Proposed tiers (fits decision-board D1, D2, D4, D5)
 
 - **D4:** the free tier is the marketing loop, built on heavy reuse/caching. Paid unlocks story import and
