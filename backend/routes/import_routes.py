@@ -6,6 +6,7 @@ import asyncio
 import urllib.parse
 from fastapi import APIRouter, Request, HTTPException
 import config
+import daily_quota
 import url_fetch
 import usage_log as usage
 import import_cache
@@ -127,6 +128,7 @@ async def import_story(body: StoryImportRequest, request: Request):
         rate_bucket="import_story",
         rate_limit_per_min=int(getattr(config, "RATE_LIMIT_IMPORT_PER_MIN", 10)),
     )
+    daily_quota.enforce_generation_limit(request)
 
     text = (body.text or "").strip()
     source_meta = None
@@ -209,6 +211,7 @@ async def api_generate_scenarios_from_video(request: Request):
     attest_rights = bool((body or {}).get("attest_rights", False))
     if not attest_rights:
         raise HTTPException(status_code=400, detail="attest_rights_required")
+    daily_quota.enforce_generation_limit(request)
 
     target_language = (body or {}).get("target_language") or "Japanese"
     max_scenes = (body or {}).get("max_scenes") or 5
@@ -240,6 +243,7 @@ async def api_import_auto(body: AutoImportRequest, request: Request):
         rate_bucket="import_auto",
         rate_limit_per_min=int(getattr(config, "RATE_LIMIT_IMPORT_PER_MIN", 10)),
     )
+    daily_quota.enforce_generation_limit(request)
 
     url = (body.url or "").strip()
     text = (body.text or "").strip()

@@ -152,6 +152,11 @@ RATE_LIMIT_IMPORT_PER_MIN = int(os.getenv("RATE_LIMIT_IMPORT_PER_MIN", "10"))
 RATE_LIMIT_PUBLISH_PER_MIN = int(os.getenv("RATE_LIMIT_PUBLISH_PER_MIN", "10"))
 RATE_LIMIT_STREAM_CONN_PER_MIN = int(os.getenv("RATE_LIMIT_STREAM_CONN_PER_MIN", "30"))
 
+# Daily per-user caps (need RATE_LIMIT_ENABLED; users are the Cloudflare Access email, else "anonymous").
+# DAILY_IMPORT_LIMIT covers the story/video import and generation routes in one bucket.
+DAILY_IMPORT_LIMIT = int(os.getenv("DAILY_IMPORT_LIMIT", "5"))
+DAILY_TTS_CLIP_LIMIT = int(os.getenv("DAILY_TTS_CLIP_LIMIT", "300"))
+
 # CORS origins
 def _collect_allowed_origins() -> list[str]:
     """Collect allowed frontend origins from env or provide sensible dev defaults.

@@ -75,6 +75,9 @@ def app(_isolated_paths) -> FastAPI:
     tts_cache.mkdir(parents=True, exist_ok=True)
     mp.setattr(importlib.import_module("voice.cache"), "TTS_CACHE_DIR", tts_cache)
 
+    # Daily per-user caps count in a sqlite file; keep test runs out of backend/storage.
+    mp.setattr(importlib.import_module("daily_quota"), "DB_PATH", root_dir / "daily_quota.sqlite")
+
     app_module = importlib.import_module("main")
     application = app_module.app
 

@@ -11,7 +11,8 @@ import os
 import base64
 import threading
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, HTTPException, Request, Response
+import daily_quota
 from voice import select as voice_select
 from voice import cache as voice_cache
 from services.scenarios import get_scenario_by_id
@@ -80,6 +81,16 @@ def _inline_audio(result: dict) -> dict:
 
 @router.post("/tts")
 async def api_tts(request: Request):
+    # Bind the caller for the daily TTS cap: providers charge each uncached clip to current_user.
+    # _synth copies the context into its worker thread, so the providers see the same user.
+    token = daily_quota.current_user.set(daily_quota.user_from_request(request))
+    try:
+        return await _api_tts(request)
+    finally:
+        daily_quota.current_user.reset(token)
+
+
+async def _api_tts(request: Request):
     """Return a cached/pre-rendered voice clip for a short phrase.
 
     Body JSON: {
@@ -149,6 +160,8 @@ async def api_tts(request: Request):
                 "cached": result.get("cached", False),
             }
             return _inline_audio(resp) if inline else resp
+        except daily_quota.DailyLimitExceeded:
+            raise HTTPException(status_code=429, detail="daily_limit")
         except Exception as e:
             # Fall back to Google if ElevenLabs fails
             print(f"[TTS] ElevenLabs failed, falling back to Google: {e}")
@@ -185,6 +198,8 @@ async def api_tts(request: Request):
                 "cached": result.get("cached", False),
             }
             return _inline_audio(resp) if inline else resp
+        except daily_quota.DailyLimitExceeded:
+            raise HTTPException(status_code=429, detail="daily_limit")
         except Exception as e:
             # Fall back to OpenAI if Google fails
             print(f"[TTS] Google TTS failed, falling back to OpenAI: {e}")
@@ -254,5 +269,7 @@ async def api_tts(request: Request):
             "provider": "openai",
         }
         return _inline_audio(resp) if inline else resp
+    except daily_quota.DailyLimitExceeded:
+        raise HTTPException(status_code=429, detail="daily_limit")
     except Exception as e:
         return {"error": str(e)}

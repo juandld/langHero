@@ -11,6 +11,7 @@ from image.visual_styles import ArtStyle, Panel, PanelType, Mood, VisualEffect, 
 from services.scenarios import get_scenario_by_id
 from image import dalle as image_gen
 from security import parse_json_body
+import daily_quota
 
 router = APIRouter(prefix="/api/panels", tags=["panels"])
 
@@ -161,6 +162,7 @@ async def api_generate_panel_images(request: Request):
 
     if not panels_data:
         raise HTTPException(status_code=400, detail="panels_required")
+    daily_quota.enforce_generation_limit(request)
 
     # Convert dict panels to Panel objects
     panels = []

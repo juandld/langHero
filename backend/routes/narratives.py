@@ -9,6 +9,7 @@ from datetime import datetime
 from fastapi import APIRouter, Request, Response
 from langchain_core.messages import HumanMessage
 import config
+import daily_quota
 import providers
 import usage_log as usage
 from utils import TRANSCRIPTS_DIR
@@ -107,6 +108,8 @@ async def generate_narrative(request: Request):
     }
     Returns: {"filename": "narrative-...txt"}
     """
+    # Before the try below: that try turns every error into {"error": ...} with a 200.
+    daily_quota.enforce_generation_limit(request)
     try:
         body = await request.json()
         items = (body or {}).get("items", [])

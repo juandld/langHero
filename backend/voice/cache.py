@@ -10,6 +10,7 @@ from typing import Callable, Iterable, Optional, Tuple
 from uuid import uuid4
 
 import config
+import daily_quota
 import providers
 from voice import select as voice_select
 
@@ -276,6 +277,7 @@ def get_or_create_clip(
     base_synth = synthesizer or providers.tts_with_openai
 
     def synth_with_instructions(text: str, v: str, f: str) -> bytes:
+        daily_quota.charge_tts_clip()  # only reached on a cache miss; a cached clip never synthesizes
         return base_synth(text, v, f, instructions)
 
     # Include sentiment in cache key if provided

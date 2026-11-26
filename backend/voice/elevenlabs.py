@@ -9,6 +9,7 @@ import os
 from typing import Optional
 from dotenv import load_dotenv
 
+import daily_quota
 from lib import ai_calls
 from voice.cache import tts_cache_key, tts_cache_lookup, tts_cache_path, tts_response
 
@@ -227,6 +228,7 @@ def synthesize_speech(
     hit = tts_cache_lookup("eleven", key, output_format, voice_id, "elevenlabs")
     if hit:
         return hit
+    daily_quota.charge_tts_clip()  # uncached: this call is about to pay for synthesis
 
     cache_file = tts_cache_path("eleven", key, output_format)
 
