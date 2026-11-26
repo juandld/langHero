@@ -464,6 +464,14 @@
   {#if showMenu}
     <footer class="footer" in:fade={{ duration: 400, delay: 200 }}>
       <p class="version">Early Access</p>
+      <nav class="legal-links" aria-label="Legal">
+        <a href="/pricing">Pricing</a>
+        <a href="/terms">Terms</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/refund">Refunds</a>
+        <a href="/imprint">Imprint</a>
+        <a href="/takedown">Report content</a>
+      </nav>
     </footer>
   {/if}
 </main>
@@ -929,6 +937,22 @@
     font-weight: 600;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+  }
+  .legal-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 16px;
+    margin-top: 8px;
+    font-size: 0.8rem;
+  }
+  .legal-links a {
+    color: #64748b;
+    text-decoration: none;
+  }
+  .legal-links a:hover {
+    color: #94a3b8;
+    text-decoration: underline;
   }
 
   /* Mobile */
