@@ -6,6 +6,7 @@
   import { runsStore, syncFromStorage } from '$lib/runStore.js';
   import { authUser, hydrateAuth, isAppwriteConfigured } from '$lib/auth';
   import { getBackendUrl } from '$lib/config';
+  import HomeFooter from '$lib/components/HomeFooter.svelte';
 
   let mounted = false;
   let showTitle = false;
@@ -462,17 +463,7 @@
 
   <!-- Footer -->
   {#if showMenu}
-    <footer class="footer" in:fade={{ duration: 400, delay: 200 }}>
-      <p class="version">Early Access</p>
-      <nav class="legal-links" aria-label="Legal">
-        <a href="/pricing">Pricing</a>
-        <a href="/terms">Terms</a>
-        <a href="/privacy">Privacy</a>
-        <a href="/refund">Refunds</a>
-        <a href="/imprint">Imprint</a>
-        <a href="/takedown">Report content</a>
-      </nav>
-    </footer>
+    <HomeFooter />
   {/if}
 </main>
 
@@ -923,38 +914,6 @@
   }
 
   /* Footer */
-  .footer {
-    position: absolute;
-    bottom: 24px;
-    left: 0;
-    right: 0;
-    text-align: center;
-  }
-  .version {
-    margin: 0;
-    font-size: 0.85rem;
-    color: #475569;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .legal-links {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px 16px;
-    margin-top: 8px;
-    font-size: 0.8rem;
-  }
-  .legal-links a {
-    color: #64748b;
-    text-decoration: none;
-  }
-  .legal-links a:hover {
-    color: #94a3b8;
-    text-decoration: underline;
-  }
-
   /* Mobile */
   @media (max-width: 700px) {
     .menu-btn {

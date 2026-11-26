@@ -1,17 +1,10 @@
 <script>
+  import { legalLinks as links } from '$lib/legalLinks.js';
+
   /** @type {string} */
   export let title;
   /** @type {string} */
   export let updated = '2026-11-26';
-
-  const links = [
-    { href: '/pricing', label: 'Pricing' },
-    { href: '/terms', label: 'Terms' },
-    { href: '/privacy', label: 'Privacy' },
-    { href: '/refund', label: 'Refunds' },
-    { href: '/imprint', label: 'Imprint' },
-    { href: '/takedown', label: 'Report content' }
-  ];
 </script>
 
 <svelte:head>
