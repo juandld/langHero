@@ -152,6 +152,32 @@ is a queueable item.
    1-8 adds **0** `langHero:gemini`, `langHero:openai_chat` and `langHero:tts` rows to
    `provider_spend_host.jsonl`. `tests/demo_mode_test.py` asserts this, and the suite passes.
 
+   **Status 2026-11-26 (branch `q/bba80c4cfba64b8a`): code done, live check pending.**
+   - `getStreamMode()` (`frontend/src/lib/config.ts`) defaults to `mock` on `/demo` and `/demo/...`. Only an explicit
+     `?stream=real|off` overrides it. localStorage `STREAM_MODE` is neither read nor written there, so `/play` is unaffected.
+   - With `DEMO_MODE=true`, no provider is called on a demo turn:
+     - `/narrative/interaction` and `/narrative/imitate` take a browser `transcript` form field instead of
+       transcribing audio. The demo GameView fills it from the Web Speech API on `/demo`.
+     - Matching is keywords/similarity only: no `invoke_google`/`openai_chat` fallback, no `romanize` (the example's
+       `pronunciation` is used instead) and no `makes_sense`.
+     - A demo request with no transcript returns `demo_mode_transcript_required`.
+     - `/narrative/options` serves the authored examples.
+     - `/api/tts` returns `{"skip": true, "reason": "demo_mode_tts_cache_only"}` on a cache miss on all three providers.
+       The guard is `voice.cache.demo_cache_only_guard`.
+   - `DEMO_MODE=false` is unchanged: the transcript field is ignored and `audio_file` stays required (422 without it).
+   - `tests/demo_mode_test.py` plays scenes 1-8 through TestClient with counting fakes on every `providers.*` entry
+     point and on both TTS `get_client`s, and asserts `{}` calls. It also covers the demo-off paid paths.
+   - Gaps, not fixed (each would double the scope):
+     - (a) Browsers without Web Speech (Firefox, some iOS webviews) get no transcript, so free-speech turns on the
+       demo are refused instead of transcribed. Typed or tap-to-answer input on `/demo` would be the fix.
+     - (b) Demo TTS is only free if the scene 1-8 lines are pre-rendered into the cache on the demo host. Otherwise
+       the NPC is silent. Pre-render as part of step 5.
+     - (c) `/narrative/ask-bimbo`, `/generate-reaction` and `/translate` are still LLM-backed in demo mode. GameView's
+       built-in path doesn't call them; step 5's public host should not expose them.
+     - (d) `npm run check` reports 955 errors on main before this change and the same 955 after it. This branch adds
+       none, but the check does not exit 0.
+     - (e) The `provider_spend_host.jsonl` live count above is the verifier's live step.
+
 5. **Public demo hostname (M; code + David's Cloudflare action).**
    Done when: a second backend instance with `DEMO_MODE=true` and `RATE_LIMIT_ENABLED=true` runs under its own
    systemd unit, with a frontend build pointing at it. A public hostname (e.g. `demo.lang.camofiles.app`)
