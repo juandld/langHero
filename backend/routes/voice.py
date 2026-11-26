@@ -160,6 +160,8 @@ async def _api_tts(request: Request):
                 "cached": result.get("cached", False),
             }
             return _inline_audio(resp) if inline else resp
+        except voice_cache.DemoCacheMiss:
+            return {"skip": True, "reason": "demo_mode_tts_cache_only"}
         except daily_quota.DailyLimitExceeded:
             raise HTTPException(status_code=429, detail="daily_limit")
         except Exception as e:
@@ -198,6 +200,8 @@ async def _api_tts(request: Request):
                 "cached": result.get("cached", False),
             }
             return _inline_audio(resp) if inline else resp
+        except voice_cache.DemoCacheMiss:
+            return {"skip": True, "reason": "demo_mode_tts_cache_only"}
         except daily_quota.DailyLimitExceeded:
             raise HTTPException(status_code=429, detail="daily_limit")
         except Exception as e:
@@ -269,6 +273,8 @@ async def _api_tts(request: Request):
             "provider": "openai",
         }
         return _inline_audio(resp) if inline else resp
+    except voice_cache.DemoCacheMiss:
+        return {"skip": True, "reason": "demo_mode_tts_cache_only"}
     except daily_quota.DailyLimitExceeded:
         raise HTTPException(status_code=429, detail="daily_limit")
     except Exception as e:

@@ -95,10 +95,21 @@ export async function discoverBackend(candidates?: string[]): Promise<string> {
 
 export type StreamMode = 'off' | 'mock' | 'real';
 
+/** True on the free marketing demo (/demo and below), which must cost $0 per visitor. */
+export function isDemoPath(): boolean {
+  if (typeof window === 'undefined') return false;
+  const path = window.location.pathname || '';
+  return path === '/demo' || path.startsWith('/demo/');
+}
+
 export function getStreamMode(): StreamMode {
   let mode: StreamMode = 'real';
   try {
     if (typeof window === 'undefined') return mode;
+    const demo = isDemoPath();
+    // The demo streams from /stream/mock unless ?stream=real|off is passed explicitly;
+    // localStorage is neither read nor written there, so /demo and /play never leak into each other.
+    if (demo) mode = 'mock';
     const params = new URLSearchParams(window.location.search);
     const qp = params.get('stream') ?? params.get('streamMode') ?? params.get('mockStream');
     if (qp) {
@@ -106,9 +117,10 @@ export function getStreamMode(): StreamMode {
       if (lowered === 'mock') mode = 'mock';
       else if (lowered === 'off' || lowered === '0' || lowered === 'false') mode = 'off';
       else mode = 'real';
-      window.localStorage.setItem('STREAM_MODE', mode);
+      if (!demo) window.localStorage.setItem('STREAM_MODE', mode);
       return mode;
     }
+    if (demo) return mode;
     const stored = window.localStorage.getItem('STREAM_MODE');
     if (stored === 'mock' || stored === 'off' || stored === 'real') {
       mode = stored as StreamMode;

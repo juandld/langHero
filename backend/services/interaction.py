@@ -39,87 +39,110 @@ def _similarity(a: str, b: str) -> float:
     return float(SequenceMatcher(a=na, b=nb).ratio())
 
 
+def _transcribe_interaction(audio_file, temp_path: str, lang: Optional[str]):
+    """Save the uploaded audio and transcribe it with the configured provider (paid)."""
+    audio_bytes = audio_file.read()
+    os.makedirs(VOICE_NOTES_DIR, exist_ok=True)
+    with open(temp_path, "wb") as f:
+        f.write(audio_bytes)
+
+    # Transcribe Audio
+    lang_hint_value = (lang or "").strip().lower()
+    if "japanese" in lang_hint_value or lang_hint_value == "ja":
+        instruction = (
+            "Transcribe this audio recording. "
+            "If the speech is Japanese, write it in Japanese script without romanizing. "
+            "If it is another language, transcribe using that language's normal writing system. "
+            "Do not translate."
+        )
+    elif "mandarin" in lang_hint_value or "chinese" in lang_hint_value or lang_hint_value == "zh":
+        instruction = (
+            "Transcribe this audio recording. "
+            "If the speech is Mandarin Chinese, write it in simplified Chinese characters. "
+            "If it is another language, transcribe using that language's normal writing system. "
+            "Do not translate."
+        )
+    elif lang_hint_value:
+        instruction = (
+            "Transcribe this audio recording. "
+            f"The expected language is {lang}, but always use the language that is actually spoken. "
+            "Do not translate."
+        )
+    else:
+        instruction = "Transcribe this audio recording in the language you hear. Do not translate."
+
+    transcribe_started = time.perf_counter()
+    result = providers.transcribe_audio(
+        audio_bytes,
+        file_ext="webm",
+        mime_type="audio/webm",
+        instructions=instruction,
+        language_hint=lang_hint_value or None,
+        context=providers.CONTEXT_INTERACTION,
+    )
+    transcribed_text = result.text
+    duration_ms = int((time.perf_counter() - transcribe_started) * 1000)
+
+    try:
+        print(f"[interaction/{result.provider}] Heard: {(transcribed_text or '')[:200]} ({duration_ms}ms)")
+    except Exception:
+        pass
+
+    # Log usage
+    if result.provider == "gemini":
+        key_index = int(result.meta.get("key_index", 0) or 0)
+        usage.log_usage(
+            event="interaction_transcribe",
+            provider="gemini",
+            model=result.model,
+            key_label=usage.key_label_from_index(key_index, providers.GOOGLE_KEYS),
+            status="success",
+        )
+    elif result.provider == "openai":
+        usage.log_usage(
+            event="interaction_transcribe",
+            provider="openai",
+            model=result.model,
+            key_label=usage.OPENAI_LABEL,
+            status="success",
+        )
+    return result
+
+
 def process_interaction(
     audio_file,
     current_scenario_id_str,
     lang: Optional[str] = None,
     judge: Optional[float] = None,
+    transcript: Optional[str] = None,
 ):
     """
     Processes the user's audio interaction to determine the next scenario.
+
+    With config.DEMO_MODE on, no provider is called: the browser-side
+    ``transcript`` replaces audio transcription, matching is local only
+    (keywords/similarity, no LLM fallback) and no romanization is generated.
     """
+    demo = bool(config.DEMO_MODE)
+    if demo and not (transcript or "").strip():
+        return {
+            "error": "demo_mode_transcript_required",
+            "match_type": "demo_no_transcript",
+            "scoreDelta": 0,
+            "livesDelta": 0,
+            "confidence": 0.0,
+        }
     temp_filename = f"temp_{uuid.uuid4()}.webm"
     temp_path = os.path.join(VOICE_NOTES_DIR, temp_filename)
 
     try:
         current_scenario_id = int(current_scenario_id_str)
 
-        # Save temporary audio file
-        audio_bytes = audio_file.read()
-        os.makedirs(VOICE_NOTES_DIR, exist_ok=True)
-        with open(temp_path, "wb") as f:
-            f.write(audio_bytes)
-
-        # Transcribe Audio
-        lang_hint_value = (lang or "").strip().lower()
-        if "japanese" in lang_hint_value or lang_hint_value == "ja":
-            instruction = (
-                "Transcribe this audio recording. "
-                "If the speech is Japanese, write it in Japanese script without romanizing. "
-                "If it is another language, transcribe using that language's normal writing system. "
-                "Do not translate."
-            )
-        elif "mandarin" in lang_hint_value or "chinese" in lang_hint_value or lang_hint_value == "zh":
-            instruction = (
-                "Transcribe this audio recording. "
-                "If the speech is Mandarin Chinese, write it in simplified Chinese characters. "
-                "If it is another language, transcribe using that language's normal writing system. "
-                "Do not translate."
-            )
-        elif lang_hint_value:
-            instruction = (
-                "Transcribe this audio recording. "
-                f"The expected language is {lang}, but always use the language that is actually spoken. "
-                "Do not translate."
-            )
+        if demo:
+            result = providers.TranscriptionResult(text=transcript.strip(), provider="browser", model="")
         else:
-            instruction = "Transcribe this audio recording in the language you hear. Do not translate."
-
-        transcribe_started = time.perf_counter()
-        result = providers.transcribe_audio(
-            audio_bytes,
-            file_ext="webm",
-            mime_type="audio/webm",
-            instructions=instruction,
-            language_hint=lang_hint_value or None,
-            context=providers.CONTEXT_INTERACTION,
-        )
+            result = _transcribe_interaction(audio_file, temp_path, lang)
         transcribed_text = result.text
-        duration_ms = int((time.perf_counter() - transcribe_started) * 1000)
-
-        try:
-            print(f"[interaction/{result.provider}] Heard: {(transcribed_text or '')[:200]} ({duration_ms}ms)")
-        except Exception:
-            pass
-
-        # Log usage
-        if result.provider == "gemini":
-            key_index = int(result.meta.get("key_index", 0) or 0)
-            usage.log_usage(
-                event="interaction_transcribe",
-                provider="gemini",
-                model=result.model,
-                key_label=usage.key_label_from_index(key_index, providers.GOOGLE_KEYS),
-                status="success",
-            )
-        elif result.provider == "openai":
-            usage.log_usage(
-                event="interaction_transcribe",
-                provider="openai",
-                model=result.model,
-                key_label=usage.OPENAI_LABEL,
-                status="success",
-            )
 
         heard_raw = transcribed_text or ""
         transcribed_text = (transcribed_text or "").lower()
@@ -290,7 +313,7 @@ def process_interaction(
             return out
 
         # Semantic choice via LLM
-        if not next_scenario_id and current_scenario.get("options"):
+        if not demo and not next_scenario_id and current_scenario.get("options"):
             try:
                 opts = current_scenario["options"]
                 lines = []
@@ -372,7 +395,10 @@ def process_interaction(
                             elif isinstance(exs[0], str):
                                 expected = exs[0]
                             if expected:
-                                pron = providers.romanize(expected, "Japanese") or ""
+                                if demo:
+                                    pron = (exs[0].get("pronunciation") or "") if isinstance(exs[0], dict) else ""
+                                else:
+                                    pron = providers.romanize(expected, "Japanese") or ""
                                 feedback = generate_social_feedback(success=False, match_type="wrong_language")
                                 return {
                                     "heard": heard_raw,
@@ -453,8 +479,31 @@ def process_interaction(
             os.remove(temp_path)
 
 
-def imitate_say(audio_bytes: bytes, mime: str, expected_text: str, target_lang: Optional[str] = None) -> dict:
-    """Transcribe the audio and compare to expected_text. Returns {success, score, heard, makesSense}."""
+def imitate_say(
+    audio_bytes: bytes,
+    mime: str,
+    expected_text: str,
+    target_lang: Optional[str] = None,
+    transcript: Optional[str] = None,
+) -> dict:
+    """Transcribe the audio and compare to expected_text. Returns {success, score, heard, makesSense}.
+
+    With config.DEMO_MODE on, the browser-side ``transcript`` is scored by
+    similarity alone: no transcription and no makes_sense call.
+    """
+    if config.DEMO_MODE:
+        heard = (transcript or "").strip()
+        score = _similarity(heard, expected_text or "")
+        return {
+            "success": score >= 0.72,
+            "score": round(score, 3),
+            "confidence": round(score, 3),
+            "threshold": 0.72,
+            "heard": heard,
+            "makesSense": False,
+            **({} if heard else {"error": "demo_mode_transcript_required"}),
+        }
+
     result = providers.transcribe_audio(
         audio_bytes,
         file_ext=("webm" if (mime and "webm" in mime) else "wav"),

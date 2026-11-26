@@ -28,6 +28,22 @@ def _scenario_context_text(s: dict) -> str:
     return "\n".join(parts)
 
 
+def _authored_option(o: dict) -> dict:
+    """An option with only the examples written into the scenario (no generation)."""
+    examples = []
+    for ex in o.get("examples") or []:
+        if isinstance(ex, dict):
+            examples.append({k: ex.get(k) or "" for k in ("native", "target", "pronunciation")})
+        elif isinstance(ex, str) and ex.strip():
+            examples.append({"native": "", "target": ex.strip(), "pronunciation": ""})
+    return {
+        "option_text": o.get("text", ""),
+        "style": o.get("style"),
+        "examples": examples,
+        "next_scenario": o.get("next_scenario"),
+    }
+
+
 def generate_option_suggestions(
     scenario_id: int,
     n_per_option: int = 3,
@@ -59,6 +75,10 @@ def generate_option_suggestions(
         question = str(scenario["question"]).strip()
     elif scenario.get("description"):
         question = "What do you say?"
+
+    if config.DEMO_MODE:
+        # Demo costs $0: serve the scenario's own examples, never an LLM call.
+        return {"question": question, "options": [_authored_option(o) for o in opts]}
 
     option_lines = "\n".join([f"- {o.get('text','')}" for o in opts])
 

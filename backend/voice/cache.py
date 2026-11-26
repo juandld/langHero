@@ -48,6 +48,16 @@ def tts_cache_path(prefix: str, cache_key: str, output_format: str) -> Path:
     return TTS_CACHE_DIR / f"{prefix}-{cache_key}.{output_format}"
 
 
+class DemoCacheMiss(RuntimeError):
+    """Raised in DEMO_MODE when a TTS phrase is not cached (demo never pays for synthesis)."""
+
+
+def demo_cache_only_guard() -> None:
+    """Call after a cache miss, before any paid synthesis; raises DemoCacheMiss when DEMO_MODE is on."""
+    if config.DEMO_MODE:
+        raise DemoCacheMiss("demo_mode_tts_cache_only")
+
+
 def tts_response(
     cache_file: Path, voice: str, output_format: str, provider: str, cached: bool = False
 ) -> dict:
@@ -277,7 +287,8 @@ def get_or_create_clip(
     base_synth = synthesizer or providers.tts_with_openai
 
     def synth_with_instructions(text: str, v: str, f: str) -> bytes:
-        daily_quota.charge_tts_clip()  # only reached on a cache miss; a cached clip never synthesizes
+        demo_cache_only_guard()  # runs only on a miss, before the manifest is saved
+        daily_quota.charge_tts_clip()  # only reached on a cache miss; a demo miss stops above without charging
         return base_synth(text, v, f, instructions)
 
     # Include sentiment in cache key if provided

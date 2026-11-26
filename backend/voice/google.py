@@ -10,7 +10,7 @@ from typing import Optional
 from dotenv import load_dotenv
 
 import daily_quota
-from voice.cache import tts_cache_key, tts_cache_lookup, tts_cache_path, tts_response
+from voice.cache import demo_cache_only_guard, tts_cache_key, tts_cache_lookup, tts_cache_path, tts_response
 
 load_dotenv()
 
@@ -253,6 +253,7 @@ def synthesize_speech(
     hit = tts_cache_lookup("google", key, output_format, voice_name, "google")
     if hit:
         return hit
+    demo_cache_only_guard()
     daily_quota.charge_tts_clip()  # uncached: this call is about to pay for synthesis
 
     cache_file = tts_cache_path("google", key, output_format)

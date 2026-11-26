@@ -1,6 +1,6 @@
 <script>
   import { storyStore } from '$lib/storyStore.js';
-  import { getBackendUrl, discoverBackend, getStreamMode } from '$lib/config';
+  import { getBackendUrl, discoverBackend, getStreamMode, isDemoPath } from '$lib/config';
   import { apiFetch } from '$lib/api';
   import { getAuthToken } from '$lib/auth';
   import { activeRunId, getRun, syncFromStorage, updateRun } from '$lib/runStore.js';
@@ -311,6 +311,38 @@
     evaluating = false;
   }
 
+  // The free demo (/demo) must not pay for transcription: the browser's own speech
+  // recognition supplies the transcript and the DEMO_MODE backend matches it locally.
+  /** @type {Record<string, string>} */
+  const SPEECH_LANG_CODES = { japanese: 'ja-JP', ja: 'ja-JP', mandarin: 'zh-CN', chinese: 'zh-CN', zh: 'zh-CN', spanish: 'es-ES', es: 'es-ES', english: 'en-US', en: 'en-US' };
+  /** @type {{ stop: () => Promise<string> } | null} */
+  let demoRecognizer = null;
+
+  /** @param {string} lang @returns {{ stop: () => Promise<string> } | null} */
+  function startDemoRecognition(lang) {
+    const w = /** @type {any} */ (typeof window !== 'undefined' ? window : {});
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!SR) return null;
+    let text = '';
+    const rec = new SR();
+    rec.lang = SPEECH_LANG_CODES[String(lang || '').toLowerCase()] || 'ja-JP';
+    rec.continuous = true;
+    rec.interimResults = false;
+    /** @type {Promise<string>} */
+    const ended = new Promise((resolve) => {
+      rec.onresult = (/** @type {any} */ e) => { text = Array.from(e.results).map((/** @type {any} */ r) => r[0]?.transcript || '').join(' ').trim(); };
+      rec.onerror = () => {};
+      rec.onend = () => resolve(text);
+    });
+    try { rec.start(); } catch (_) { return null; }
+    return {
+      stop: () => {
+        try { rec.stop(); } catch (_) {}
+        return Promise.race([ended, new Promise((/** @type {(v: string) => void} */ r) => setTimeout(() => r(text), 1500))]);
+      }
+    };
+  }
+
   async function toggleRecording() {
     if (isRecording) {
       if (mediaRecorder && mediaRecorder.state !== "inactive") {
@@ -352,6 +384,11 @@
 
           const formData = new FormData();
           formData.append('audio_file', audioBlob, 'recording.webm');
+          if (demoRecognizer) {
+            const heard = await demoRecognizer.stop();
+            demoRecognizer = null;
+            if (heard) formData.append('transcript', heard);
+          }
 
           try {
             if (requireRepeat && selectedOption) {
@@ -389,6 +426,7 @@
           mediaRecorder.start(200);
         } else {
           mediaRecorder.start();
+          demoRecognizer = isDemoPath() ? startDemoRecognition(effectiveTargetLang) : null;
         }
         isRecording = true;
         refreshMicDevices();

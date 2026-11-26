@@ -4,9 +4,10 @@ Narrative interaction endpoints for game dialogue processing.
 
 import json
 from typing import Optional
-from fastapi import APIRouter, File, UploadFile, Form, Response
+from fastapi import APIRouter, File, UploadFile, Form, Response, HTTPException
 from pydantic import BaseModel
 from langchain_core.messages import HumanMessage
+import config
 import providers
 from security import clean_llm_json, detect_audio_mime
 from services.interaction import process_interaction, imitate_say
@@ -218,39 +219,57 @@ Return ONLY valid JSON, no markdown."""
 
 @router.post("/interaction")
 async def handle_interaction(
-    audio_file: UploadFile = File(...),
+    audio_file: UploadFile = File(None),
     current_scenario_id: str = Form(...),
     lang: str = Form(None),
     judge: str = Form(None),
+    transcript: str = Form(None),
 ):
     """
     Receives audio and the current scenario ID,
     processes them, and returns the next scenario.
+
+    ``transcript`` (browser speech recognition) is used only in DEMO_MODE, where
+    it replaces paid transcription; outside demo mode audio_file stays required.
     """
+    if audio_file is None and not config.DEMO_MODE:
+        raise HTTPException(status_code=422, detail="audio_file is required")
     judge_value = None
     try:
         if judge is not None and str(judge).strip() != "":
             judge_value = float(judge)
     except Exception:
         judge_value = None
-    result = process_interaction(audio_file.file, current_scenario_id, lang, judge=judge_value)
+    result = process_interaction(
+        audio_file.file if audio_file is not None else None,
+        current_scenario_id,
+        lang,
+        judge=judge_value,
+        transcript=transcript,
+    )
     return result
 
 
 @router.post("/imitate")
 async def imitate_endpoint(
-    audio_file: UploadFile = File(...),
+    audio_file: UploadFile = File(None),
     expected: str = Form(...),
     next_scenario: int = Form(None),
     lang: str = Form(None),
+    transcript: str = Form(None),
 ):
     """Transcribe learner audio and check similarity to expected.
 
     Returns {success, score, heard, nextScenario?}
     """
-    mime = detect_audio_mime(audio_file.content_type)
-    audio_bytes = audio_file.file.read()
-    res = imitate_say(audio_bytes, mime, expected, lang)
+    if audio_file is None and not config.DEMO_MODE:
+        raise HTTPException(status_code=422, detail="audio_file is required")
+    if config.DEMO_MODE:
+        res = imitate_say(b"", "", expected, lang, transcript=transcript)
+    else:
+        mime = detect_audio_mime(audio_file.content_type)
+        audio_bytes = audio_file.file.read()
+        res = imitate_say(audio_bytes, mime, expected, lang)
     if res.get('success') and next_scenario is not None:
         try:
             ns = int(next_scenario)
